@@ -1,0 +1,287 @@
+#ifndef VFUTIL_LISTS_GH
+#define VFUTIL_LISTS_GH
+
+#include <list.gh>
+#include <assoclist.gh>
+#include <permutations.gh>
+#include "util.gh"
+
+#define ASSOC(s,t) list<pair<s,t> >
+
+lemma_auto(remove(pair(k,v),l))
+void remove_assoc_of_distinct<s,t>(s k, t v, ASSOC(s,t) l)
+    requires distinct(keys(l)) && mem(pair(k,v),l);
+    ensures  remove(pair(k,v),l) == remove_assoc(k,l);
+{
+    switch(l) {
+    case nil:
+    case cons(lv,vs):
+        TRIVIAL_PAIR(lv)
+        if(k == fst(lv)) {
+            assert !mem(k,keys(vs));
+            if(mem(pair(k,v),vs)) {
+                mem_keys(k,v,vs);
+                assert false;
+            }
+            assert !mem(pair(k,v),vs);
+        } else {
+            remove_assoc_of_distinct(k,v,vs);
+        }
+    }
+}
+
+lemma_auto(remove(x,l))
+void remove_nonmem<t>(t x, list<t> l)
+    requires true;
+    ensures  (remove(x,l) == l) == !mem(x,l);
+{ LIST_INDUCTION(l, xs, remove_nonmem(x, xs)) }
+
+lemma_auto(remove(x,l))
+void remove_distinct<t>(t x, list<t> l)
+    requires !!distinct(l);
+    ensures  !mem(x,remove(x,l));
+{ LIST_INDUCTION(l, xs, remove_distinct(x, xs)) }
+
+lemma_auto(remove(x,remove(x,l)))
+void remove_idempotent<t>(t x, list<t> l)
+    requires !!distinct(l);
+    ensures  remove(x,l) == remove(x,remove(x,l));
+{ LIST_INDUCTION(l, xs, remove_idempotent(x, xs)) }
+
+lemma_auto(is_permutation(keys(a),keys(b)))
+void keys_permutation<s,t>(ASSOC(s,t) a, ASSOC(s,t) b)
+    requires is_permutation(a,b) && distinct(keys(a))
+        &&   distinct(keys(b));
+    ensures  !!is_permutation(keys(a),keys(b));
+{
+    switch(a) {
+    case nil:
+    case cons(x,xs):
+        TRIVIAL_PAIR(x)
+        assert remove(x,b) == remove_assoc(fst(x),b);
+        assert keys(remove_assoc(fst(x),b)) == remove(fst(x), keys(b));
+        assert !!distinct(keys(b));
+        distinct_remove(fst(x), keys(b));
+        assert !!distinct(keys(remove(x,b)));
+        keys_permutation(xs,remove(x,b));
+        mem_keys(fst(x),snd(x),b);
+        assert !!mem(fst(x),keys(b));
+    }
+}
+
+
+lemma_auto(length(l)) void nil_length_auto<t>(list<t> l)
+    requires true;
+    ensures  (length(l) == 0) == (l == nil);
+{ TRIVIAL_LIST(l) }
+
+
+lemma_auto(tail(l)) void cons_head_tail<t>(list<t> l)
+    requires l != nil;
+    ensures  l == cons(head(l),tail(l));
+{ TRIVIAL_LIST(l) }
+
+lemma_auto(drop(n,append(p,s))) void drop_of_append<t>(
+        int n, list<t> p, list<t> s)
+    requires n == length(p);
+    ensures drop(n,append(p,s)) == s;
+{
+    switch(p) {
+    case nil: return;
+    case cons(x,xs):
+        drop_of_append(n-1, xs, s);
+        assert drop(n-1, append(xs,s)) == s;
+        assert append(p,s) == append(cons(x,xs),s);
+        assert append(p,s) == cons(x,append(xs,s));
+        assert drop(n,append(p,s)) == drop(n-1,append(xs,s));
+    }
+}
+
+lemma_auto(all_eq(drop(n,l),x)) void all_eq_drop<t>(list<t> l, int n,
+        t x)
+    requires n >= 0 && n <= length(l) && all_eq(l,x);
+    ensures  !!all_eq(drop(n,l),x);
+{
+    switch(l) {
+    case nil: return;
+    case cons(v,vs):
+        if(n > 0) {
+            all_eq_drop(vs,n-1,x);
+        }
+    }
+}
+
+lemma_auto(drop(n,drop(m,l)))
+void drop_n_of_drop_m<t>(int n, int m, list<t> l)
+    requires n >= 0 && m >= 0;
+    ensures  drop(n,drop(m,l)) == drop(n+m,l);
+{
+    switch(l) {
+        case nil:
+        case cons(x,xs):
+            if(n != 0) {
+                drop_n_of_drop_m(n-1,m,xs);
+            }
+            if(m != 0) {
+                drop_n_of_drop_m(n,m-1,xs);
+            }
+    }
+}
+
+lemma_auto(drop(n,take(m,l)))
+void drop_n_of_take_m<t>(int n, int m, list<t> l)
+    requires n >= 0 && m >= 0 && m >= n && m <= length(l);
+    ensures  drop(n,take(m,l)) == take(m-n,drop(n,l));
+{
+    switch(l) {
+        case nil:
+        case cons(x,xs):
+            if(n != 0 && m != 0) {
+                drop_n_of_take_m(n-1,m-1,xs);
+                assert drop(n,take(m,l))
+                    == drop(n,cons(x,take(m-1,xs)));
+                assert drop(n,take(m,l))
+                    == drop(n-1,take(m-1,xs));
+                assert drop(n,take(m,l))
+                    == take(m-n,drop(n-1,xs));
+                assert drop(n,take(m,l))
+                    == take(m-n,drop(n,l));
+            }
+    }
+}
+
+lemma_auto(take(n,take(m,l)))
+void take_n_of_take_m<t>(int n, int m, list<t> l)
+    requires n >= 0 && m >= 0 && m >= n && m <= length(l);
+    ensures  take(n,take(m,l)) == take(n,l);
+{
+    switch(l) {
+    case nil:
+    case cons(x,xs):
+        if(n != 0 && m != 0) {
+            take_n_of_take_m(n-1,m-1,xs);
+        }
+    }
+}
+
+lemma_auto(all_eq(take(n,l),v))
+void all_eq_take<t>(int n, list<t> l, t v)
+    requires n >= 0 && n <= length(l) && all_eq(l,v);
+    ensures  !!all_eq(take(n,l),v);
+{
+    switch(l) {
+    case nil:
+    case cons(x,xs):
+        if(n != 0) {
+            all_eq_take(n-1,xs,v);
+        }
+    }
+}
+
+lemma //_auto(is_permutation(a,b))
+void permutation_length<t>(list<t> a, list<t> b)
+    requires !!is_permutation(a,b);
+    ensures  length(a) == length(b);
+{
+    switch(a) {
+    case nil: return;
+    case cons(x,xs):
+        assert length(remove(x,b)) + 1 == length(b);
+        permutation_length(xs,remove(x,b));
+    }
+}
+
+lemma_auto(remove(x,append(a,b)))
+void remove_append<t>(t x, list<t> a, list<t> b)
+    requires !!mem(x,a);
+    ensures  remove(x,append(a,b)) == append(remove(x,a),b);
+{
+    switch(a) {
+    case nil:
+    case cons(ax,axs):
+        if(mem(x,axs)) remove_append(x,axs,b);
+    }
+}
+
+lemma_auto(is_permutation(a,b))
+void permutation_symm<t>(list<t> a, list<t> b)
+    requires true;
+    ensures  is_permutation(a,b) == is_permutation(b,a);
+{
+    switch(a) {
+    case nil:
+        switch(b) { case nil: case cons(bx,bxs): }
+    case cons(x,xs):
+        switch(b) { case nil: case cons(bx,bxs): }
+        permutation_symm(xs,remove(x,b));
+        if(is_permutation(a,b)) {
+            assert !!is_permutation(xs,remove(x,b));
+            is_perm_cons_remove(b,x);
+            is_perm_transitive(b, cons(x, remove(x,b)), a);
+        } else if(is_permutation(b,a)) {
+            assert remove(x,a) == xs;
+            is_perm_remove(b,a,x);
+            is_perm_mem(b,a,x);
+            assert !!is_permutation(remove(x,b),remove(x,a));
+            assert !!is_permutation(remove(x,b),xs);
+            assert !!is_permutation(xs,remove(x,b));
+            assert !!is_permutation(a,b);
+            assert false;
+        }
+    }
+}
+
+//lemma
+//void permutation_disjoint<t>(list<t> a, list<t> b, list<t> c)
+//    requires !!is_permutation(a,b);
+//    ensures  distinct(append(a,c)) == distinct(append(b,c));
+//{
+//    switch(a) {
+//    case nil: return;
+//    case cons(x,xs):
+//        permutation_length(xs,remove(x,b));
+//    }
+//}
+
+//lemma_auto(is_permutation(append(xs,cons(x,ys)),
+//            append(cons(x,xs),ys)))
+//void permutation_cons_swap<t>(t x, list<t> xs, list<t> ys)
+//    requires distinct(xs) && distinct(ys);
+//    ensures  !!is_permutation(append(xs,cons(x,ys)),
+//            append(cons(x,xs),ys));
+//{
+//    assert append(cons(x,xs),ys) == cons(x,append(xs,ys));
+//    assert remove(x,append(cons(x,xs),ys)) == append(xs,ys);
+//    disjoint_append(cons(x,xs),ys);
+//    assert !distinct(cons(x,xs));
+//    assert !mem(x,xs);
+//    assert remove(x,append(xs,cons(x,ys))) == append(xs,ys);
+//    assert  !!is_permutation(append(xs,cons(x,ys)),
+//            append(cons(x,xs),ys));
+//}
+
+fixpoint int sum(list<int> l) {
+    switch(l) {
+    case nil: return 0;
+    case cons(x,xs): return x + sum(xs);
+    }
+}
+
+lemma void nonneg_sum(list<int> l)
+    requires !!forall(l,(ge_than)(0));
+    ensures  sum(l) >= 0;
+{ LIST_INDUCTION(l,xs,nonneg_sum(xs)) }
+
+lemma void nonneg_filter_sum(list<int> l, fixpoint(int,bool) f)
+    requires !!forall(l,(ge_than)(0));
+    ensures  sum(filter(f,l)) <= sum(l);
+{ LIST_INDUCTION(l,xs,nonneg_filter_sum(xs,f)) }
+
+lemma void forall_filter<t>(list<t> l, fixpoint(t,bool) p,
+        fixpoint(t,bool) f)
+    requires !!forall(l,p);
+    ensures  !!forall(filter(f,l),p);
+{ LIST_INDUCTION(l,xs,forall_filter(xs,p,f)) }
+
+#endif
+

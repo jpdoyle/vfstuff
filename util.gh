@@ -1,0 +1,642 @@
+#ifndef VFUTIL_UTIL_GH
+#define VFUTIL_UTIL_GH
+
+#include <quantifiers.gh>
+#include <listex.gh>
+#include "nats.gh"
+
+#define BEGIN_FORALL(t,v,l,p) if(!forall(l,p)) { \
+    t v = not_forall(l,p);
+
+#define END_FORALL() assert false; }
+
+predicate let<t>(t x; t y) = y == x;
+
+fixpoint bool nonneg(int x) { return x >= 0; }
+
+lemma_auto void let_auto<t>()
+    requires [?f]let<t>(?x,?y);
+    ensures  [ f]let<t>( x, y) &*& y == x;
+{ open let(_,_); }
+
+fixpoint t o<r,s,t>(fixpoint(s,t) f, fixpoint(r,s) g, r x) {
+    return f(g(x));
+}
+
+fixpoint t flip<r,s,t>(fixpoint(r,s,t) f, s y, r x) { return f(x,y); }
+
+fixpoint bool not(bool b) { return !b; }
+
+fixpoint s constf<s,t>(s x, t y) { return x; }
+
+fixpoint list<t> singleton<t>(t x) { return {x}; }
+
+fixpoint t onpairs<r,s,t>(fixpoint(r,s,t) f, pair<r,s> p) {
+    switch(p) {
+    case pair(x,y): return f(x,y);
+    }
+}
+
+fixpoint bool ge_than(int x, int y) { return y >= x; }
+
+fixpoint option<t> nth_of<t>(int n, list<t> l) {
+    switch(l) {
+    case nil: return none;
+    case cons(x,xs):
+        return n == 0 ? some(x)
+            :  n  > 0 ? nth_of(n-1,xs)
+            :           none;
+    }
+}
+
+lemma void index_of_positive<t>(t v, list<t> l)
+    requires true;
+    ensures  index_of(v,l) >= 0;
+{
+    switch(l) { case nil: case cons(x,xs): index_of_positive(v,xs); }
+}
+
+lemma_auto(nth_of(index_of(v,l),l))
+void nth_of_index_of<t>(t v, list<t> l)
+    requires true;
+    ensures  (nth_of(index_of(v,l),l) == some(v))
+        == mem(v,l);
+{
+    switch(l) {
+        case nil:
+        case cons(x,xs):
+            nth_of_index_of(v,xs);
+            if(v == x) {
+                assert index_of(v,l) == 0;
+                assert nth_of(0,l) == some(x);
+            } else {
+                assert index_of(v,xs)+1 == index_of(v,l);
+                index_of_positive(v,xs);
+                assert index_of(v,xs) >= 0;
+                assert nth_of(index_of(v,l),l)
+                    == nth_of(index_of(v,l)-1,xs);
+                assert nth_of(index_of(v,l),l)
+                    == nth_of(index_of(v,xs),xs);
+            }
+    }
+}
+
+//lemma_auto(nth_of(n,drop(m,l)))
+//void nth_of_of_drop<t>(int n, int m, list<t> l)
+//    requires true;
+//    ensures  (nth_of(n,drop(m,l)) == nth_of(n+m,l));
+//{
+//    switch(l) {
+//    case nil:
+//    case cons(x,xs): 
+//    }
+//}
+
+lemma_auto(nth_of(n,l)) void nth_of_bounds<t>(int n, list<t> l)
+    requires true;
+    ensures  (nth_of(n,l) == none) == (l == nil || n < 0 || n >=
+            length(l));
+{
+    switch(l) {
+        case nil:
+        case cons(x,xs):
+            nth_of_bounds(n-1,xs);
+    }
+}
+
+lemma void nth_of_is_nth<t>(int n, list<t> l)
+    requires true;
+    ensures  switch(nth_of(n,l)) {
+        case none: return n < 0 || length(l) <= n;
+        case some(x):
+            return n >= 0 &*& n < length(l) &*& x == nth(n,l);
+    };
+{
+    switch(l) { case nil: case cons(x,xs): nth_of_is_nth(n-1,xs); }
+}
+
+fixpoint option<t> safe_head<t>(list<t> l) {
+    switch(l) {
+    case nil: return none;
+    case cons(x,xs):
+        return some(x);
+    }
+}
+
+
+fixpoint option<pair<k,v> > assoc_of<k,v>(k key, list<pair<k,v> > l) {
+    switch(l) {
+    case nil: return none;
+    case cons(x,xs):
+        return fst(x) == key ? some(x)
+            : assoc_of(key,xs);
+    }
+}
+
+fixpoint option<v> lookup_of<k,v>(k key, list<pair<k,v> > l) {
+    switch(l) {
+    case nil: return none;
+    case cons(x,xs):
+        return fst(x) == key ? some(snd(x))
+            : lookup_of(key,xs);
+    }
+}
+
+fixpoint list<pair<k,v> > take_until<k,v>(k key, list<pair<k,v> > l) {
+    switch(l) {
+    case nil: return nil;
+    case cons(x,xs):
+        return fst(x) == key ? {}
+            : cons(x,take_until(key,xs));
+    }
+}
+
+fixpoint bool equals<t>(t x, t y) { return x == y; }
+
+lemma void note(bool x)
+    requires x == true;
+    ensures  x == true;
+{}
+
+lemma void note_eq<t>(t x, t y)
+    requires x == y;
+    ensures  x == y;
+{}
+
+lemma void forall_append_exact<t>(list<t> a, list<t> b, fixpoint(t,bool) p);
+    requires true;
+    ensures  forall(append(a,b),p) == (forall(a,p) && forall(b,p));
+
+lemma_auto(mem(x,reverse(l))) void reverse_mem<t>(list<t> l, t x);
+    requires true;
+    ensures  mem(x,l) == mem(x,reverse(l));
+
+lemma void forall_reverse<t>(list<t> l, fixpoint(t,bool) p);
+    requires true;
+    ensures  forall(l,p) == forall(reverse(l),p);
+
+#if 0
+
+#define EMPTY()
+#define DEFER(m) m
+#define NOOP(x)
+#define APP(m,x) m(x)
+
+#define SIMPLEST_LIST_(l,NIL_BODY,x,xs,CONS_BODY) switch(l) { case nil: NIL_BODY case cons(x,xs): CONS_BODY }
+#define SIMPLE_LIST_(l,X_OP,x,XS_OP,xs) switch(l) { case nil: case cons(x,xs): X_OP(x) XS_OP(xs) }
+#define SIMPLE_LIST(l,X_OP,XS_OP) SIMPLE_LIST_(l,X_OP,l##__x,XS_OP,l##__xs)
+#define TRIVIAL_LIST(l) SIMPLE_LIST(l,NOOP,NOOP)
+
+#define SIMPLEST_PAIR_(p,x,X_BODY,y,Y_BODY) switch(p) { case pair(x,y): { X_BODY Y_BODY } }
+#define SIMPLE_PAIR_(p,X_OP,x,Y_OP,y) switch(p) { case pair(x,y): X_OP(x) Y_OP(y) }
+#define SIMPLE_PAIR(p,X_OP,Y_OP) SIMPLE_PAIR_(p,X_OP,p##__x,Y_OP,p##__y)
+#define TRIVIAL_PAIR(p) SIMPLE_PAIR(p,NOOP,NOOP)
+
+fixpoint t id<t>(t x) { return x; }
+
+inductive either<s,t> = left(s) | right(t);
+
+#define SIMPLEST_EITHER_(e,l,L_BODY,r,R_BODY) switch(e) { case left(l): { L_BODY } case right(r): { R_BODY } }
+#define SIMPLE_EITHER_(e,L_OP,l,R_OP,r) switch(e) { case left(l): { L_OP(l) } case right(r): { R_OP(r) } }
+#define SIMPLE_EITHER(e,L_OP,R_OP) SIMPLE_EITHER_(e,L_OP,e##__x,R_OP,e##__y)
+#define TRIVIAL_EITHER(e) SIMPLE_EITHER(e,NOOP,NOOP)
+
+#else
+
+#define NOOP(x)
+
+#define SIMPLE_LIST_(l,X_OP,x,XS_OP,xs) switch(l) { case nil: case cons(x,xs): X_OP(x) XS_OP(xs) }
+#define SIMPLE_LIST(l,X_OP,XS_OP) SIMPLE_LIST_(l,X_OP,l##__x,XS_OP,l##__xs)
+#define TRIVIAL_LIST(l) SIMPLE_LIST(l,NOOP,NOOP)
+
+#define SIMPLE_PAIR_(p,X_OP,x,Y_OP,y) switch(p) { case pair(x,y): X_OP(x) Y_OP(y) }
+#define SIMPLE_PAIR(p,X_OP,Y_OP) SIMPLE_PAIR_(p,X_OP,p##__x,Y_OP,p##__y)
+#define TRIVIAL_PAIR(p) SIMPLE_PAIR(p,NOOP,NOOP)
+
+fixpoint t id<t>(t x) { return x; }
+
+inductive either<s,t> = left(s) | right(t);
+
+#define SIMPLE_OPTION_(e,SOME_OP,x) switch(e) { case none: case some(x): SOME_OP(r) }
+#define SIMPLE_OPTION(e,SOME_OP) SIMPLE_OPTION_(e,SOME_OP,e##__x)
+#define TRIVIAL_OPTION(e) SIMPLE_OPTION(e,NOOP)
+
+#define SIMPLE_EITHER_(e,L_OP,l,R_OP,r) switch(e) { case left(l): L_OP(l) case right(r): R_OP(r) }
+#define SIMPLE_EITHER(e,L_OP,R_OP) SIMPLE_EITHER_(e,L_OP,e##__x,R_OP,e##__y)
+#define TRIVIAL_EITHER(e) SIMPLE_EITHER(e,NOOP,NOOP)
+
+#define SIMPLE_NAT_(n,PRED_OP,m) switch(n) { case zero: case succ(m): PRED_OP(m) }
+#define SIMPLE_NAT(n,PRED_OP) SIMPLE_NAT_(n,PRED_OP,n##__m)
+#define TRIVIAL_NAT(n) SIMPLE_NAT(n,NOOP)
+
+#endif
+
+#define TRIVIAL_LIST2(l) switch(l) { case nil: case cons(l##_x,l##_xs): TRIVIAL_LIST(l##_xs) }
+#define LIST_INDUCTION(l,xs,step) switch(l) { case nil: \
+    case cons(l##_x,xs): step; }
+#define NAT_INDUCTION(n,n0,step) switch(n) { case zero: \
+    case succ(n0): step; }
+
+//lemma_auto(some(x) == some(y))
+lemma
+void option_eq<t>(t x, t y)
+    requires true;
+    ensures  (some(x) == some(y)) == (x == y);
+{
+    option<t> ox = some(x);
+    option<t> oy = some(y);
+    TRIVIAL_OPTION(ox)
+    TRIVIAL_OPTION(oy)
+}
+
+fixpoint t option_into<s,t>(t noneVal, fixpoint(s,t) f, option<s> o) {
+    switch(o) {
+    case none: return noneVal;
+    case some(x): return f(x);
+    }
+}
+
+fixpoint option<t> opmap<s,t>(fixpoint(s,t) f, option<s> op) {
+    return option_into(none,(o)(some,f),op);
+}
+
+fixpoint option<t> opstep<s,t>(fixpoint(s,option<t>) f, option<s> o) {
+    return option_into(none,f,o);
+}
+
+fixpoint list<t> oplist<t>(option<t> o) {
+    switch(o) {
+    case none: return nil;
+    case some(x): return {x};
+    }
+}
+
+lemma_auto(assoc_of(key,l)) void assoc_lookup_of<k,v>(k key,
+            list<pair<k,v> > l);
+    requires true;
+    ensures  assoc_of(key,l) == opmap((pair)(key),lookup_of(key,l));
+
+fixpoint bool disjoint<t>(list<t> a, list<t> b) {
+    return forall(a,(notf)((flip)(mem,b)));
+}
+
+lemma void disjoint_append<t>(list<t> a, list<t> b);
+    requires true;
+    ensures  distinct(append(a,b)) == (distinct(a) && distinct(b) && disjoint(a,b));
+
+lemma void disjoint_with_append<t>(list<t> a, list<t> b, list<t> c);
+    requires true;
+    ensures  disjoint(a,append(b,c)) == (disjoint(a,b) && disjoint(a,c));
+
+lemma_auto(disjoint(a,b)) void disjoint_symm<t>(list<t> a, list<t> b);
+    requires true;
+    ensures  disjoint(a,b) == disjoint(b,a);
+
+fixpoint bool is_right<s,t>(either<s,t> e) {
+    switch(e) {
+    case  left(l): return false;
+    case right(r): return true;
+    }
+}
+
+fixpoint bool is_lefts<s,t>(either<s,t> e) {
+    switch(e) {
+    case  left(l): return true;
+    case right(r): return false;
+    }
+}
+
+fixpoint either<r,t> either_rmap<r,s,t>(fixpoint(s,t) f, either<r,s> e) {
+    switch(e) {
+    case left(l): return left(l);
+    case right(r): return right(f(r));
+    }
+}
+
+fixpoint either<s,t> either_lmap<r,s,t>(fixpoint(r,s) f, either<r,t> e) {
+    switch(e) {
+    case left(l): return left(f(l));
+    case right(r): return right(r);
+    }
+}
+
+fixpoint either<r,s> either_bimap<p,q,r,s>(fixpoint(p,r) lf,
+        fixpoint(q,s) rf, either<p,q> e) {
+    switch(e) {
+    case left(l): return left(lf(l));
+    case right(r): return right(rf(r));
+    }
+}
+
+fixpoint t either_into<r,s,t>(fixpoint(r,t) lf, fixpoint(s,t) rf,
+        either<r,s> e) {
+    switch(e) {
+    case left(l): return lf(l);
+    case right(r): return rf(r);
+    }
+}
+
+fixpoint either<r,t> either_step<r,s,t>(fixpoint(s,either<r,t>) f,
+        either<r,s> e) {
+    return either_into(left,f,e);
+}
+
+fixpoint either<r,t> either_opstep<r,s,t>(r noneVal,
+        fixpoint(s,option<t>) f, either<r,s> e) {
+    return either_step(
+        (o)((option_into)(left(noneVal),right),f),e);
+}
+
+lemma void either_into_factor<r,s,t>(fixpoint(r,t) l, fixpoint(s,t) r,
+        either<r,s> e)
+    requires true;
+    ensures  (o)(either_unify,(either_bimap)(l,r),e)
+        == either_into(l,r,e);
+{ TRIVIAL_EITHER(e) }
+
+lemma void either_bifunctor<p,q,r, s,t,w>(
+        fixpoint(q,r) lf, fixpoint(p,q) lg,
+        fixpoint(t,w) rf, fixpoint(s,t) rg,
+        either<s,p> e1, either<p,s> e2);
+    requires true;
+    ensures emp
+
+        &*& either_rmap(id,e1) == e1
+        &*& either_rmap(id,e2) == e2
+        &*& either_lmap(id,e1) == e1
+        &*& either_lmap(id,e2) == e2
+        &*& either_bimap(id,id,e1) == e1
+        &*& either_bimap(id,id,e2) == e2
+
+        &*& either_rmap(lf,either_rmap(lg,e1))
+                == either_rmap((o)(lf,lg),e1)
+        &*& either_lmap(lf,either_lmap(lg,e2))
+                == either_lmap((o)(lf,lg),e2)
+
+        &*& either_lmap(rf,either_lmap(rg,e1))
+                == either_lmap((o)(rf,rg),e1)
+        &*& either_rmap(rf,either_rmap(rg,e2))
+                == either_rmap((o)(rf,rg),e2)
+
+        &*& either_bimap(rf,lf,either_bimap(rg,lg,e1))
+                == either_bimap((o)(rf,rg),(o)(lf,lg),e1)
+        &*& either_bimap(lf,rf,either_bimap(lg,rg,e2))
+                == either_bimap((o)(lf,lg),(o)(rf,rg),e2)
+        ;
+
+//fixpoint either<r,t> either_step<r,s,t>(fixpoint(s,either<r,t>) f,
+//        either<r,s> e) {
+//    switch(e) {
+//    case left(l): return left(l);
+//    case right(r): return f(r);
+//    }
+//}
+
+fixpoint t either_unify<t>(either<t,t> v) {
+    switch(v) {
+    case left(l): return l;
+    case right(r): return r;
+    }
+}
+
+fixpoint pair<r,t> pair_rmap<r,s,t>(fixpoint(s,t) f, pair<r,s> e) {
+    switch(e) {
+    case pair(l,r): return pair(l,f(r));
+    }
+}
+
+fixpoint pair<s,t> pair_lmap<r,s,t>(fixpoint(r,s) f, pair<r,t> e) {
+    switch(e) {
+    case pair(l,r): return pair(f(l),r);
+    }
+}
+
+fixpoint pair<r,s> pair_bimap<p,q,r,s>(fixpoint(p,r) lf,
+        fixpoint(q,s) rf, pair<p,q> e) {
+    switch(e) {
+    case pair(l,r): return pair(lf(l),rf(r));
+    }
+}
+
+lemma void pair_bifunctor<p,q,r, s,t,w>(
+        fixpoint(q,r) lf, fixpoint(p,q) lg,
+        fixpoint(t,w) rf, fixpoint(s,t) rg,
+        pair<s,p> e1, pair<p,s> e2);
+    requires true;
+    ensures emp
+
+        &*& pair_rmap(id,e1) == e1
+        &*& pair_rmap(id,e2) == e2
+        &*& pair_lmap(id,e1) == e1
+        &*& pair_lmap(id,e2) == e2
+        &*& pair_bimap(id,id,e1) == e1
+        &*& pair_bimap(id,id,e2) == e2
+
+        &*& pair_rmap(lf,pair_rmap(lg,e1))
+                == pair_rmap((o)(lf,lg),e1)
+        &*& pair_lmap(lf,pair_lmap(lg,e2))
+                == pair_lmap((o)(lf,lg),e2)
+
+        &*& pair_lmap(rf,pair_lmap(rg,e1))
+                == pair_lmap((o)(rf,rg),e1)
+        &*& pair_rmap(rf,pair_rmap(rg,e2))
+                == pair_rmap((o)(rf,rg),e2)
+
+        &*& pair_bimap(rf,lf,pair_bimap(rg,lg,e1))
+                == pair_bimap((o)(rf,rg),(o)(lf,lg),e1)
+        &*& pair_bimap(lf,rf,pair_bimap(lg,rg,e2))
+                == pair_bimap((o)(lf,lg),(o)(rf,rg),e2)
+        ;
+
+fixpoint int mul(int x, int y) { return x*y; }
+
+lemma void as_mul(int x, int y)
+    requires true;
+    ensures  mul(x,y) == x*y;
+{}
+
+// mul_mono_r/l from verifast's test/longlong.c, renamed because a later
+// version of verifast has these in its prelude
+lemma void my_mul_mono_l(int a1, int a2, int b)
+    requires a1 <= a2 &*& 0 <= b;
+    ensures a1 * b <= a2 * b;
+{
+    for (int i = 0; i < b; i++)
+        invariant i <= b &*& a1 * i <= a2 * i;
+        decreases b - i;
+    {}
+}
+
+lemma void my_mul_mono_r(int a, int b1, int b2)
+    requires 0 <= a &*& b1 <= b2;
+    ensures a * b1 <= a * b2;
+{
+    for (int i = 0; i < a; i++)
+        invariant i <= a &*& i * b1 <= i * b2;
+        decreases a - i;
+    {}
+}
+
+lemma void my_mul_strict_mono_l(int a1, int a2, int b)
+    requires a1 < a2 &*& 0 < b;
+    ensures a1 * b < a2 * b;
+{
+    for (int i = 1; i < b; i++)
+        invariant i <= b &*& a1 * i < a2 * i;
+        decreases b - i;
+    {}
+}
+
+lemma void my_mul_strict_mono_r(int a, int b1, int b2)
+    requires 0 < a &*& b1 < b2;
+    ensures a * b1 < a * b2;
+{
+    for (int i = 1; i < a; i++)
+        invariant i <= a &*& i * b1 < i * b2;
+        decreases a - i;
+    {}
+}
+
+lemma void mul_abs_commute(int x, int y)
+    requires true;
+    ensures  abs(x)*abs(y) == abs(x*y);
+{
+    if(y >= 0) {
+        assert abs(y) == y;
+        if(x >= 0) {
+            assert abs(x) == x;
+            my_mul_mono_r(x,0,y);
+            assert x*y >= 0; assert abs(x*y) == x*y;
+            assert abs(x*y) == abs(x)*abs(y);
+
+        } else {
+            my_mul_mono_l(x,-1,y);
+            assert x*y <= -y;
+            assert x*y <= 0;
+            assert abs(x*y) == -(x*y);
+            assert abs(x) == -x;
+            as_mul(-x,y);
+            assert abs(x*y) == (-x)*y;
+            assert abs(x*y) == abs(x)*y;
+            assert abs(x*y) == abs(x)*abs(y);
+        }
+
+    } else {
+        assert y < 0;
+        assert abs(y) == -y;
+        assert y <= -1;
+
+        if(x >= 0) {
+            my_mul_mono_r(x,y,-1);
+            assert x*y <= -x;
+            assert x*y <= 0;
+            assert abs(x*y) == -(x*y);
+            assert abs(x*y) == x*(-y);
+            as_mul(x,-y);
+            assert abs(x*y) == x*abs(y);
+
+            assert abs(x*y) == abs(x)*abs(y);
+
+        } else {
+            assert x < 0;
+            assert abs(x) == -x;
+            assert x*y == (-x)*(-y);
+            my_mul_mono_l(1,-x,-y);
+            assert -y <= (-x)*(-y);
+            assert abs(x*y) == x*y;
+            as_mul(-x,-y);
+
+            assert abs(x*y) == abs(x)*abs(y);
+        }
+
+
+    }
+}
+
+//lemma_auto(abs(mul(x,y))) void mul_abs_commute_auto(int x, int y)
+//    requires true;
+//    ensures  mul(abs(x),abs(y)) == abs(mul(x,y));
+//{
+//    mul_abs_commute(x,y);
+//    //as_mul(x,y);
+//    //as_mul(abs(x),abs(y));
+//}
+
+lemma void zero_mul_unique(int x, int y);
+    requires y != 0;
+    ensures  (x*y == 0) == (x == 0);
+
+lemma void division_zero_unique(int d, int q, int r);
+    requires d != 0 &*& abs(r) < abs(d) &*& 0 == d*q + r;
+    ensures  q == (0/d) &*& q == 0 &*& r == (0%d) &*& r == 0;
+
+lemma void division_unique(int D, int d, int q, int r);
+    requires d != 0 &*& abs(r) < abs(d) &*& abs(d*q) <= abs(D)
+        &*&   D == d*q + r;
+    ensures  q == (D/d) &*& r == (D%d);
+
+lemma void div_monotonic_numerator(int x, int y, int d);
+    requires d > 0 &*& x >= 0 &*& y >= x;
+    ensures  x/d <= y/d;
+
+lemma void into_numerator(int x, int y, int d);
+    requires d > 0 &*& x >= 0 &*& y >= 0;
+    ensures  x + (y/d) == (d*x + y)/d;
+
+lemma void mod_sign(int x, int d);
+    requires d > 0;
+    ensures  x >= 0 ? x%d >= 0 : x%d <= 0;
+
+lemma void div_sign(int x, int d);
+    requires d > 0;
+    ensures  x >= 0 ? x/d >= 0 : x/d <= 0;
+
+lemma void mod_plus(int x, int y, int d);
+    requires d > 0 &*& x >= 0 &*& y >= 0;
+    ensures  (x%d + y)%d == (x+y)%d;
+
+fixpoint bool bounded(int min, int max, int x) {
+    return x >= min && x <= max;
+}
+
+lemma_auto(bounded(l,h,x)) void bounded_cases(int l, int h, int x);
+    requires bounded(l,h,x) && l <= h;
+    ensures  x == l || bounded(l+1,h,x);
+
+lemma_auto(bounded(l,l,x)) void bounded_base_case(int l, int x)
+    requires true;
+    ensures  (x == l) == bounded(l,l,x);
+{ }
+
+predicate malloced_string(char* s; list<char> cs) =
+        string(s,cs) &*& malloc_block(s,?numbytes)
+    &*& numbytes == length(cs) + 1;
+
+predicate malloced_strings(char* * base, int n;
+    list<list<char> > strs) =
+        base != 0 &*& n >= 0 &*&
+        (n == 0
+        ? strs == {}
+        : n > 0 &*& pointer(base, ?ptr)
+            &*& malloced_string(ptr,?first)
+            &*& malloced_strings(base+1,n-1,?rest)
+            &*& strs == cons(first,rest)
+        );
+
+lemma_auto void malloced_strings_public()
+    requires [?f]malloced_strings(?base,?n,?strs);
+    ensures  [ f]malloced_strings( base, n, strs)
+        &*&  n >= 0
+        &*&  base != 0
+        &*&  length(strs) == n
+        ;
+{
+    open [ f]malloced_strings( base, n, strs);
+    if(n != 0) {
+        malloced_strings_public();
+    }
+}
+
+
+#endif
+
