@@ -353,9 +353,9 @@ int binsearch_tuerk(int x, int* A, int n)
                   &*& mid_seg == drop(lower,take(maxind,elems))
                   &*& mem(x,elems) == mem(x,mid_seg)
                   &*& nth_of(0,mid_seg) == nth_of(lower,elems)
-                  &*& (length(mid_seg) == 1
-                    ? (nth_of(0,mid_seg) == some(x)) == mem(x,elems)
-                    : emp)
+                  &*& (length(mid_seg) != 1 ||
+                       (nth_of(0,mid_seg) == some(x)) == mem(x,elems)
+                      )
                   ;
           @*/
         /*@ ensures [f]A[old_lower..maxind] |-> mid_seg
@@ -363,19 +363,20 @@ int binsearch_tuerk(int x, int* A, int n)
                   &*& old_lower <= lower &*& lower <= old_upper
                   &*& nth_of(lower-old_lower,mid_seg)
                     == nth_of(lower,elems)
-                  &*& mem(x,elems)
-                  ?   nth_of(lower,elems) == some(x)
-                  :   nth_of(lower,elems) != some(x)
+                  &*& mem(x,elems) == (nth_of(lower,elems) == some(x))
                   ;
           @*/
         //@ decreases upper-lower;
     {
         //@ note(maxind <= n);
         //@ open ints(A+lower,_,_);
+        /*@ int newmaxind = maxind; @*/
 
         if(A[lower] == x) {
             upper = lower;
             /*@ {
+                newmaxind = upper+1;
+                assert upper != n;
                 assert maxind == length(take(maxind,elems));
                 assert lower < maxind;
                 assert lower < length(take(maxind,elems));
@@ -485,7 +486,7 @@ int binsearch_tuerk(int x, int* A, int n)
             //@ if(lower != mid) { ints_join(A+lower); }
 
             /*@ {
-                int newmaxind = upper == n ? n : upper+1;
+                newmaxind = upper == n ? n : upper+1;
                 assert [f]A[lower..newmaxind] |-> ?newmid;
 
                 if(newmid != drop(lower,take(newmaxind,elems))) {
@@ -546,19 +547,17 @@ int binsearch_tuerk(int x, int* A, int n)
             } @*/
         }
 
-        //@ int newmaxind = upper == n ? n : upper+1;
-        /*@ if(newmaxind - lower <= 1) {
-            assert [f]A[lower..newmaxind] |-> ?newmid;
-            if(!((nth_of(0,newmid) == some(x)) == mem(x,elems))) {
-                switch(nth_of(0,newmid)) {
-                case none: assert false;
-                case some(e):
-                    option_eq(e,x);
-                    TRIVIAL_LIST2(newmid)
-                    assert false;
-                }
+        /*@ assert [f]A[lower..newmaxind] |-> ?newmid; @*/
+        /*@ if(newmaxind - lower <= 1 &&
+               !((nth_of(0,newmid) == some(x)) == mem(x,elems))) {
+            switch(nth_of(0,newmid)) {
+            case none: assert false;
+            case some(e):
+                option_eq(e,x);
+                TRIVIAL_LIST2(newmid)
                 assert false;
             }
+            assert false;
         } @*/
 
         //@ recursive_call();
@@ -575,7 +574,6 @@ int binsearch_tuerk(int x, int* A, int n)
             assert nth_of(lower-old_lower,mid_seg)
                 == nth_of(lower,elems);
         } @*/
-
     }
 
     //@ assert lower == upper;

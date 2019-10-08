@@ -1,0 +1,418 @@
+#ifndef VFUTIL_NUMTHEO_GH
+#define VFUTIL_NUMTHEO_GH
+
+#include "util.gh"
+
+fixpoint int product(list<int> l) {
+    switch(l) {
+    case nil:        return 1;
+    case cons(x,xs): return x*product(xs);
+    }
+}
+
+fixpoint bool nonfactor(int x, int y) {
+    return x > 0 && y > 0 && x%y != 0 && y%x != 0; }
+
+lemma_auto(nonfactor(x,x)) void nonfactor_self(int x)
+    requires true;
+    ensures  !nonfactor(x,x);
+{ if(x != 0) { division_unique(x,x,1,0); } }
+
+lemma_auto(nonfactor(x,y)) void nonfactor_symm(int x, int y)
+    requires true;
+    ensures  nonfactor(x,y) == nonfactor(y,x);
+{}
+
+lemma_auto(nonfactor(x,y)) void nonfactor_def(int x, int y)
+    requires x >= y && y > 0;
+    ensures  nonfactor(x,y) == (x%y != 0);
+{
+    if(x != y) {
+        division_unique(y,x,0,y);
+    }
+}
+
+fixpoint bool is_prime_fueled(int x, nat f) {
+    switch(f) {
+    case zero: return true;
+    case succ(f0):
+        return (int_of_nat(f) >= x ? is_prime_fueled(x,f0)
+                : ((x-int_of_nat(f) <= 1) || ((x%(x-int_of_nat(f)) !=
+                        0))) &&
+                    is_prime_fueled(x,f0));
+    }
+}
+
+lemma void is_prime_fueled_mono(int x, nat n, nat m)
+    requires int_of_nat(n) >= int_of_nat(m);
+    ensures  !(    is_prime_fueled(x,n)
+               && !is_prime_fueled(x,m));
+{
+    switch(n) {
+    case zero:
+    case succ(n0):
+        if(n == m) { return; }
+        assert int_of_nat(n0) + 1 == int_of_nat(n);
+        if(int_of_nat(n) == int_of_nat(m)) {
+            nat_of_int_of_nat(n);
+            nat_of_int_of_nat(m);
+            assert false;
+        }
+        assert int_of_nat(n) > int_of_nat(m);
+        is_prime_fueled_mono(x,n0,m);
+    }
+}
+
+fixpoint bool is_prime(int x) {
+    return x > 1 && is_prime_fueled(x,nat_of_int(x));
+}
+
+fixpoint list<int> primes_below(nat n) {
+    switch(n) {
+    case zero: return {};
+    case succ(n0):
+        return (is_prime(int_of_nat(n))
+                ? cons(int_of_nat(n),primes_below(n0))
+                : primes_below(n0));
+    }
+}
+
+lemma void primes_below_correct(nat n)
+    requires true;
+    ensures  !!distinct(primes_below(n))
+        &*&  !!forall(primes_below(n), is_prime)
+        &*&  !!forall(primes_below(n), (bounded)(2,int_of_nat(n)))
+        ;
+{
+    switch(n) {
+    case zero:
+    case succ(n0):
+        primes_below_correct(n0);
+        if(mem(int_of_nat(n),primes_below(n0))) {
+            forall_elim(primes_below(n0), (bounded)(2,int_of_nat(n0)),
+                    int_of_nat(n));
+            assert false;
+        }
+        if(!forall(primes_below(n), (bounded)(2,int_of_nat(n)))) {
+            int cx = not_forall(primes_below(n),
+                    (bounded)(2,int_of_nat(n)));
+            if(cx != int_of_nat(n)) {
+                forall_elim(primes_below(n0), (bounded)(2,int_of_nat(n0)),
+                        cx);
+            }
+            assert false;
+        }
+    }
+}
+
+lemma_auto(mem(x,primes_below(n)))
+void primes_below_correct_auto(nat n,int x)
+    requires true;
+    ensures  mem(x,primes_below(n))
+        ==   (is_prime(x) && bounded(2,int_of_nat(n),x));
+{
+    switch(n) {
+    case zero: return;
+    case succ(n0):
+        primes_below_correct_auto(n0,x);
+    }
+}
+
+lemma void primes_below_complete(int p, nat n)
+    requires !!is_prime(p) &*& p <= int_of_nat(n);
+    ensures  !!mem(p,primes_below(n));
+{
+    switch(n) {
+    case zero:
+    case succ(n0):
+        if(p != int_of_nat(n)) {
+            primes_below_complete(p,n0);
+        }
+    }
+}
+
+lemma void shift_primes_below_range(int bound, nat n)
+    requires true;
+    ensures  (
+        (bound-1 > int_of_nat(n))
+        ? filter((ge_than)(bound-1), primes_below(n)) == nil
+        : (is_prime(bound-1))
+        ? filter((ge_than)(bound-1), primes_below(n))
+            == append(
+                filter((ge_than)(bound), primes_below(n)),
+                ({bound-1}))
+        : filter((ge_than)(bound-1), primes_below(n))
+            == filter((ge_than)(bound), primes_below(n))
+        );
+{
+    switch(n) {
+    case zero:
+    case succ(n0):
+        shift_primes_below_range(bound+1,n0);
+        shift_primes_below_range(bound,n0);
+    }
+}
+
+fixpoint option<int> first_factor(list<int> l, int x) {
+    switch(l) {
+    case nil: return none;
+    case cons(v,vs):
+        return (x%v == 0 ? some(v) : first_factor(vs,x));
+    }
+}
+
+lemma void prime_no_factors(int x, int y)
+    requires !!is_prime(x) &*& y > 1 &*& y < x;
+    ensures  x%y != 0;
+{
+    if(x-y == 1) {
+        division_unique(x,y,1,1);
+        return;
+    }
+
+    nat f = zero;
+
+    while(int_of_nat(f) < (x-y))
+        invariant !!is_prime_fueled(x,f)
+            &*&   int_of_nat(f) <= (x-y)
+            ;
+        decreases (x-y) - int_of_nat(f);
+    {
+        nat x_f = nat_of_int(x);
+        while(int_of_nat(x_f) > int_of_nat(succ(f)))
+            invariant int_of_nat(x_f) >= int_of_nat(succ(f))
+                &*&   !!is_prime_fueled(x,x_f);
+            decreases int_of_nat(x_f);
+        {
+            switch(x_f) {
+            case zero: assert false;
+            case succ(x_f0):
+                assert !!is_prime_fueled(x,x_f);
+                assert !!is_prime_fueled(x,x_f0);
+                x_f = x_f0;
+            }
+        }
+
+        //int_of_nat_of_int(int_of_nat(x_f));
+        nat_of_int_of_nat(x_f);
+        //int_of_nat_of_int(int_of_nat(f));
+        nat_of_int_of_nat(f);
+        assert int_of_nat(x_f) == int_of_nat(succ(f));
+        assert x_f == succ(f);
+
+        f = succ(f);
+    }
+
+    switch(f) {
+        case zero: assert false;
+        case succ(f0):
+    }
+
+}
+
+lemma int findFactor(int x)
+    requires x > 1 &*& !is_prime(x);
+    ensures  !!is_prime(result) &*& x%result == 0 &*& result > 1
+        &*&  result < x;
+{
+    int factor = x;
+    division_unique(x,x,1,0);
+    while(!is_prime(factor))
+        invariant x%factor == 0 &*& factor > 1 &*& factor <= x;
+        decreases factor;
+    {
+        if(factor <= 2) { assert false; }
+        if(!is_prime_fueled(factor,N1)) {
+            division_unique(factor,factor-1,1,1);
+            assert false;
+        }
+        int y;
+        for(y = factor-1; factor%y != 0; --y)
+            invariant y > 1 &*& y < factor
+                &*&   (factor%y != 0)
+                        == is_prime_fueled(factor,
+                                nat_of_int(factor-y))
+                &*&   !!is_prime_fueled(factor,
+                        nat_of_int(factor-(y+1)))
+                ;
+            decreases y;
+        {
+            assert !!is_prime_fueled(factor,nat_of_int(factor-y));
+            assert succ(nat_of_int(factor-y)) ==
+                nat_of_int(factor- (y-1));
+            if(y == 2) {
+                assert !is_prime_fueled(factor,nat_of_int(factor));
+                assert succ(nat_of_int(factor-1)) ==
+                    nat_of_int(factor);
+                note( !is_prime_fueled(factor,nat_of_int(factor-1)));
+                assert int_of_nat(nat_of_int(factor-1)) == factor-1;
+                assert ((factor-int_of_nat(nat_of_int(factor-1))) <=
+                        1)
+                    || (factor%(factor
+                                -int_of_nat(nat_of_int(factor-1)))
+                            != 0);
+                note_eq(succ(nat_of_int(factor-2)),
+                    nat_of_int(factor-1));
+                assert false;
+            }
+        }
+
+        div_rem(factor,y);
+        div_rem(x,factor);
+        assert factor == y*(factor/y);
+        assert x == factor*(x/factor);
+        assert x == y*(factor/y)*(x/factor);
+        mul_assoc(y,factor/y,x/factor);
+        assert x == y*((factor/y)*(x/factor));
+        division_unique(x,y,(factor/y)*(x/factor),0);
+
+
+        factor = y;
+    }
+    return factor;
+}
+
+fixpoint bool prime_up_to(nat n, int x) {
+    return forall(primes_below(n),(nonfactor)(x));
+}
+
+lemma void prime_test(int x)
+    requires x > 1;
+    ensures  is_prime(x)
+        ==   prime_up_to(nat_of_int(x-1), x);
+{
+    primes_below_correct(nat_of_int(x-1));
+    if(is_prime(x) && !forall(primes_below(nat_of_int(x-1)),
+                              (nonfactor)(x))) {
+        int cx = not_forall(primes_below(nat_of_int(x-1)),
+                (nonfactor)(x));
+        forall_elim(primes_below(nat_of_int(x-1)), (bounded)(2,x-1), cx);
+        prime_no_factors(x,cx);
+        assert x > 0 && cx > 0;
+        assert x%cx != 0;
+        division_unique(cx,x,0,cx);
+        assert false;
+    }
+    if(!is_prime(x) && forall(primes_below(nat_of_int(x-1)),
+                              (nonfactor)(x))) {
+        int p = findFactor(x);
+        primes_below_complete(p,nat_of_int(x-1));
+        forall_elim(primes_below(nat_of_int(x-1)), (nonfactor)(x), p);
+        assert false;
+    }
+}
+
+lemma void prime_up_to_no_factors(nat n, int x, int y)
+    requires !!prime_up_to(n,x) &*& y > 1 &*& y <= int_of_nat(n);
+    ensures  x%y != 0;
+{
+    switch(n) {
+    case zero: assert false;
+    case succ(n0):
+        if(x%y == 0) {
+            if(y != int_of_nat(n)) {
+                prime_up_to_no_factors(n0,x,y);
+                assert false;
+            } else if(is_prime(y)) {
+                assert false;
+            } else {
+                prime_test(y);
+                assert !prime_up_to(nat_of_int(y-1),y);
+                int cx = not_forall(primes_below(nat_of_int(y-1)),
+                        (nonfactor)(y));
+                div_rem(x,y);
+                div_rem(y,cx);
+                assert y%cx == 0;
+                assert !!mem(cx,primes_below(n0));
+                assert y == cx*(y/cx);
+                assert x == y*(x/y);
+                mul_assoc(cx,y/cx,x/y);
+                assert x == cx*((y/cx)*(x/y));
+                division_unique(x,cx,(y/cx)*(x/y),0);
+                prime_up_to_no_factors(n0,x,cx);
+                assert false;
+            }
+            assert false;
+        }
+    }
+}
+
+lemma void prime_test_sqrt(int x, nat n)
+    requires x > 1 &*& int_of_nat(n) < x
+        &*&  int_of_nat(n)*int_of_nat(n) >= x;
+    ensures  is_prime(x) == prime_up_to(n, x);
+{
+    prime_test(x);
+    if(is_prime(x) && !prime_up_to(n, x)) {
+        int cx = not_forall(primes_below(n),(nonfactor)(x));
+        prime_up_to_no_factors(nat_of_int(x-1),x,cx);
+        assert false;
+    }
+    if(!is_prime(x) && prime_up_to(n, x)) {
+        int cx = not_forall(primes_below(nat_of_int(x-1)),
+                            (nonfactor)(x));
+        div_rem(x,cx);
+        assert int_of_nat(nat_of_int(x-1)) == x-1;
+        div_sign(x,cx);
+        if(cx*cx > x) {
+            if(x/cx > cx) {
+                my_mul_mono_r(cx,cx,x/cx);
+                assert false;
+            }
+            my_mul_strict_mono_l(x/cx,cx,x/cx);
+            assert (x/cx)*(x/cx) < x;
+            division_unique(x,x/cx,cx,0);
+            if(x/cx <= 0) {
+                assert false;
+            }
+            if(x/cx == 1) {
+                assert cx == x;
+                assert false;
+            }
+
+            cx = x/cx;
+        }
+        assert cx*cx <= x;
+        if(cx > int_of_nat(n)) {
+            my_mul_strict_mono_l(int_of_nat(n),cx,int_of_nat(n));
+            my_mul_strict_mono_r(cx,int_of_nat(n),cx);
+            assert false;
+        }
+        assert cx <= int_of_nat(n);
+        assert x%cx == 0;
+
+        prime_up_to_no_factors(n,x,cx);
+        assert false;
+    }
+}
+
+lemma void prime_up_to_composite(nat n, int x)
+    requires x > 1 &*& !!prime_up_to(n,x)
+        &*&  !is_prime(int_of_nat(succ(n)))
+        &*&  int_of_nat(succ(n)) < x
+        ;
+    ensures  !!prime_up_to(succ(n),x);
+{}
+
+
+//lemma void prime_no_factors(int x, int y)
+//    requires !!is_prime(x) &*& y > 1 &*& y < x;
+//    ensures  x%y != 0;
+//{
+//    nat f = nat_of_int(x);
+//
+//    while(int_of_nat(f) > y)
+//        invariant is_prime_fueled(x,f)
+//            &*&   int_of_nat(f) >= y
+//            ;
+//        decreases int_of_nat(f) - y;
+//    {
+//        switch(f) {
+//        case zero:     assert false;
+//        case succ(f0): f = f0;
+//        }
+//    }
+//}
+
+#endif
+
