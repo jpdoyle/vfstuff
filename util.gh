@@ -497,6 +497,24 @@ lemma void my_mul_strict_mono_r(int a, int b1, int b2)
     {}
 }
 
+lemma void mul_assoc(int x, int y, int z)
+    requires true;
+    ensures x*(y*z) == (x*y)*z;
+{
+    if(x == 0) { return; };
+    if(x > 0) {
+        for(int i = 1; i < x; ++i)
+            invariant i >= 1 &*& i <= x &*& i*(y*z) == (i*y)*z;
+            decreases x-i;
+        { note_eq( ((i+1)*y)*z, (i*y+y)*z); }
+    } else { assert x < 0;
+        for(int i = -1; i > x; --i)
+            invariant i <= -1 &*& i >= x &*& i*(y*z) == (i*y)*z;
+            decreases i-x;
+        { note_eq( ((i-1)*y)*z, (i*y-y)*z); }
+    }
+}
+
 lemma void mul_abs_commute(int x, int y)
     requires true;
     ensures  abs(x)*abs(y) == abs(x*y);
@@ -634,6 +652,25 @@ lemma_auto void malloced_strings_public()
     open [ f]malloced_strings( base, n, strs);
     if(n != 0) {
         malloced_strings_public();
+    }
+}
+
+predicate int_buffer(int* start, int len, int cap; list<int> vals)
+    =   start != 0 &*& cap > 0 &*& len >= 0 &*& start[..len] |-> vals
+    &*& start[len..cap] |-> _;
+
+lemma_auto void int_buffer_auto()
+    requires [?f]int_buffer(?start,?len,?cap,?vals);
+    ensures  [ f]int_buffer( start, len, cap, vals)
+        &*&  f <= 1 &*& start != 0
+        &*&  len >= 0 &*& cap > 0 &*& length(vals) == len
+        ;
+{
+    open int_buffer(_,_,_,_);
+    if(f > 1) {
+        open ints(start,_,_);
+        if(len == 0) { open ints(start,_,_); }
+        integer_unique(start);
     }
 }
 

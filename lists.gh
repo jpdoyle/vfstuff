@@ -283,5 +283,81 @@ lemma void forall_filter<t>(list<t> l, fixpoint(t,bool) p,
     ensures  !!forall(filter(f,l),p);
 { LIST_INDUCTION(l,xs,forall_filter(xs,p,f)) }
 
+fixpoint list<t> repeat<t>(t v, nat n) {
+    switch(n) {
+    case zero:     return {};
+    case succ(n0): return cons(v,repeat(v,n0));
+    }
+}
+
+lemma_auto(length(repeat(v,n))) void repeat_len<t>(t v, nat n)
+    requires true;
+    ensures  length(repeat(v,n)) == int_of_nat(n);
+{ NAT_INDUCTION(n,n0,repeat_len(v,n0)) }
+
+lemma_auto(mem(x,repeat(v,n))) void mem_repeat<t>(t x, t v, nat n)
+    requires !!mem(x,repeat(v,n));
+    ensures  x == v;
+{
+    switch(n) {
+    case zero:
+    case succ(n0):
+        switch(repeat(v,n)) {
+        case nil: assert false;
+        case cons(v0,vs):
+            if(x != v0) {
+                mem_repeat(x,v,n0);
+            }
+        }
+    }
+}
+
+fixpoint list<int> indices_of_inner<t>(t v, list<t> l, int base) {
+    switch(l) {
+    case nil: return {};
+    case cons(x,xs):
+        return (x == v ? cons(base, indices_of_inner(v,xs,base+1))
+                       : indices_of_inner(v,xs,base+1));
+    }
+}
+
+fixpoint list<int> indices_of<t>(t v, list<t> l) {
+    return indices_of_inner(v,l,0);
+}
+
+lemma_auto(mem(i,indices_of_inner(v,l,b)))
+void indices_of_inner_correct<t>(t v, list<t> l, int b, int i)
+    requires true;
+    ensures  mem(i,indices_of_inner(v,l,b))
+        ==   (nth_of(i-b,l) == some(v));
+{
+    switch(l) {
+    case nil: return;
+    case cons(x,xs):
+        indices_of_inner_correct(v,xs,b+1,i);
+        if(i == b) {
+            if(nth_of(i-b,l) != some(v)
+               && mem(i,indices_of_inner(v,l,b))) {
+                assert false;
+            }
+            if(x == v) {
+                assert nth_of(i-b,l) == some(v);
+            } else {
+                assert !mem(i,indices_of_inner(v,l,b));
+            }
+            return;
+        }
+        /* indices_of_inner(v,xs,b+1,i); */
+    }
+}
+
+lemma_auto(indices_of_inner(v,append(a,b),i))
+void indices_of_inner_append<t>(t v, list<t> a, list<t> b, int i)
+    requires true;
+    ensures  indices_of_inner(v,append(a,b),i)
+        ==   append(indices_of_inner(v,a,i),
+                    indices_of_inner(v,b,i+length(a)));
+{ LIST_INDUCTION(a,axs, indices_of_inner_append(v,axs,b,i+1)) }
+
 #endif
 
