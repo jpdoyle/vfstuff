@@ -538,88 +538,61 @@
 
   @*/
 
-void insert(int* arr, int n, int i)
-    /*@ requires arr[i] |-> ?x &*& arr[i+1..n] |-> ?rest
-            &*&  sorted(rest) == true
-            &*&  i >= 0
-            ;
-      @*/
-    /*@ ensures  arr[i..n] |-> ?l
-            &*&  sorted(l) == true
-            &*&  is_permutation(cons(x,rest),l) == true
-            ;
-      @*/
-    //@ terminates;
-{
-    int j = i;
-    while(j+1 < n)
-        /*@ requires j >= 0 && j+1 <= n
-                 &*& arr[j+1..n] |-> ?suffix
-                 &*& arr[j] |-> ?v
-                 &*& sorted(suffix) == true
-                 ;
-          @*/
-        /*@ ensures arr[old_j..n] |-> ?l
-                 &*& sorted(l) == true
-                 &*& is_permutation(cons(v,suffix),l) == true
-                 ;
-          @*/
-        //@ decreases n-j-1;
-    {
-        //@ open ints(arr+j+1,_,_);
-        if(arr[j] <= arr[j+1]) { break; }
-
-        int tmp = arr[j+1];
-        arr[j+1] = arr[j];
-        arr[j] = tmp;
-        j++;
-
-        //@ recursive_call();
-        /*@ {
-            assert arr[old_j] |-> ?new_v;
-            assert arr[old_j+1..n] |-> ?new_suffix;
-
-            head_tail_deconstruct(suffix);
-            list<int> swap_suffix = cons(v,tail(suffix));
-
-            permutation_transitive(cons(new_v,new_suffix),cons(new_v,swap_suffix),cons(v,suffix));
-            all_ge_permutation(new_v,swap_suffix,new_suffix);
-        } @*/
-
-    }
-}
-
 void isort(int* arr, int n)
-    /*@ requires arr[..n] |-> ?l
-            ;
-      @*/
-    /*@ ensures  arr[..n] |-> ?new_l
-            &*&  sorted(new_l) == true
-            &*&  is_permutation(l,new_l) == true
-            ;
-      @*/
-    //@ terminates;
+    /*@ requires arr[..n] |-> ?l; @*/
+    /*@ ensures  arr[..n] |-> ?new_l &*& !!sorted(new_l)
+            &*&  !!is_permutation(l,new_l); @*/
+    /*@ terminates; @*/
 {
-    int i = n;
-    while(i > 0)
-        /*@ invariant arr[..i] |-> ?prefix
-                 &*& arr[i..n] |-> ?suffix
-                 &*& sorted(suffix) == true
-                 &*& is_permutation(append(prefix,suffix),l) == true
-                 &*& i >= 0 && i <= n
-                 ;
-          @*/
-        //@ decreases i;
+    int i,j;
+    for(i = n; i > 0; --i)
+        /*@ invariant arr[..i]  |-> ?prefix
+                 &*&  arr[i..n] |-> ?suffix
+                 &*&  !!sorted(suffix)
+                 &*&  !!is_permutation(append(prefix,suffix),l)
+                 &*&  i >= 0 &*& i <= n; @*/
+        /*@ decreases i; @*/
     {
-        //@ ints_split(arr,i-1);
-        //@ assert arr[i-1] |-> ?v;
-        insert(arr,n,i-1);
-        i--;
+        /*@ ints_split(arr,i-1); @*/
+        /*@ assert arr[i-1] |-> ?v; @*/
+        for(j=i-1; j+1 < n; ++j)
+            /*@ requires j >= 0 &*& j+1 <= n
+                    &*& arr[j+1..n] |-> ?ins_suffix
+                    &*& arr[j]      |-> ?ins_v
+                    &*& !!sorted(ins_suffix); @*/
+            /*@ ensures arr[old_j..n] |-> ?new_l
+                    &*& !!sorted(new_l)
+                    &*& !!is_permutation(cons(ins_v,ins_suffix),new_l)
+                    ; @*/
+            /*@ decreases n-j-1; @*/
+        {
+            /*@ open ints(arr+j+1,_,_); @*/
+            if(arr[j] <= arr[j+1]) { break; }
+
+            int tmp = arr[j+1];
+            arr[j+1] = arr[j];
+            arr[j] = tmp;
+
+            /*@ recursive_call(); @*/
+            /*@ {
+                assert arr[old_j]      |-> ?next_v;
+                assert arr[old_j+1..n] |-> ?next_suffix;
+
+                list<int> swap_suffix = cons(ins_v, tail(ins_suffix));
+
+                permutation_transitive(
+                    cons(next_v,next_suffix),
+                    cons(next_v,swap_suffix),
+                    cons(ins_v,ins_suffix));
+                all_ge_permutation(next_v, swap_suffix, next_suffix);
+            } @*/
+
+        }
         /*@ {
-            assert arr[..i] |-> ?new_prefix;
-            assert arr[i..n] |-> ?new_suffix;
+            assert arr[..(i-1)]  |-> ?new_prefix;
+            assert arr[(i-1)..n] |-> ?new_suffix;
             permutation_transitive(append(new_prefix,new_suffix),
-                    append(new_prefix,cons(v,suffix)),l);
+                                   append(new_prefix,cons(v,suffix)),l);
         } @*/
     }
 }
