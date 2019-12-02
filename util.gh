@@ -501,17 +501,17 @@ lemma void mul_assoc(int x, int y, int z)
     requires true;
     ensures x*(y*z) == (x*y)*z;
 {
-    if(x == 0) { return; };
+    if(x == 0) { return; }
     if(x > 0) {
-        for(int i = 1; i < x; ++i)
-            invariant i >= 1 &*& i <= x &*& i*(y*z) == (i*y)*z;
+        for(int i =  1; i < x; ++i)
+            invariant i >=  1 &*& i <= x &*& i*(y*z) == (i*y)*z;
             decreases x-i;
-        { note_eq( ((i+1)*y)*z, (i*y+y)*z); }
+        { note_eq(((i+1)*y)*z, (i*y+y)*z); }
     } else { assert x < 0;
         for(int i = -1; i > x; --i)
             invariant i <= -1 &*& i >= x &*& i*(y*z) == (i*y)*z;
             decreases i-x;
-        { note_eq( ((i-1)*y)*z, (i*y-y)*z); }
+        { note_eq(((i-1)*y)*z, (i*y-y)*z); }
     }
 }
 
@@ -616,6 +616,8 @@ lemma void mod_plus(int x, int y, int d);
 fixpoint bool bounded(int min, int max, int x) {
     return x >= min && x <= max;
 }
+
+fixpoint int max_of(int a,int b) { return a > b ? a : b; }
 
 lemma_auto(bounded(l,h,x)) void bounded_cases(int l, int h, int x);
     requires bounded(l,h,x) && l <= h;

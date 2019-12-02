@@ -201,8 +201,7 @@ lemma void prime_no_factors(int x, int y)
 
     while(int_of_nat(f) < (x-y))
         invariant !!is_prime_fueled(x,f)
-            &*&   int_of_nat(f) <= (x-y)
-            ;
+            &*&   int_of_nat(f) <= (x-y);
         decreases (x-y) - int_of_nat(f);
     {
         nat x_f = nat_of_int(x);
@@ -220,9 +219,7 @@ lemma void prime_no_factors(int x, int y)
             }
         }
 
-        //int_of_nat_of_int(int_of_nat(x_f));
         nat_of_int_of_nat(x_f);
-        //int_of_nat_of_int(int_of_nat(f));
         nat_of_int_of_nat(f);
         assert int_of_nat(x_f) == int_of_nat(succ(f));
         assert x_f == succ(f);

@@ -2,6 +2,32 @@
 /*@ #include "lists.gh" @*/
 /*@ #include <arrays.gh> @*/
 
+
+/*@
+
+lemma_auto(indices_of_inner(v,l,b))
+void indices_of_length<t>(t v, list<t> l, int b)
+    requires true;
+    ensures  length(indices_of_inner(v,l,b)) <= length(l);
+{ LIST_INDUCTION(l, xs, indices_of_length(v,xs,b+1)) }
+
+lemma void ge_than_primes_length_nat(int i, nat n)
+    requires true;
+    ensures  length(filter((ge_than)(i), primes_below(n)))
+        <=   max_of(0,int_of_nat(n)+1-i);
+{ NAT_INDUCTION(n,n0, ge_than_primes_length_nat(i,n0)) }
+
+lemma_auto(filter((ge_than)(i),
+            primes_below(nat_of_int(n))))
+void ge_than_primes_length(int i, int n)
+    requires n >= 0;
+    ensures  length(filter((ge_than)(i), primes_below(nat_of_int(n))))
+        <=   max_of(0,n+1-i);
+{ ge_than_primes_length_nat(i,nat_of_int(n)); }
+
+
+  @*/
+
 size_t prime_sieve(int* buff, size_t n)
     /*@ requires buff[..n] |-> _ &*& n > 0 &*& n+n <= UINTPTR_MAX; @*/
     /*@ ensures  int_buffer(buff, result, n,
@@ -74,7 +100,7 @@ size_t prime_sieve(int* buff, size_t n)
         /*@ ensures  buff[old_i..n] |-> ?primes
                 &*&  reverse(indices_of_inner(1,primes,old_i))
                      == filter((ge_than)(old_i),
-                            primes_below(nat_of_int(n)))
+                            primes_below(nat_of_int(n-1)))
                 ;
           @*/
         /*@ decreases n-i; @*/
