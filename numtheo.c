@@ -66,6 +66,7 @@ size_t prime_sieve(int* buff, size_t n)
 
     buff[0] = 0;
     buff[1] = 0;
+    /*@ assume(false); @*/
 
     /*@ {
         assert buff[2..n] |-> ?init_nums;

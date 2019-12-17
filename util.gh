@@ -597,6 +597,10 @@ lemma void div_monotonic_numerator(int x, int y, int d);
     requires d > 0 &*& x >= 0 &*& y >= x;
     ensures  x/d <= y/d;
 
+lemma void div_shrinks(int x, int d);
+    requires d > 0 &*& x >= 0;
+    ensures  x/d <= x;
+
 lemma void into_numerator(int x, int y, int d);
     requires d > 0 &*& x >= 0 &*& y >= 0;
     ensures  x + (y/d) == (d*x + y)/d;
@@ -618,6 +622,7 @@ fixpoint bool bounded(int min, int max, int x) {
 }
 
 fixpoint int max_of(int a,int b) { return a > b ? a : b; }
+fixpoint int min_of(int a,int b) { return a < b ? a : b; }
 
 lemma_auto(bounded(l,h,x)) void bounded_cases(int l, int h, int x);
     requires bounded(l,h,x) && l <= h;

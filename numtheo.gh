@@ -30,6 +30,31 @@
 //    }
 //}
 
+lemma void mul_commutes(int a, int b)
+    requires true;
+    ensures  a*b == b*a;
+{
+    if(a >= 0) {
+        for(int i = 0; i < a; ++i)
+            invariant i*b == b*i
+                &*&   0 <= i &*& i <= a;
+            decreases a-i;
+        { }
+    } else {
+        for(int i = 0; i > a; --i)
+            invariant i*b == b*i
+                &*&   0 >= i &*& i >= a;
+            decreases i-a;
+        { }
+    }
+}
+
+fixpoint int mul_abstract(int a,int b) { return a*b; }
+lemma void mul_abstract_def(int a,int b)
+    requires true;
+    ensures  mul_abstract(a,b) == a*b;
+{}
+
 fixpoint int product(list<int> l) {
     switch(l) {
     case nil:        return 1;
@@ -418,6 +443,316 @@ lemma void prime_up_to_composite(nat n, int x)
     ensures  !!prime_up_to(succ(n),x);
 {}
 
+fixpoint int gcd_below(int x, int y, nat n) {
+    switch(n) {
+    case zero: return 1;
+    case succ(n0):
+        return (x%int_of_nat(n) == 0
+                && y%int_of_nat(n) == 0
+               ) ? int_of_nat(n) : gcd_below(x,y,n0);
+    }
+}
+
+fixpoint int gcd(int x,int y) {
+    return gcd_below(x,y,nat_of_int(min_of(x,y)));
+}
+
+lemma_auto(gcd_below(x,y,n))
+void gcd_pos(int x, int y, nat n)
+    requires true;
+    ensures  gcd_below(x,y,n) > 0;
+{ NAT_INDUCTION(n,n0,gcd_pos(x,y,n0)) }
+
+lemma_auto(gcd_below(x,y,n))
+void gcd_divides_x(int x, int y, nat n)
+    requires true;
+    ensures  x%gcd_below(x,y,n) == 0;
+{
+    switch(n) {
+    case zero: division_unique(x,1,x,0);
+    case succ(n0):
+        if(x%int_of_nat(n) == 0 && y%int_of_nat(n) == 0) {
+            return;
+        }
+        gcd_divides_x(x,y,n0);
+    }
+}
+
+lemma_auto(gcd_below(x,y,n))
+void gcd_below_x(int x, int y, nat n)
+    requires x > 0;
+    ensures  x >= gcd_below(x,y,n);
+{
+    div_rem( x,gcd_below(x,y,n));
+    div_sign(x,gcd_below(x,y,n));
+    mod_sign(x,gcd_below(x,y,n));
+    if(x < gcd_below(x,y,n)) {
+        my_mul_mono_r(gcd_below(x,y,n),1,x/gcd_below(x,y,n));
+        assert false;
+    }
+}
+
+lemma_auto(gcd_below(x,y,n))
+void gcd_symm(int x, int y, nat n)
+    requires true;
+    ensures  gcd_below(x,y,n) == gcd_below(y,x,n);
+{ NAT_INDUCTION(n,n0,gcd_symm(x,y,n0)) }
+//    switch(n) {
+//    case zero: division_unique(y,1,y,0);
+//    case succ(n0):
+//        if(x%int_of_nat(n) == 0 && y%int_of_nat(n) == 0) {
+//            return;
+//        }
+//        gcd_divides_y(x,y,n0);
+//    }
+//}
+
+lemma void gcd_is_max_divisor_inner(int x, int y, int d, nat n)
+    requires x > 0 &*& y > 0 &*& x%d == 0 &*& y%d == 0
+        &*&  int_of_nat(n) >= d;
+    ensures  gcd_below(x,y,n) >= d;
+{
+    switch(n) {
+    case zero:
+    case succ(n0):
+        if(x%int_of_nat(n) == 0 && y%int_of_nat(n) == 0) {
+            return;
+        }
+        gcd_is_max_divisor_inner(x,y,d,n0);
+    }
+}
+
+lemma void gcd_is_max_divisor(int x, int y, int d)
+    requires x > 0 &*& y > 0 &*& x%d == 0 &*& y%d == 0;
+    ensures  gcd(x,y) >= d;
+{
+    if(gcd(x,y) < d) {
+        if(d <= 0) { assert false; }
+        if(d > x) {
+            division_unique(x,d,0,x);
+            assert false;
+        }
+        if(d > y) {
+            division_unique(y,d,0,y);
+            assert false;
+        }
+
+        int_of_nat_of_int(min_of(x,y));
+        div_rem(x,d);
+        div_rem(y,d);
+        assert min_of(x,y) >= d;
+        gcd_is_max_divisor_inner(x,y,d,nat_of_int(min_of(x,y)));
+    }
+}
+
+// lemma void prime_divides_product_inner(int p, int x, int y, nat n)
+//     requires !!is_prime(p) &*& (x*y)%p == 0 &*& abs(x) <= int_of_nat(n);
+//     ensures  (x%p == 0 || y%p == 0);
+// {
+//     switch(n) {
+//     case zero: division_unique(0,p,0,0);
+//     case succ(n0):
+//         if(!(x%p == 0 || y%p == 0)) {
+//             if(abs(x) <= 1) {
+//                 if(x < 0) {
+//                     assert x == -1;
+//                     division_unique(y,p,-(x*y)/p,0);
+//                 } else if(x < 1) {
+//                     assert x == 0;
+//                     division_unique(0,p,0,0);
+//                 } else {
+//                     assert x == 1;
+//                     division_unique(y,p,(x*y)/p,0);
+//                 }
+//                 assert false;
+//             }
+//             if(is_prime(x)) {
+//                 assert x != p;
+//                 assert p*((x*y)/p) == x*y;
+//                 assert false;
+//             }
+//             int q = findFactor(x);
+//             div_rem(x,q);
+//             assert q < x;
+//             assert x/q < x;
+//             assert false;
+//         }
+//     }
+//     if(x%p != 0 && y%p != 0) {
+//         if(abs(x%p + y%p) < p) {
+//             assert x*y == (p*(x/p) + x%p)*(p*(y/p) + y%p);
+//             assert x*y == (p*(x/p))*(p*(y/p) + y%p) + (x%p)*(p*(y/p) + y%p);
+//             assert x*y == (p*(x/p))*(p*(y/p)) + (p*(x/p))*(y%p)
+//                         + (x%p)*(p*(y/p)) + (x%p)*(y%p);
+//             division_unique(x*y,p,
+//                 (
+//     }
+// }
+
+// lemma void prime_divides_product(int p, int x, int y)
+//     requires !!is_prime(p) &*& (x*y)%p == 0;
+//     ensures  (x%p == 0 || y%p == 0);
+// {
+//     if(x%p != 0 && y%p != 0) {
+//         if(abs(x%p + y%p) < p) {
+//             assert x*y == (p*(x/p) + x%p)*(p*(y/p) + y%p);
+//             assert x*y == (p*(x/p))*(p*(y/p) + y%p) + (x%p)*(p*(y/p) + y%p);
+//             assert x*y == (p*(x/p))*(p*(y/p)) + (p*(x/p))*(y%p)
+//                         + (x%p)*(p*(y/p)) + (x%p)*(y%p);
+//             division_unique(x*y,p,
+//                 (
+//     }
+// }
+
+lemma void lincombo_factor(int a, int b, int x, int y, int n, int d)
+    requires a*x + b*y == n &*& a%d == 0 &*& b%d == 0 &*& d != 0;
+    ensures  n%d == 0;
+{
+    div_rem(a,d);
+    div_rem(b,d);
+    assert (d*(a/d))*x + (d*(b/d))*y == n;
+    mul_assoc(d,a/d,x);
+    mul_assoc(d,b/d,y);
+    assert d*((a/d)*x) + d*((b/d)*y) == n;
+    assert d*(((a/d)*x) + ((b/d)*y)) == n;
+    division_unique(n,d,((a/d)*x + (b/d)*y),0);
+}
+
+lemma pair<int,int> gcd_is_min_lincomb_sol(int a, int b, int x, int y, int n)
+    requires a*x + b*y == n &*& a%n != 0 &*& n > 0 &*& a > 0 &*& b > 0;
+    ensures  switch(result) {
+        case pair(x1,y1):
+            return a*x1 + b*y1 > 0 &*& a*x1+b*y1 < n;
+    };
+{
+    div_rem(a,n);
+    assert a%n == a - n*(a/n);
+    assert a%n == a - (a*x + b*y)*(a/n);
+    note_eq((a*x + b*y)*(a/n),((a*x)*(a/n) + (b*y)*(a/n)));
+    assert a%n == a - ((a*x)*(a/n) + (b*y)*(a/n));
+    assert a%n == a - (a*x)*(a/n) - (b*y)*(a/n);
+    mul_assoc(a,x,a/n); mul_assoc(b,y,a/n);
+    assert a%n == a - a*(x*(a/n)) - b*(y*(a/n));
+    assert a%n == a*(1 - x*(a/n)) - b*(y*(a/n));
+    if(-b*(y*(a/n)) != b*(-y*(a/n))) {
+        note_eq(b*(-y*(a/n)) + b*(y*(a/n)),b*(y*(a/n)+(-y*(a/n))));
+        note_eq(0,y*(a/n)+(-y*(a/n)));
+        mul_abs_commute(b,(y*(a/n)+(-y*(a/n))));
+        my_mul_mono_r(abs(b),0,(y*(a/n)+(-y*(a/n))));
+        my_mul_mono_r(abs(b),(y*(a/n)+(-y*(a/n))),0);
+        assert false;
+    }
+    //note_eq(-b*(y*(a/n)),b*(-y*(a/n)));
+    note_eq(a%n, a*(1 - x*(a/n)) + b*(-y*(a/n)));
+    assert a == n*(a/n) + a%n;
+    return pair(1-x*(a/n),-y*(a/n));
+}
+
+lemma pair<int,int> gcd_min_lincomb_sol(int a, int b)
+    requires a > 0 &*& b > 0;
+    ensures  switch(result) {
+        case pair(x,y):
+            return a*x + b*y == gcd(a,b);
+    };
+{
+    int x = 1, y = 0;
+    int n = a*x + b*y;
+    while(a%n != 0 || b%n != 0)
+        invariant a*x + b*y == n &*& n >= 1;
+        decreases n;
+    {
+        if(a%n != 0) {
+            switch(gcd_is_min_lincomb_sol(a, b, x, y, n)) {
+            case pair(x1,y1):
+                x = x1;
+                y = y1;
+            }
+        } else {
+            switch(gcd_is_min_lincomb_sol(b, a, y, x, n)) {
+            case pair(x1,y1):
+                x = y1;
+                y = x1;
+            }
+        }
+        n = a*x + b*y;
+    }
+
+    lincombo_factor(a,b,x,y,n,gcd(a,b));
+    div_rem(n,gcd(a,b));
+    div_sign(n,gcd(a,b));
+    mod_sign(n,gcd(a,b));
+    div_shrinks(n,gcd(a,b));
+
+    assert n == gcd(a,b)*(n/gcd(a,b));
+
+    if(n < gcd(a,b)) {
+        if(n/gcd(a,b) <= 0) {
+            assert n/gcd(a,b) == 0;
+            assert n == 0;
+            assert false;
+        }
+        my_mul_mono_r(gcd(a,b),1,n/gcd(a,b));
+        assert gcd(a,b) <= gcd(a,b)*(n/gcd(a,b));
+        assert gcd(a,b) <= n;
+        assert false;
+    }
+    assert n >= gcd(a,b);
+    gcd_is_max_divisor(a,b,n);
+    assert n <= gcd(a,b);
+    return pair(x,y);
+}
+
+lemma void divisors_divide_gcd(int x, int y, int d)
+    requires x > 0 &*& y > 0 &*& x%d == 0 &*& y%d == 0 &*& d != 0;
+    ensures  gcd(x,y)%d == 0;
+{
+    switch(gcd_min_lincomb_sol(x,y)) {
+    case pair(a,b):
+        lincombo_factor(x,y,a,b,gcd(x,y),d);
+    }
+}
+
+lemma void gcd_prime(int p, int y)
+    requires !!is_prime(p) &*& y > 0 &*& y%p != 0;
+    ensures  gcd(p,y) == 1;
+{
+    if(gcd(p,y) > 1) {
+        prime_no_factors(p,gcd(p,y));
+        assert false;
+    }
+}
+
+lemma void prime_divides_product(int p, int a, int b)
+    requires !!is_prime(p) &*& a > 0 &*& b > 0 &*& (a*b)%p == 0;
+    ensures  (a%p == 0 || b%p == 0);
+{
+    if(a%p != 0 && b%p != 0) {
+        gcd_prime(p,a); gcd_prime(p,b);
+        div_rem(a*b,p);
+        switch(gcd_min_lincomb_sol(p,b)) {
+        case pair(x,y):
+            assert p*x + b*y == 1;
+            mul_abstract_def(a,p*x + b*y);
+            note_eq(a*1,a);
+            note_eq(a*(p*x + b*y), a);
+            assert a*(p*x) + a*(b*y) == a;
+
+            mul_assoc(a,p,x);
+            mul_assoc(p,a,x);
+            mul_assoc(a,b,y);
+            mul_commutes(a,p);
+
+            assert p*(a*x) + (a*b)*y == a;
+
+            note_eq(a*b,p*((a*b)/p));
+            mul_assoc(p,(a*b)/p,y);
+            assert p*a*x + p*((a*b)/p)*y == a;
+            assert p*(a*x + ((a*b)/p)*y) == a;
+            division_unique(a,p,(a*x + ((a*b)/p)*y),0);
+            assert false;
+        }
+    }
+}
 
 //lemma void prime_no_factors(int x, int y)
 //    requires !!is_prime(x) &*& y > 1 &*& y < x;
