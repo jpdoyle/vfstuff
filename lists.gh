@@ -272,6 +272,12 @@ lemma void nonneg_sum(list<int> l)
     ensures  sum(l) >= 0;
 { LIST_INDUCTION(l,xs,nonneg_sum(xs)) }
 
+lemma //_auto(filter((constf)(true),l))
+void filter_id<t>(list<t> l)
+    requires true;
+    ensures  filter((constf)(true),l) == l;
+{ LIST_INDUCTION(l,xs,filter_id(xs)) }
+
 lemma void nonneg_filter_sum(list<int> l, fixpoint(int,bool) f)
     requires !!forall(l,(ge_than)(0));
     ensures  sum(filter(f,l)) <= sum(l);
@@ -282,6 +288,23 @@ lemma void forall_filter<t>(list<t> l, fixpoint(t,bool) p,
     requires !!forall(l,p);
     ensures  !!forall(filter(f,l),p);
 { LIST_INDUCTION(l,xs,forall_filter(xs,p,f)) }
+
+lemma t filter_diff<t>(fixpoint(t,bool) f1, fixpoint(t,bool) f2, list<t> l)
+    requires filter(f1,l) != filter(f2,l);
+    ensures  !!mem(result,l) &*& f1(result) != f2(result);
+{
+    switch(l) {
+    case nil: assert false;
+    case cons(x,xs):
+        if(f1(x) != f2(x)) { return x; }
+        return filter_diff(f1,f2,xs);
+    }
+}
+
+lemma t filter_effect<t>(fixpoint(t,bool) f, list<t> l)
+    requires filter(f,l) != l;
+    ensures  !!mem(result,l) &*& !f(result);
+{ filter_id(l); return filter_diff(f,(constf)(true),l); }
 
 fixpoint list<t> repeat<t>(t v, nat n) {
     switch(n) {
@@ -325,7 +348,7 @@ fixpoint list<int> indices_of<t>(t v, list<t> l) {
     return indices_of_inner(v,l,0);
 }
 
-lemma_auto(mem(i,indices_of_inner(v,l,b)))
+lemma
 void indices_of_inner_correct<t>(t v, list<t> l, int b, int i)
     requires true;
     ensures  mem(i,indices_of_inner(v,l,b))
@@ -350,6 +373,38 @@ void indices_of_inner_correct<t>(t v, list<t> l, int b, int i)
         /* indices_of_inner(v,xs,b+1,i); */
     }
 }
+
+lemma_auto(mem(i,indices_of_inner(v,l,b)))
+void indices_of_inner_correct_auto<t>(t v, list<t> l, int b, int i)
+    requires !!mem(i,indices_of_inner(v,l,b));
+    ensures  (nth_of(i-b,l) == some(v));
+{ indices_of_inner_correct(v,l,b,i); }
+
+lemma
+void indices_of_inner_bounds<t>(t v, list<t> l, int b, int i)
+    requires !!mem(i,indices_of_inner(v,l,b));
+    ensures  i >= b &*& i < b+length(l);
+{
+    switch(l) {
+    case nil: assert false;
+    case cons(x,xs):
+        if(x != v) {
+            indices_of_inner_bounds(v,xs,b+1,i);
+        }
+    }
+}
+
+lemma_auto(mem(i,indices_of_inner(v,l,b)))
+void indices_of_inner_bounds_auto1<t>(t v, list<t> l, int b, int i)
+    requires !!mem(i,indices_of_inner(v,l,b));
+    ensures  i >= b;
+{ indices_of_inner_bounds(v,l,b,i); }
+
+lemma_auto(mem(i,indices_of_inner(v,l,b)))
+void indices_of_inner_bounds_auto2<t>(t v, list<t> l, int b, int i)
+    requires !!mem(i,indices_of_inner(v,l,b));
+    ensures  i < b+length(l);
+{ indices_of_inner_bounds(v,l,b,i); }
 
 lemma_auto(indices_of_inner(v,append(a,b),i))
 void indices_of_inner_append<t>(t v, list<t> a, list<t> b, int i)

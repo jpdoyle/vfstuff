@@ -446,6 +446,23 @@ lemma void div_sign(int x, int d)
     }
 }
 
+lemma void div_shrinks(int x, int d)
+    requires d > 0 &*& x >= 0;
+    ensures  x/d <= x;
+{
+    if(x/d > x) {
+        div_sign(x,d);
+        mod_sign(x,d);
+        div_rem(x,d);
+
+        my_mul_mono_l(1,d,x);
+        my_mul_strict_mono_r(d,x,x/d);
+        assert d*x < d*(x/d);
+        assert x < d*(x/d);
+
+        assert false;
+    }
+}
 
 @*/
 

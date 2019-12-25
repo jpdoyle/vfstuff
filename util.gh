@@ -10,6 +10,8 @@
 
 #define END_FORALL() assert false; }
 
+#define SKIP_PROOF() { assume(false); }
+
 predicate let<t>(t x; t y) = y == x;
 
 fixpoint bool nonneg(int x) { return x >= 0; }
@@ -680,6 +682,8 @@ lemma_auto void int_buffer_auto()
         integer_unique(start);
     }
 }
+
+fixpoint bool isbit(int x) { return x == 0 || x == 1; }
 
 
 #endif
