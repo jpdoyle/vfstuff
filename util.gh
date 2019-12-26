@@ -599,6 +599,10 @@ lemma void div_monotonic_numerator(int x, int y, int d);
     requires d > 0 &*& x >= 0 &*& y >= x;
     ensures  x/d <= y/d;
 
+lemma void div_monotonic_denominator(int D, int x, int y);
+    requires D > 0 &*& x > 0 &*& y >= x;
+    ensures  D/y <= D/x;
+
 lemma void div_shrinks(int x, int d);
     requires d > 0 &*& x >= 0;
     ensures  x/d <= x;
@@ -610,6 +614,10 @@ lemma void into_numerator(int x, int y, int d);
 lemma void mod_sign(int x, int d);
     requires d > 0;
     ensures  x >= 0 ? x%d >= 0 : x%d <= 0;
+
+lemma void mod_abs(int x, int d);
+    requires d > 0;
+    ensures  abs(x%d) == abs(x)%d;
 
 lemma void div_sign(int x, int d);
     requires d > 0;

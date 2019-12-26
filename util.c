@@ -323,6 +323,16 @@ lemma void mod_sign(int x, int d)
     ensures  x >= 0 ? x%d >= 0 : x%d <= 0;
 { div_rem(x,d); }
 
+lemma void mod_abs(int x, int d)
+    requires d > 0;
+    ensures  abs(x%d) == abs(x)%d;
+{
+    div_rem(x,d);
+    if(x < 0) {
+        division_unique(-x,d,-(x/d),-(x%d));
+    }
+}
+
 lemma void mod_plus(int x, int y, int d)
     requires d > 0 &*& x >= 0 &*& y >= 0;
     ensures  (x%d + y)%d == (x+y)%d;
@@ -442,6 +452,25 @@ lemma void div_sign(int x, int d)
 
     if(x < 0 && x/d > 0) {
         mul_mono_l(1,x/d,d);
+        assert false;
+    }
+}
+
+lemma void div_monotonic_denominator(int D, int x, int y)
+    requires D > 0 &*& x > 0 &*& y >= x;
+    ensures  D/y <= D/x;
+{
+    div_rem(D,x); div_rem(D,y);
+    div_sign(D,y);
+
+    if(D/x < D/y) {
+        my_mul_mono_r(x,D/x+1,D/y);
+        my_mul_mono_l(x,y,D/y);
+        assert x*(D/x) + x <= x*(D/y);
+        assert x*(D/x) + D%x < x*(D/y);
+        assert x*(D/x) + D%x < x*(D/y)+D%y;
+        assert x*(D/x) + D%x < y*(D/y)+D%y;
+
         assert false;
     }
 }

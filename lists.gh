@@ -289,6 +289,12 @@ lemma void forall_filter<t>(list<t> l, fixpoint(t,bool) p,
     ensures  !!forall(filter(f,l),p);
 { LIST_INDUCTION(l,xs,forall_filter(xs,p,f)) }
 
+lemma void forall_remove<t>(list<t> l, fixpoint(t,bool) p,
+        t x)
+    requires !!forall(l,p);
+    ensures  !!forall(remove(x,l),p);
+{ LIST_INDUCTION(l,xs,forall_remove(xs,p,x)) }
+
 lemma t filter_diff<t>(fixpoint(t,bool) f1, fixpoint(t,bool) f2, list<t> l)
     requires filter(f1,l) != filter(f2,l);
     ensures  !!mem(result,l) &*& f1(result) != f2(result);

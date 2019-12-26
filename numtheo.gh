@@ -2,6 +2,7 @@
 #define VFUTIL_NUMTHEO_GH
 
 #include "util.gh"
+#include "lists.gh"
 
 //lemma void mul_assoc(int x,int y,int z)
 //    requires true;
@@ -214,9 +215,12 @@ fixpoint option<int> first_factor(list<int> l, int x) {
 }
 
 lemma void prime_no_factors(int x, int y)
-    requires !!is_prime(x) &*& y > 1 &*& y < x;
+    requires !!is_prime(x) &*& y > 1 &*& y != x;
     ensures  x%y != 0;
 {
+    if(y > x) {
+        division_unique(x,y,0,x); return;
+    }
     if(x-y == 1) {
         division_unique(x,y,1,1);
         return;
@@ -388,7 +392,7 @@ lemma void prime_up_to_no_factors(nat n, int x, int y)
 
 lemma void prime_test_sqrt(int x, nat n)
     requires x > 1 &*& int_of_nat(n) < x
-        &*&  int_of_nat(n)*int_of_nat(n) >= x;
+        &*&  int_of_nat(succ(n))*int_of_nat(succ(n)) > x;
     ensures  is_prime(x) == prime_up_to(n, x);
 {
     prime_test(x);
@@ -423,8 +427,9 @@ lemma void prime_test_sqrt(int x, nat n)
         }
         assert cx*cx <= x;
         if(cx > int_of_nat(n)) {
-            my_mul_strict_mono_l(int_of_nat(n),cx,int_of_nat(n));
-            my_mul_strict_mono_r(cx,int_of_nat(n),cx);
+            assert cx >= int_of_nat(succ(n));
+            my_mul_mono_l(int_of_nat(succ(n)),cx,int_of_nat(succ(n)));
+            my_mul_mono_r(cx,int_of_nat(succ(n)),cx);
             assert false;
         }
         assert cx <= int_of_nat(n);
@@ -751,6 +756,175 @@ lemma void prime_divides_product(int p, int a, int b)
             division_unique(a,p,(a*x + ((a*b)/p)*y),0);
             assert false;
         }
+    }
+}
+
+lemma_auto(indices_of_inner(v,l,b))
+void indices_of_length<t>(t v, list<t> l, int b)
+    requires true;
+    ensures  length(indices_of_inner(v,l,b)) <= length(l);
+{ LIST_INDUCTION(l, xs, indices_of_length(v,xs,b+1)) }
+
+lemma void ge_than_primes_length_nat(int i, nat n)
+    requires true;
+    ensures  length(filter((ge_than)(i), primes_below(n)))
+        <=   max_of(0,int_of_nat(n)+1-i);
+{ NAT_INDUCTION(n,n0, ge_than_primes_length_nat(i,n0)) }
+
+lemma_auto(filter((ge_than)(i),
+            primes_below(nat_of_int(n))))
+void ge_than_primes_length(int i, int n)
+    requires n >= 0;
+    ensures  length(filter((ge_than)(i), primes_below(nat_of_int(n))))
+        <=   max_of(0,n+1-i);
+{ ge_than_primes_length_nat(i,nat_of_int(n)); }
+
+
+lemma void sieve_works(int i, int n, list<int> primes)
+    requires !!forall(primes, isbit)
+        &*&  !!forall(indices_of_inner(1,primes,i), is_prime)
+        &*&  !!forall(indices_of_inner(0,primes,i), (notf)(is_prime))
+        &*&  i >= 2 &*& i <= n &*& length(primes) == n-i
+        ;
+    ensures reverse(indices_of_inner(1,primes,i))
+        ==  filter((ge_than)(i),
+                primes_below(nat_of_int(n-1)));
+{
+    switch(primes) {
+    case nil:
+    case cons(x,xs):
+        sieve_works(i+1,n,xs);
+        shift_primes_below_range(i+1,nat_of_int(n-1));
+    }
+}
+
+lemma void sqrt_search(int n, int x, int y)
+    requires n > 0 &*& x > 0 &*& x < y &*& y < n/x;
+    ensures  n/y >= x &*& n/y <= n/x;
+{
+    div_rem(n,x); div_rem(n,y);
+    div_monotonic_denominator(n,x,y);
+    if(n/y < x) {
+        my_mul_mono_r(y,n/y+1,x);
+        assert y*(n/y)+y <= y*x;
+        my_mul_mono_l(y,n/x,x);
+        assert y*(n/y)+y <= (n/x)*x;
+        mul_commutes(n/x,x);
+        assert false;
+    }
+    if(n/y > n/x) {
+        my_mul_mono_r(x,n/x+1,n/y);
+        assert x*(n/x)+x <= x*(n/y);
+        my_mul_mono_l(x,y,n/y);
+        assert x*(n/x)+x <= y*(n/y);
+        assert false;
+    }
+}
+
+lemma void sqrt_search2(int n, int x, int y)
+    requires n > 0 &*& x > 0 &*& n/x > 0 &*& n/x < y &*& y < x;
+    ensures  n/y >= n/x &*& n/y <= x;
+{
+    div_rem(n,x); div_rem(n,y);
+    div_monotonic_denominator(n,y,x);
+    if(n/y > x) {
+        my_mul_mono_r(y,x+1,n/y);
+        assert y*x + y <= y*(n/y);
+        my_mul_mono_l(n/x+1,y,x);
+        assert (n/x)*x+x+y <= y*(n/y);
+        mul_commutes(n/x,x);
+        assert x*(n/x)+x+y <= y*(n/y);
+        assert false;
+    }
+}
+
+lemma int prime_divides_product_list(int p, list<int> l)
+    requires !!is_prime(p) &*& product(l)%p == 0 &*& product(l) != 0;
+    ensures  !!mem(result,l) &*& result%p == 0;
+{
+    switch(l) {
+    case nil: division_unique(product(l),p,0,1); assert false;
+    case cons(x,xs):
+        if(x%p == 0) { return x; }
+
+        mul_abs_commute(x,product(xs));
+        mod_abs(x,p);
+        mod_abs(product(l),p);
+        mod_abs(product(xs),p);
+        assert abs(product(l))%p == 0;
+        prime_divides_product(p,abs(x),abs(product(xs)));
+
+        return prime_divides_product_list(p,xs);
+    }
+}
+
+lemma void product_grows(int x, list<int> xs)
+    requires x != 0 &*& !mem(0,xs);
+    ensures  abs(product(cons(x,xs))) >= abs(x)
+        &*&  abs(product(cons(x,xs))) >= abs(product(xs));
+{
+    switch(xs) {
+    case nil:
+    case cons(v,vs):
+        product_grows(v,vs);
+        mul_abs_commute(x,product(xs));
+        my_mul_mono_l(1,abs(x),abs(product(xs)));
+        my_mul_mono_r(abs(x),1,abs(product(xs)));
+    }
+}
+
+lemma void product_commutes(int x, list<int> l)
+    requires !!mem(x,l);
+    ensures  product(l) == x*product(remove(x,l));
+{
+    switch(l) {
+    case nil: assert false;
+    case cons(v,vs):
+        if(v != x) {
+            mul_commutes(x,v);
+            mul_assoc(x,v,product(remove(x,vs)));
+            mul_assoc(v,x,product(remove(x,vs)));
+            product_commutes(x,vs);
+            assert product(l) == v*product(vs);
+            assert product(l) == v*(x*product(remove(x,vs)));
+            assert product(l) == x*(v*product(remove(x,vs)));
+            assert product(l) == x*(product(remove(x,cons(v,vs))));
+        }
+    }
+}
+
+lemma void unique_prime_factorization(
+        int n, list<int> l1, list<int> l2)
+    requires product(l1) == n &*& product(l2) == n
+        &*&  n > 0 &*& !!forall(l1,is_prime)
+        &*&  !!forall(l2,is_prime);
+    ensures !!is_permutation(l1,l2);
+{
+    switch(l1) {
+    case nil:
+        assert n == 1;
+        switch(l2) {
+        case nil:
+        case cons(x,xs):
+            if(mem(0,xs)) { forall_elim(xs,is_prime,0); }
+            product_grows(x,xs);
+            assert false;
+        }
+    case cons(x,xs):
+        division_unique(n,x,product(xs),0);
+        int l2_x = prime_divides_product_list(x,l2);
+        forall_elim(l2,is_prime,l2_x);
+        if(l2_x != x) {
+            div_rem(l2_x,x); div_rem(x,l2_x);
+            prime_no_factors(l2_x,x);
+            prime_no_factors(x,l2_x);
+            assert false;
+        }
+        product_commutes(x,l2);
+        division_unique(n,x,product(remove(x,l2)),0);
+        div_sign(n,x);
+        forall_remove(l2,is_prime,x);
+        unique_prime_factorization(n/x,xs,remove(x,l2));
     }
 }
 

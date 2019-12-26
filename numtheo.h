@@ -16,5 +16,16 @@ size_t euclid_gcd(size_t a,size_t b);
     /*@ ensures  result == gcd(a,b); @*/
     /*@ terminates; @*/
 
+size_t abs_diff(size_t x, size_t y);
+    /*@ requires true; @*/
+    /*@ ensures  result == abs(x-y); @*/
+    /*@ terminates; @*/
+
+size_t int_sqrt(size_t n);
+    /*@ requires n >= 0; @*/
+    /*@ ensures  result >= 0 &*& result*result <= n
+            &*&  (result+1)*(result+1) > n; @*/
+    /*@ terminates; @*/
+
 #endif
 

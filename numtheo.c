@@ -1,32 +1,14 @@
 #include "numtheo.h"
-/*@ #include "lists.gh" @*/
 /*@ #include <arrays.gh> @*/
 
-
-/*@
-
-lemma_auto(indices_of_inner(v,l,b))
-void indices_of_length<t>(t v, list<t> l, int b)
-    requires true;
-    ensures  length(indices_of_inner(v,l,b)) <= length(l);
-{ LIST_INDUCTION(l, xs, indices_of_length(v,xs,b+1)) }
-
-lemma void ge_than_primes_length_nat(int i, nat n)
-    requires true;
-    ensures  length(filter((ge_than)(i), primes_below(n)))
-        <=   max_of(0,int_of_nat(n)+1-i);
-{ NAT_INDUCTION(n,n0, ge_than_primes_length_nat(i,n0)) }
-
-lemma_auto(filter((ge_than)(i),
-            primes_below(nat_of_int(n))))
-void ge_than_primes_length(int i, int n)
-    requires n >= 0;
-    ensures  length(filter((ge_than)(i), primes_below(nat_of_int(n))))
-        <=   max_of(0,n+1-i);
-{ ge_than_primes_length_nat(i,nat_of_int(n)); }
-
-
-  @*/
+size_t abs_diff(size_t x, size_t y)
+    /*@ requires true; @*/
+    /*@ ensures  result == abs(x-y); @*/
+    /*@ terminates; @*/
+{
+    if(x > y) { return x-y; }
+    return y-x;
+}
 
 size_t euclid_gcd(size_t a,size_t b)
     /*@ requires a > 0 &*& b > 0; @*/
@@ -70,6 +52,124 @@ size_t euclid_gcd(size_t a,size_t b)
     return b;
 }
 
+size_t int_sqrt(size_t n)
+    /*@ requires n >= 0; @*/
+    /*@ ensures  result >= 0 &*& result*result <= n
+            &*&  (result+1)*(result+1) > n; @*/
+    /*@ terminates; @*/
+{
+    size_t a = 1, b = n;
+
+    if(n == 0) { return 0; }
+
+    /*@ {
+        if(n <= 0) { assert false; }
+        division_unique(n,1,n,0);
+        my_mul_mono_r(b,1,b);
+        assert 2*2 > 1;
+        if(n != 1) {
+            if(n <= 1) { assert false; }
+            my_mul_strict_mono_r(n,1,n);
+            assert b*b > n;
+        }
+    } @*/
+
+    while(abs_diff(a,b) > 1)
+        /*@ invariant a >= 1 &*& a <= b
+                &*&   b >= 1 &*& b <= n
+                &*&   (b == n/a || a == n/b)
+                &*&   a*a <= n
+                &*&   (a == b ? (b+1)*(b+1) > n
+                      : (b*b > n))
+                ; @*/
+        /*@ decreases abs(a-b); @*/
+    {
+        /*@ {
+            div_rem(b-a,2);
+            if(b-a > b)  { assert false; }
+            if(a+(b-a)/2 > b)  {
+                assert (b-a)/2 > b-a;
+                mul_mono_l(1,2,b-a);
+                assert false;
+            }
+
+            if(b == n/a) {
+                sqrt_search(n,a,a+(b-a)/2);
+            } else {
+                sqrt_search2(n,b,a+(b-a)/2);
+            }
+
+        } @*/
+
+        a = a+(b-a)/2;
+        b = n/a;
+
+        /*@ {
+            div_rem(n,a);
+            mod_sign(n,a);
+            if(b < 1) {
+                div_sign(n,a);
+                assert b == 0;
+                assert false;
+            }
+            if(b > n) {
+                my_mul_mono_r(a,n+1,b);
+                my_mul_mono_l(1,a,n);
+
+                assert false;
+            }
+
+
+            if(a <= b) {
+                my_mul_mono_r(a,a,b);
+                my_mul_mono_l(a,b,b);
+
+                if(a == b) {
+                    if((a+1)*(a+1) <= n) {
+                        assert false;
+                    }
+                } else {
+                    if(b*b <= n) {
+                        assert n == a*b + n%a;
+                        assert n%a < a;
+                        assert n < (a+1)*b;
+                        my_mul_mono_l(a+1,b,b);
+                        assert false;
+                    }
+                }
+            } else {
+                my_mul_mono_r(a,b,a);
+                my_mul_mono_l(b,a,b);
+
+                if(a*a <= n) {
+                    assert a >= b+1;
+                    assert n == a*b + n%a;
+                    assert n%a <= a-1;
+                    assert a*a <= a*b + a-1;
+                    assert a*(a-b) <= a-1;
+                    assert a-b >= 0;
+                    if(a-b > 0) {
+                        my_mul_mono_r(a,1,a-b);
+                        assert false;
+                    }
+                    assert a-b == 0;
+                    assert false;
+                }
+            }
+        } @*/
+
+        if(b < a) {
+            size_t tmp = a;
+            a = b;
+            b = tmp;
+        }
+    }
+    /*@ {
+        assert a+1 >= b;
+    } @*/
+    return a;
+}
+
 int prime_sieve(int* buff, int n)
     /*@ requires buff[..n] |-> _ &*& n > 0 &*& n+n <= INT_MAX; @*/
     /*@ ensures  int_buffer(buff, result, n,
@@ -87,8 +187,58 @@ int prime_sieve(int* buff, int n)
 
     int i,j;
 
-    if(n < 2) {
+    if(n <= 2) {
+        /*@ {
+          if(n == 2) {
+            assert nat_of_int(n-1) == succ(zero);
+          } else {
+            if(n < 1) { assert false; }
+            if(n > 1) { assert false; }
+            assert n == 1;
+            assert nat_of_int(n-1) == zero;
+          }
+        assert primes_below(nat_of_int(n-1)) == {};
+        } @*/
         return 0;
+    }
+
+    if(n <= 4) {
+        /*@ open ints(buff,_,_); @*/
+        /*@ open ints(buff+1,_,_); @*/
+        buff[0] = 2;
+        buff[1] = 3;
+        if(n <= 3) {
+            /*@ {
+                assert n == 3;
+                assert primes_below(nat_of_int(n-1)) == {2};
+            } @*/
+            return 1;
+        } else {
+            /*@ {
+                assert n == 4;
+                assert primes_below(nat_of_int(2)) == {2};
+                //note_eq(nat_of_int(n-1),succ(succ(succ(zero))));
+                assert !!is_prime(2);
+                if(!is_prime(3)) {
+                    prime_test_sqrt(3,nat_of_int(2));
+                    division_unique(3,2,1,1);
+                    division_unique(2,3,0,2);
+                    assert nat_of_int(2) == succ(succ(zero));
+                    assert !forall(primes_below(nat_of_int(2)),
+                        (nonfactor)(3));
+                    nonfactor_def(3,2);
+                    int cx = not_forall(primes_below(nat_of_int(2)),
+                        (nonfactor)(3));
+                    if(cx == 2) {
+                        assert false;
+                    }
+                    assert false;
+                }
+                assert !!is_prime(3);
+                assert primes_below(nat_of_int(n-1)) == {3,2};
+            } @*/
+            return 2;
+        }
     }
 
     for(i = 0; i < n; ++i)
@@ -108,7 +258,6 @@ int prime_sieve(int* buff, int n)
 
     buff[0] = 0;
     buff[1] = 0;
-    /* @ assume(false); @*/
 
     /*@ {
         assert buff[2..n] |-> ?init_nums;
@@ -133,16 +282,23 @@ int prime_sieve(int* buff, int n)
             int cx = not_forall(init_nums,isbit);
             assert false;
         }
+        if(2*2 < 0) { assert false; }
     } @*/
 
-    for(i = 2; i < n; ++i)
+    for(i = 2; i*i < n; ++i)
         /*@ requires buff[i..n] |-> ?nums
                 &*&  !!forall(indices_of_inner(1,nums,i),
                         (prime_up_to)(nat_of_int(i-1)))
                 &*&  !!forall(indices_of_inner(0,nums,i),
                         (notf)(is_prime))
                 &*&  !!forall(nums,isbit)
-                &*&  i >= 2 &*& i <= n
+                &*&  i >= 2 &*& (i-1)*(i-1) <= n
+                &*&  i*i <= 2*n-1 &*& i*i > 0
+                &*&  i*i < n ? emp
+                :    !!forall(indices_of_inner(1,nums,i), is_prime)
+                &*&  reverse(indices_of_inner(1,nums,i))
+                     == filter((ge_than)(i),
+                            primes_below(nat_of_int(n-1)))
                 ;
           @*/
         /*@ ensures  buff[old_i..n] |-> ?primes
@@ -154,6 +310,12 @@ int prime_sieve(int* buff, int n)
           @*/
         /*@ decreases n-i; @*/
     {
+        /*@ {
+            if(i >= n) {
+                my_mul_mono_r(i,1,i);
+                assert false;
+            }
+        } @*/
 
         /*@ open ints(buff+i,_,_); @*/
         /*@ prime_test(i); @*/
@@ -320,7 +482,6 @@ int prime_sieve(int* buff, int n)
                             assert cx-j < n-j;
                             assert false;
                         }
-                        
                     }
 
                 } @*/
@@ -409,6 +570,30 @@ int prime_sieve(int* buff, int n)
                 }
             } @*/
         }
+
+        /*@ {
+            if((i+1)*(i+1) > 2*n-1) {
+                note_eq((i+1)*(i+1),i*i+2*i+1);
+                my_mul_mono_l(2,i,i);
+                assert i*i <= n-1;
+                assert 2*i <= n-1;
+                assert i*i+2*i+1 <= (n-1)+(n-1)+1;
+                assert false;
+            }
+            if((i+1)*(i+1) >= n) {
+                assert buff[i+1..n] |-> ?next;
+                if(!forall(indices_of_inner(1,next,i+1), is_prime)) {
+                    int cx = not_forall(indices_of_inner(1,next,i+1),
+                        is_prime);
+                    forall_elim(indices_of_inner(1,next,i+1),
+                        (prime_up_to)(nat_of_int(i)),cx);
+                    prime_test_sqrt(cx,nat_of_int(i));
+                    assert false;
+                }
+
+                sieve_works(i+1,n,next);
+            }
+        } @*/
 
         /*@ recursive_call(); @*/
 
