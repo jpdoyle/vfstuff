@@ -8,6 +8,12 @@
 
 #define ASSOC(s,t) list<pair<s,t> >
 
+lemma_auto(mem(x,reverse(l)))
+void mem_reverse<t>(t x,list<t> l)
+    requires true;
+    ensures  mem(x,reverse(l)) == mem(x,l);
+{ LIST_INDUCTION(l,xs,mem_reverse(x,xs)) }
+
 lemma_auto(remove(pair(k,v),l))
 void remove_assoc_of_distinct<s,t>(s k, t v, ASSOC(s,t) l)
     requires distinct(keys(l)) && mem(pair(k,v),l);
@@ -419,6 +425,94 @@ void indices_of_inner_append<t>(t v, list<t> a, list<t> b, int i)
         ==   append(indices_of_inner(v,a,i),
                     indices_of_inner(v,b,i+length(a)));
 { LIST_INDUCTION(a,axs, indices_of_inner_append(v,axs,b,i+1)) }
+
+fixpoint int maximum(list<int> l) {
+    switch(l) {
+    case nil: return 0;
+    case cons(x,xs):
+        return switch(xs) {
+        case nil: return x;
+        case cons(v,vs): return max_of(x,maximum(xs));
+        };
+    }
+}
+
+lemma void maximum_correct(int x, list<int> l)
+    requires !!mem(x,l);
+    ensures  !!mem(maximum(l),l) &*& maximum(l) >= x;
+{
+    switch(l) {
+    case nil: assert false;
+    case cons(v,vs):
+        if(v != x) { maximum_correct(x,vs); }
+        switch(vs) {
+        case nil:
+        case cons(vs_x,vs_xs):
+            maximum_correct(vs_x,vs);
+        }
+    }
+}
+
+lemma void maximum_remove(int x,list<int> l)
+    requires !!mem(x,l) &*& length(l) > 1;
+    ensures  maximum(l) == max_of(x,maximum(remove(x,l)));
+{
+    switch(l) {
+    case nil: assert false;
+    case cons(v,vs):
+        switch(vs) {
+        case nil: assert false;
+        case cons(vs_x,vs_xs):
+            switch(vs_xs) {
+            case nil:
+            case cons(x3,rest):
+                if(v == x) { return; }
+                if(x == vs_x) {
+                    assert remove(x,l) == cons(v,vs_xs);
+                    assert maximum(l) ==
+                        max_of(v,max_of(x,maximum(vs_xs)));
+                    assert maximum(l) ==
+                        max_of(max_of(v,x),maximum(vs_xs));
+                    assert maximum(l) ==
+                        max_of(max_of(x,v),maximum(vs_xs));
+                    assert maximum(l) ==
+                        max_of(x,max_of(v,maximum(vs_xs)));
+                    return;
+                }
+                //TRIVIAL_LIST(vs_xs)
+                maximum_remove(x,vs);
+            }
+        }
+    }
+}
+
+lemma void maximum_permutation(list<int> a,list<int> b)
+    requires !!is_permutation(a,b);
+    ensures  maximum(a) == maximum(b);
+{
+    switch(a) {
+    case nil:
+    case cons(v,vs):
+        permutation_length(a,b);
+        maximum_permutation(vs,remove(v,b));
+        switch(vs) {
+        case nil: TRIVIAL_LIST2(b)
+        case cons(vs_x,vs_xs):
+            switch(vs_xs) {
+            case nil: TRIVIAL_LIST2(b)
+            case cons(x3,rest):
+                maximum_remove(v,b);
+            }
+        }
+    }
+}
+
+lemma_auto(maximum(cons(a,cons(b,l))))
+void maximum_swap(int a, int b, list<int> l)
+    requires true;
+    ensures  maximum(cons(a,cons(b,l)))
+        ==   maximum(cons(b,cons(a,l)));
+{ TRIVIAL_LIST(l) }
 
 #endif
 

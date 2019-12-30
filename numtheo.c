@@ -170,22 +170,22 @@ size_t int_sqrt(size_t n)
     return a;
 }
 
-int prime_sieve(int* buff, int n)
-    /*@ requires buff[..n] |-> _ &*& n > 0 &*& n+n <= INT_MAX; @*/
-    /*@ ensures  int_buffer(buff, result, n,
+size_t prime_sieve(size_t* buff, size_t n)
+    /*@ requires buff[..n] |-> _ &*& n > 0 &*& n+n <= ULLONG_MAX; @*/
+    /*@ ensures  u_llong_buffer(buff, result, n,
                     reverse(primes_below(nat_of_int(n-1))));
       @*/
     /*@ terminates; @*/
 {
     /*@ {
         if(buff == 0) {
-            open ints(buff,_,_);
-            integer_limits(buff);
+            open ullongs(buff,_,_);
+            u_llong_integer_limits(buff);
             assert false;
         }
     } @*/
 
-    int i,j;
+    size_t i,j;
 
     if(n <= 2) {
         /*@ {
@@ -203,8 +203,8 @@ int prime_sieve(int* buff, int n)
     }
 
     if(n <= 4) {
-        /*@ open ints(buff,_,_); @*/
-        /*@ open ints(buff+1,_,_); @*/
+        /*@ open ullongs(buff,_,_); @*/
+        /*@ open ullongs(buff+1,_,_); @*/
         buff[0] = 2;
         buff[1] = 3;
         if(n <= 3) {
@@ -252,8 +252,8 @@ int prime_sieve(int* buff, int n)
     /*@ assert buff[..n] |-> repeat(1,nat_of_int(n)); @*/
 
     /*@ {
-        open ints(buff,_,_);
-        open ints(buff+1,_,_);
+        open ullongs(buff,_,_);
+        open ullongs(buff+1,_,_);
     } @*/
 
     buff[0] = 0;
@@ -317,7 +317,7 @@ int prime_sieve(int* buff, int n)
             }
         } @*/
 
-        /*@ open ints(buff+i,_,_); @*/
+        /*@ open ullongs(buff+i,_,_); @*/
         /*@ prime_test(i); @*/
         if(!buff[i]) {
             /*@ {
@@ -337,7 +337,7 @@ int prime_sieve(int* buff, int n)
                 }
             } @*/
         } else {
-            /* @ open ints(buff+i,_,_); @*/
+            /* @ open ullongs(buff+i,_,_); @*/
             /*@ {
                 assert buff[i] |-> 1;
                 indices_of_inner_correct(1, nums, i, 0);
@@ -398,7 +398,7 @@ int prime_sieve(int* buff, int n)
             {
 
                 /*@ {
-                    ints_split(buff+j-i+1, i-1);
+                    ullongs_split(buff+j-i+1, i-1);
                     assert buff[(j-i+1)..j] |-> ?pref;
                     assert buff[j..n] |-> ?rest;
                     assert later == append(pref,rest);
@@ -537,8 +537,8 @@ int prime_sieve(int* buff, int n)
                     forall_append(take(i-1,later), cons(0,next_later),
                         isbit);
 
-                    close ints(buff+old_j, n-old_j, _);
-                    ints_join(buff+old_j-i+1);
+                    close ullongs(buff+old_j, n-old_j, _);
+                    ullongs_join(buff+old_j-i+1);
                     assert buff[(old_j-i+1)..n] |-> ?new_later;
                     assert new_later ==
                         append(take(i-1,later),append({0},next_later));
@@ -637,7 +637,7 @@ int prime_sieve(int* buff, int n)
         }
     } @*/
 
-    /*@  close ints(buff,n,_); @*/
+    /*@  close ullongs(buff,n,_); @*/
 
     /*@ assert  buff[..n] |-> ?primes
             &*&  !!forall(primes,isbit)
@@ -647,7 +647,7 @@ int prime_sieve(int* buff, int n)
         @*/
 
 
-    /*@ ints_split(buff,2); @*/
+    /*@ ullongs_split(buff,2); @*/
     i = 0;
     for(j = 2; j < n; ++j)
         /*@ invariant i+1 < j &*& i >= 0 &*& j <= n
@@ -664,15 +664,15 @@ int prime_sieve(int* buff, int n)
     {
         /*@ int old_i = i; @*/
         /*@ {
-            open ints(buff+j,_,_);
+            open ullongs(buff+j,_,_);
             cons_head_tail(sieve_primes);
         } @*/
         if(buff[j]) {
             buff[i] = j;
             ++i;
             /*@ {
-                close ints(buff+old_i,1,{j});
-                ints_join(buff);
+                close ullongs(buff+old_i,1,{j});
+                ullongs_join(buff);
                 assert indices_of_inner(1,sieve_primes,j)
                     == cons(j,indices_of_inner(1,
                         tail(sieve_primes),j+1));
@@ -688,8 +688,8 @@ int prime_sieve(int* buff, int n)
             } @*/
         }
         /*@ {
-            close ints(buff+j,1,_);
-            ints_join(buff+i);
+            close ullongs(buff+j,1,_);
+            ullongs_join(buff+i);
         } @*/
     }
     return i;

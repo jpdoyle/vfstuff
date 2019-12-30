@@ -4,9 +4,9 @@
 /*@ #include "numtheo.gh" @*/
 #include <stddef.h>
 
-int prime_sieve(int* buff, int n);
-    /*@ requires buff[..n] |-> _ &*& n > 0 &*& n+n <= INT_MAX; @*/
-    /*@ ensures  int_buffer(buff, result, n,
+size_t prime_sieve(size_t* buff, size_t n);
+    /*@ requires buff[..n] |-> _ &*& n > 0 &*& n+n <= ULLONG_MAX; @*/
+    /*@ ensures  u_llong_buffer(buff, result, n,
                     reverse(primes_below(nat_of_int(n-1))));
       @*/
     /*@ terminates; @*/

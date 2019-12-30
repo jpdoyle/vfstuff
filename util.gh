@@ -294,6 +294,10 @@ lemma_auto(disjoint(a,b)) void disjoint_symm<t>(list<t> a, list<t> b);
     requires true;
     ensures  disjoint(a,b) == disjoint(b,a);
 
+lemma_auto(distinct(reverse(l))) void distinct_reverse<t>(list<t> l);
+    requires true;
+    ensures  distinct(reverse(l)) == distinct(l);
+
 fixpoint bool is_right<s,t>(either<s,t> e) {
     switch(e) {
     case  left(l): return false;
@@ -672,22 +676,67 @@ lemma_auto void malloced_strings_public()
     }
 }
 
-predicate int_buffer(int* start, int len, int cap; list<int> vals)
+lemma void u_llong_integer_limits(unsigned long long *p);
+    requires [?f]u_llong_integer(p, ?v);
+    ensures [f]u_llong_integer(p, v) &*& p > (unsigned long long *)0
+        &*& p + 1 <= (unsigned long long *)UINTPTR_MAX &*& 0 <= v
+        &*& v <= ULLONG_MAX;
+
+lemma void u_llong_integer_unique(unsigned long long *p)
+    requires [?f]u_llong_integer(p, ?v);
+    ensures [f]u_llong_integer(p, v) &*& f <= 1;
+{
+    if(f > 1) {
+        open u_llong_integer(_,_);
+        integer__to_chars(p,sizeof(unsigned long long),false);
+        chars_split((void*)p,sizeof(int));
+        chars_to_ints((char*)(void*)p,1);
+        integer_unique((int*)(void*)p);
+        assert false;
+    }
+}
+
+lemma void ullongs_split(unsigned long long *array, int offset)
+    requires [?f]ullongs(array, ?N, ?as) &*& 0 <= offset &*& offset <= N;
+    ensures [f]ullongs(array, offset, take(offset, as))
+        &*& [f]ullongs(array + offset, N - offset, drop(offset, as))
+        &*& as == append(take(offset, as), drop(offset, as));
+{
+    if(offset > 0) {
+        open ullongs(array,_,_);
+        ullongs_split(array+1,offset-1);
+        close [f]ullongs(array,offset,_);
+    }
+}
+
+lemma void ullongs_join(unsigned long long *a)
+    requires [?f]ullongs(a, ?M, ?as) &*& [f]ullongs(a + M, ?N, ?bs);
+    ensures [f]ullongs(a, M + N, append(as, bs));
+{
+    open ullongs(a,_,_);
+    if(M > 0) {
+        ullongs_join(a+1);
+        close [f]ullongs(a,M+N,_);
+    }
+}
+
+
+predicate u_llong_buffer(unsigned long long* start, int len, int cap; list<int> vals)
     =   start != 0 &*& cap > 0 &*& len >= 0 &*& start[..len] |-> vals
     &*& start[len..cap] |-> _;
 
-lemma_auto void int_buffer_auto()
-    requires [?f]int_buffer(?start,?len,?cap,?vals);
-    ensures  [ f]int_buffer( start, len, cap, vals)
+lemma_auto void u_llong_buffer_auto()
+    requires [?f]u_llong_buffer(?start,?len,?cap,?vals);
+    ensures  [ f]u_llong_buffer( start, len, cap, vals)
         &*&  f <= 1 &*& start != 0
         &*&  len >= 0 &*& cap > 0 &*& length(vals) == len
         ;
 {
-    open int_buffer(_,_,_,_);
+    open u_llong_buffer(_,_,_,_);
     if(f > 1) {
-        open ints(start,_,_);
-        if(len == 0) { open ints(start,_,_); }
-        integer_unique(start);
+        open ullongs(start,_,_);
+        if(len == 0) { open ullongs(start,_,_); }
+        u_llong_integer_unique(start);
     }
 }
 

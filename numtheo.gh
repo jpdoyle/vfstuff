@@ -3,6 +3,7 @@
 
 #include "util.gh"
 #include "lists.gh"
+#include "sorting.gh"
 
 //lemma void mul_assoc(int x,int y,int z)
 //    requires true;
@@ -946,6 +947,48 @@ lemma void unique_prime_factorization(
 //        }
 //    }
 //}
+
+//fixpoint list<int> prime_factorization_fueled(int x, nat n) {
+//    switch(n) {
+//    case zero: return {};
+//    case succ(n0):
+//        return x%int_of_nat(n) == 0 && is_prime(int_of_nat(n))
+//            ?
+//            cons(int_of_nat(n),prime_factorization_fueled(x/int_of_nat(n), n0)
+//    }
+//}
+
+lemma void factor_bound(int a, int b)
+    requires a >= 0 &*& b >= 0 &*& a*b > 0;
+    ensures  a >= 1 &*& a <= a*b
+        &*&  b >= 1 &*& b <= a*b;
+{
+    if(a < 1) { assert a == 0; assert false; }
+    if(b < 1) { assert b == 0; assert false; }
+    my_mul_mono_r(a,1,b);
+    my_mul_mono_l(1,a,b);
+}
+
+lemma_auto(reverse(primes_below(n)))
+void primes_below_sorted(nat n)
+    requires true;
+    ensures  !!sorted(reverse(primes_below(n)));
+{
+    switch(n) {
+    case zero:
+    case succ(n0):
+        primes_below_sorted(n0);
+        if(is_prime(int_of_nat(n))) {
+            if(!sorted(reverse(primes_below(n)))) {
+                pair<int,int> cx = not_sorted_append(reverse(primes_below(n0)),
+                            {int_of_nat(n)});
+                switch(cx) { case pair(x,y):
+                    assert false;
+                }
+            }
+        }
+    }
+}
 
 #endif
 
