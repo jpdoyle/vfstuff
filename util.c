@@ -2,6 +2,18 @@
 
 /*@
 
+//lemma void integer_unique(int *p)
+//    requires [?f]integer(p, ?v);
+//    ensures [f]integer(p, v) &*& f <= 1;
+//{
+//    if(f > 1) {
+//        open integer(p,_);
+//        integer__to_chars((void*)p,sizeof(int),true);
+//        chars_unique((void*)p);
+//        assert false;
+//    }
+//}
+
 lemma void forall_append_exact<t>(list<t> a, list<t> b, fixpoint(t,bool) p)
     requires true;
     ensures  forall(append(a,b),p) == (forall(a,p) && forall(b,p));
@@ -117,6 +129,36 @@ lemma void disjoint_append<t>(list<t> a, list<t> b)
         case nil:
         case cons(x,xs):
             disjoint_append(xs,b);
+    }
+}
+
+lemma void distinct_reverse<t>(list<t> l)
+    requires true;
+    ensures  distinct(reverse(l)) == distinct(l);
+{
+    switch(l) {
+    case nil:
+    case cons(x,xs):
+        distinct_reverse(xs);
+        disjoint_append({x},xs);
+        disjoint_append(reverse(xs),{x});
+        assert reverse(l) == append(reverse(xs),{x});
+        if(!distinct(l) && distinct(reverse(l))) {
+            assert !!distinct(append(reverse(xs),{x}));
+            assert !!distinct(reverse(xs));
+            assert !!distinct(xs);
+            assert !!mem(x,xs);
+            forall_elim(reverse(xs),
+                (notf)((flip)(mem,{x})),x);
+            assert false;
+        }
+        if(distinct(l) && !distinct(reverse(l))) {
+            assert !!distinct(reverse(xs));
+            assert !!distinct({x});
+            t cx = not_forall(reverse(xs),
+                (notf)((flip)(mem,{x})));
+            assert false;
+        }
     }
 }
 

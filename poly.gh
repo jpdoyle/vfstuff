@@ -1,0 +1,317 @@
+#ifndef VFSTUFF_BIGINT_H
+#define VFSTUFF_BIGINT_H
+
+#include "util.gh"
+#include "lists.gh"
+
+fixpoint int poly_eval(list<int> poly, int pt) {
+    switch(poly) {
+    case nil: return 0;
+    case cons(x,xs): return x + pt*poly_eval(xs,pt);
+    }
+}
+
+fixpoint bool is_zero(int x) { return x == 0; }
+fixpoint bool poly_is_zero(list<int> p) { return forall(p,is_zero); }
+
+fixpoint bool minimal(list<int> poly) {
+    switch(poly) {
+    case nil: return true;
+    case cons(x,xs):
+        return switch(xs) {
+        case nil: return x != 0;
+        case cons(v,vs): return minimal(xs);
+        };
+    }
+}
+
+fixpoint list<int> minimize(list<int> poly) {
+    switch(poly) {
+    case nil: return nil;
+    case cons(x,xs):
+        return poly_is_zero(xs)
+            ?  (x == 0 ? nil : cons(x,nil))
+            :  (cons(x,minimize(xs)));
+    }
+}
+
+lemma_auto(minimize(p)) void minimal_zero(list<int> p)
+    requires true;
+    ensures  (minimize(p) == nil) == poly_is_zero(p);
+{
+    switch(p) {
+    case nil: return;
+    case cons(x,xs):
+    }
+}
+
+lemma_auto(minimal(minimize(p))) void minimal_minimize(list<int> p)
+    requires true;
+    ensures  !!minimal(minimize(p));
+{
+    switch(p) {
+    case nil: return;
+    case cons(x,xs):
+        if(poly_is_zero(xs)) { }
+        TRIVIAL_LIST(xs)
+        minimal_minimize(xs);
+    }
+}
+
+lemma_auto(minimal(p)) void minimize_minimal(list<int> p)
+    requires !!minimal(p);
+    ensures  minimize(p) == p;
+{
+    switch(p) {
+    case nil: return;
+    case cons(x,xs):
+        TRIVIAL_LIST(xs)
+        minimize_minimal(xs);
+    }
+}
+
+lemma_auto(poly_eval(minimize(p),pt))
+void minimize_eval(list<int> p, int pt)
+    requires true;
+    ensures  poly_eval(minimize(p),pt) == poly_eval(p,pt);
+{
+    switch(p) {
+    case nil: return;
+    case cons(x,xs):
+        TRIVIAL_LIST(xs)
+        minimize_eval(xs,pt);
+    }
+}
+
+fixpoint int degree(list<int> p) { return length(minimize(p))-1; }
+
+fixpoint list<int> poly_scale(int s,list<int> p) {
+    switch(p) {
+    case nil: return nil;
+    case cons(x,xs): return cons(s*x,poly_scale(s,xs));
+    }
+}
+
+fixpoint list<int> poly_plus(list<int> p, list<int> q) {
+    switch(p) {
+    case nil: return q;
+    case cons(x,xs):
+        return switch(q) {
+        case nil: return p;
+        case cons(y,ys):
+            return cons(x+y,poly_plus(xs,ys));
+        };
+    }
+}
+
+lemma_auto(poly_scale(s,p))
+void scale_nil(int s,list<int> p)
+    requires true;
+    ensures  (poly_scale(s,p) == nil) == (p == nil);
+{ TRIVIAL_LIST(p) }
+
+lemma_auto(poly_scale(s,nil))
+void scale_nil_simple(int s)
+    requires true;
+    ensures  poly_scale(s,nil) == nil;
+{}
+
+lemma_auto(poly_scale(0,p))
+void scale_0(list<int> p)
+    requires true;
+    ensures  !!poly_is_zero(poly_scale(0,p));
+{ LIST_INDUCTION(p,xs,scale_0(xs)) }
+
+lemma_auto(poly_scale(1,p))
+void scale_1(list<int> p)
+    requires true;
+    ensures  p == poly_scale(1,p);
+{ LIST_INDUCTION(p,xs,scale_1(xs)) }
+
+lemma //_auto(length(poly_scale(s,p)))
+void len_scale(int s, list<int> p)
+    requires true;
+    ensures  length(poly_scale(s,p)) == length(p);
+{ LIST_INDUCTION(p,xs,len_scale(s,xs)) }
+
+lemma_auto(poly_plus(p,q))
+void poly_plus_assoc(list<int> p, list<int> q)
+    requires true;
+    ensures  poly_plus(p,q) == poly_plus(q,p);
+{
+    switch(p) {
+    case nil:
+        switch(q) {
+        case nil:
+        case cons(y,ys):
+        }
+    case cons(x,xs):
+        switch(q) {
+        case nil:
+        case cons(y,ys): poly_plus_assoc(xs,ys);
+        }
+    }
+}
+
+lemma_auto(length(poly_plus(p,q)))
+void len_plus(list<int> p, list<int> q)
+    requires length(poly_plus(p,q)) != length(p);
+    ensures  length(poly_plus(p,q)) == length(q);
+{
+    switch(p) {
+    case nil:
+    case cons(x,xs):
+        switch(q) {
+        case nil:
+        case cons(y,ys): len_plus(xs,ys);
+        }
+    }
+}
+
+lemma_auto(minimal(poly_scale(s,p)))
+void scale_nonzero(int s, list<int> p)
+    requires s != 0;
+    ensures  minimal(poly_scale(s,p)) == minimal(p);
+{
+    switch(p) {
+    case nil: return;
+    case cons(x,xs):
+        TRIVIAL_LIST(xs)
+        mul_abs_commute(s,x);
+        assert abs(s*x) == abs(s)*abs(x);
+        if(x != 0 && s*x == 0) {
+            my_mul_mono_r(abs(s),1,abs(x));
+            assert s*x != 0;
+        }
+        scale_nonzero(s,xs);
+    }
+}
+
+lemma //_auto(poly_scale(a,poly_scale(b,p)))
+void poly_scale_mul(int a, int b, list<int> p)
+    requires true;
+    ensures  poly_scale(a,poly_scale(b,p)) == poly_scale(a*b,p);
+{
+    switch(p) {
+    case nil: return;
+    case cons(x,xs):
+        mul_assoc(a,b,x);
+        assert poly_scale(a,poly_scale(b,p))
+            == cons((a*b)*x,poly_scale(a,poly_scale(b,xs)));
+        poly_scale_mul(a,b,xs);
+    }
+}
+
+lemma
+void poly_linear(int a, int b, list<int> p)
+    requires true;
+    ensures  poly_plus(poly_scale(a,p),poly_scale(b,p))
+        ==   poly_scale(a+b,p);
+{
+    switch(p) {
+    case nil:
+    case cons(x,xs):
+        poly_linear(a,b,xs);
+        assert poly_scale(a+b,p) == cons((a+b)*x,
+               poly_plus(poly_scale(a,xs),poly_scale(b,xs)));
+    }
+}
+
+fixpoint list<int> poly_mul(list<int> a,list<int> b) {
+    switch(a) {
+    case nil: return nil;
+    case cons(x,xs):
+        return poly_plus(poly_scale(x,b),cons(0,poly_mul(xs,b)));
+    }
+}
+
+lemma_auto(poly_eval(poly_scale(s,p),pt))
+void poly_scale_eval(int s, list<int> p, int pt)
+    requires true;
+    ensures  poly_eval(poly_scale(s,p),pt) == s*poly_eval(p,pt);
+{
+    switch(p) {
+    case nil:
+    case cons(x,xs):
+        poly_scale_eval(s,xs,pt);
+        assert poly_eval(poly_scale(s,p),pt)
+            == s*x + pt*poly_eval(poly_scale(s,xs),pt);
+        assert poly_eval(poly_scale(s,p),pt)
+            == s*x + pt*(s*poly_eval(xs,pt));
+        mul_assoc(pt,s,poly_eval(xs,pt));
+        mul_assoc(s,pt,poly_eval(xs,pt));
+        mul_commutes(s,pt);
+        assert poly_eval(poly_scale(s,p),pt)
+            == s*x + s*(pt*poly_eval(xs,pt));
+        assert poly_eval(poly_scale(s,p),pt)
+            == s*(x + pt*poly_eval(xs,pt));
+        mul_abstract_def(s,x + pt*poly_eval(xs,pt));
+        assert poly_eval(poly_scale(s,p),pt)
+            == s*poly_eval(p,pt);
+    }
+}
+
+lemma_auto(poly_eval(poly_plus(p,q),pt))
+void poly_plus_eval(list<int> p, list<int> q, int pt)
+    requires true;
+    ensures  poly_eval(poly_plus(p,q),pt)
+        ==   poly_eval(p,pt) + poly_eval(q,pt);
+{
+    switch(p) {
+    case nil:
+    case cons(x,xs):
+        switch(q) {
+        case nil:
+        case cons(y,ys):
+            poly_plus_eval(xs,ys,pt);
+
+            assert poly_eval(poly_plus(p,q),pt)
+                == x+y+pt*(poly_eval(poly_plus(xs,ys),pt));
+            //mul_abstract_def(pt,poly_eval(poly_plus(xs,ys),pt));
+            assert poly_eval(poly_plus(p,q),pt)
+                == x+y+pt*(poly_eval(xs,pt) + poly_eval(ys,pt));
+            note_eq( pt*(poly_eval(xs,pt) + poly_eval(ys,pt)),
+                     pt*poly_eval(xs,pt) + pt*poly_eval(ys,pt));
+            assert poly_eval(poly_plus(p,q),pt)
+                == x+y+pt*poly_eval(xs,pt) + pt*poly_eval(ys,pt);
+        }
+    }
+}
+
+lemma void poly_mul_eval(list<int> a, list<int> b, int pt)
+    requires true;
+    ensures  poly_eval(poly_mul(a,b),pt)
+        ==   poly_eval(a,pt)*poly_eval(b,pt);
+{
+    switch(a) {
+    case nil:
+    case cons(x,xs):
+        poly_mul_eval(xs,b,pt);
+        assert poly_eval(poly_mul(a,b),pt)
+            == poly_eval(poly_plus(poly_scale(x,b),
+                                   cons(0,poly_mul(xs,b))),
+                         pt);
+        assert poly_eval(poly_mul(a,b),pt)
+            == poly_eval(poly_scale(x,b),pt)
+            +  poly_eval(cons(0,poly_mul(xs,b)),pt);
+        assert poly_eval(poly_mul(a,b),pt)
+            == x*poly_eval(b,pt)
+            +  pt*poly_eval(poly_mul(xs,b),pt);
+        assert poly_eval(poly_mul(a,b),pt)
+            == x*poly_eval(b,pt)
+            +  pt*(poly_eval(xs,pt)*poly_eval(b,pt));
+
+        mul_assoc(pt,poly_eval(xs,pt),poly_eval(b,pt));
+
+        assert poly_eval(poly_mul(a,b),pt)
+            == (x + pt*poly_eval(xs,pt))*poly_eval(b,pt);
+
+        mul_abstract_def(x + pt*poly_eval(xs,pt),poly_eval(b,pt));
+
+        assert poly_eval(poly_mul(a,b),pt)
+            == poly_eval(a,pt)*poly_eval(b,pt);
+    }
+}
+
+#endif
+

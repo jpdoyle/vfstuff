@@ -286,18 +286,22 @@ int main() /*@ : main @*/
     /*@ ensures  true; @*/
 {
     size_t target;
+    size_t ret;
+    unsigned trunc;
 #ifndef __FILE__
     target = 600851475143;
 #else
     scanf("%llu",&target);
     do {
 #endif
-    size_t ret = largest_prime_factor(target);
+    ret = largest_prime_factor(target);
     /*@ assert prime_factorization(target,?l)
             &*&  ret == maximum(l); @*/
     /*@ open prime_factorization(target,l); @*/
 #ifndef __FILE__
-    unsigned trunc = /*@ truncating @*/ (unsigned)ret;
+    trunc = /*@ truncating @*/ (unsigned)ret;
+    /*@ u_integer_limits(&trunc); @*/
+
     if((size_t)trunc != ret) {
         printf("600851475143\n");
     } else {

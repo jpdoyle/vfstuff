@@ -2,6 +2,7 @@
 #define VFUTIL_UTIL_GH
 
 #include <quantifiers.gh>
+#include <list.gh>
 #include <listex.gh>
 #include "nats.gh"
 
@@ -503,6 +504,12 @@ lemma void my_mul_strict_mono_r(int a, int b1, int b2)
     {}
 }
 
+fixpoint int mul_abstract(int a,int b) { return a*b; }
+lemma void mul_abstract_def(int a,int b)
+    requires true;
+    ensures  mul_abstract(a,b) == a*b;
+{}
+
 lemma void mul_assoc(int x, int y, int z)
     requires true;
     ensures x*(y*z) == (x*y)*z;
@@ -518,6 +525,25 @@ lemma void mul_assoc(int x, int y, int z)
             invariant i <= -1 &*& i >= x &*& i*(y*z) == (i*y)*z;
             decreases i-x;
         { note_eq(((i-1)*y)*z, (i*y-y)*z); }
+    }
+}
+
+lemma void mul_commutes(int a, int b)
+    requires true;
+    ensures  a*b == b*a;
+{
+    if(a >= 0) {
+        for(int i = 0; i < a; ++i)
+            invariant i*b == b*i
+                &*&   0 <= i &*& i <= a;
+            decreases a-i;
+        { }
+    } else {
+        for(int i = 0; i > a; --i)
+            invariant i*b == b*i
+                &*&   0 >= i &*& i >= a;
+            decreases i-a;
+        { }
     }
 }
 

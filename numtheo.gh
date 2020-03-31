@@ -32,31 +32,6 @@
 //    }
 //}
 
-lemma void mul_commutes(int a, int b)
-    requires true;
-    ensures  a*b == b*a;
-{
-    if(a >= 0) {
-        for(int i = 0; i < a; ++i)
-            invariant i*b == b*i
-                &*&   0 <= i &*& i <= a;
-            decreases a-i;
-        { }
-    } else {
-        for(int i = 0; i > a; --i)
-            invariant i*b == b*i
-                &*&   0 >= i &*& i >= a;
-            decreases i-a;
-        { }
-    }
-}
-
-fixpoint int mul_abstract(int a,int b) { return a*b; }
-lemma void mul_abstract_def(int a,int b)
-    requires true;
-    ensures  mul_abstract(a,b) == a*b;
-{}
-
 fixpoint int product(list<int> l) {
     switch(l) {
     case nil:        return 1;
