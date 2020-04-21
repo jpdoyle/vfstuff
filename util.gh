@@ -73,10 +73,10 @@ void nth_of_index_of<t>(t v, list<t> l);
 //    }
 //}
 
-lemma_auto(nth_of(n,l))
+lemma //_auto(nth_of(n,l))
 void nth_of_bounds<t>(int n, list<t> l);
     requires true;
-    ensures  (nth_of(n,l) == none) == (n < 0 || n >= length(l));
+    ensures  (nth_of(n,l) != none) == (n >= 0 && n < length(l));
 
 //lemma_auto(nth_of(n,l))
 //void nth_of_bounds_auto1<t>(int n, list<t> l);
@@ -611,11 +611,10 @@ lemma_auto void u_llong_buffer_auto();
 
 fixpoint bool isbit(int x) { return x == 0 || x == 1; }
 
-//lemma_auto(pow_nat(x,n))
-//void pow_nat_nonneg(int x, nat n)
-//    requires x >= 0;
-//    ensures  pow_nat(x,n) >= 0;
-//{ NAT_INDUCTION(n,m,pow_nat_nonneg(x,m)) }
+lemma_auto(pow_nat(x,n))
+void pow_nat_pos(int x, nat n);
+    requires x >= 1;
+    ensures  pow_nat(x,n) >= 1;
 
 lemma_auto(pow_nat(1,n))
 void pow_1(nat n)

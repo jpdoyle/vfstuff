@@ -825,6 +825,19 @@ lemma void div_shrinks(int x, int d)
     }
 }
 
+lemma_auto(pow_nat(x,n))
+void pow_nat_pos(int x, nat n)
+    requires x >= 1;
+    ensures  pow_nat(x,n) >= 1;
+{
+    switch(n) {
+    case zero:
+    case succ(n0):
+        pow_nat_pos(x,n0);
+        my_mul_mono_l(1,x,pow_nat(x,n0));
+    }
+}
+
 lemma void pow_plus(int x,nat y,int z)
     requires z >= 0;
     ensures  pow_nat(x,nat_of_int(int_of_nat(y)+z))

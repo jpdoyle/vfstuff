@@ -171,6 +171,22 @@ lemma void in_range2_b64_chars(char c)
     else if(c < 'Z') {}
 }
 
+lemma void b64_cases(int n)
+    requires true;
+    ensures (n < 0) ? nth_of(n,b64_chars()) == none
+        :   (n < 26)
+            ? nth_of(n,b64_chars()) == some('A'+n)
+        :   (n-26 < 26)
+            ? nth_of(n,b64_chars()) == some('a'+(n-26))
+        :   (n-52 < 10)
+            ? nth_of(n,b64_chars()) == some('0'+(n-52))
+        :   (n <= 62)
+            ? (n == 62 &*& nth_of(n,b64_chars()) == some('+'))
+        :   (n <= 63)
+            ? (n == 63 &*& nth_of(n,b64_chars()) == some('/'))
+        :   nth_of(n,b64_chars()) == none;
+{ ALREADY_PROVEN() }
+
   @*/
 
 
@@ -180,6 +196,7 @@ char b64_of_byte(uint8_t n)
     /*@ terminates; @*/
 {
     /*@ ALREADY_PROVEN() @*/
+    /*@ b64_cases(n); @*/
     uint8_t thresh0 = (uint8_t)('Z'-'A');
     uint8_t thresh1 = (uint8_t)('z'-'a' + thresh0 + 1);
     uint8_t thresh2 = (uint8_t)('9'-'0' + thresh1 + 1);
@@ -365,6 +382,7 @@ uint8_t* bytes_of_hex(size_t len, char* s, size_t* outlen)
             ; @*/
     /*@ terminates; @*/
 {
+    /*@ ALREADY_PROVEN() @*/
     uint8_t* ret;
     uint8_t* p;
     size_t i;
@@ -475,17 +493,78 @@ uint8_t* bytes_of_hex(size_t len, char* s, size_t* outlen)
     return ret;
 }
 
-char* hex_of_bytes(size_t len, uint8_t* b) {
-    uint8_t* ret;
-    uint8_t* p;
+char* hex_of_bytes(size_t len, uint8_t* b)
+    /*@ requires [?f]b[..len] |-> ?bytes
+            &*&  2*len+1 <= ULONG_MAX
+            ; @*/
+    /*@ ensures  [ f]b[..len] |->  bytes
+            &*&  string(result,?hex_str)
+            &*&  length(hex_str) == 2*len
+            &*&  base_n(hex_chars(),reverse(hex_str),_,?val)
+            &*&  malloc_block_chars(result,_)
+            &*&  poly_eval(reverse(bytes),256) == val
+            ; @*/
+    /*@ terminates; @*/
+{
+    char* ret;
+    char* p;
     size_t i;
-    ret = calloc(2*len,sizeof(char));
+    ret = calloc(2*len+1,sizeof(char));
     if(!ret) { abort(); }
 
-    for(i = 0,p = ret; i < len; ++i,p+=2) {
-        p[0] = hex_of_nib(b[i]>>4);
-        p[1] = hex_of_nib(b[i]&0xf);
+    for(i = 0,p = ret; i < len; ++i,p+=2)
+        /*@ requires [f]b[i..len] |-> ?loop_bytes
+                &*&  ret[2*i..2*len+1] |-> _
+                &*&  i >= 0 &*& i <= len
+                &*&  p == ret+2*i
+                ; @*/
+        /*@ ensures  [f]b[old_i..len]    |->  loop_bytes
+                &*&  ret[2*old_i..2*len] |-> ?loop_hex
+                &*&  !mem('\0',loop_hex)
+                &*&  ret[2*len] |-> _
+                &*&  base_n(hex_chars(),reverse(loop_hex),_,?loop_val)
+                &*&  poly_eval(reverse(loop_bytes),256) == loop_val
+                ; @*/
+        /*@ decreases len-i; @*/
+    {
+        /*@ open uchars(b+i,_,_); @*/
+        /*@ open  chars(p,_,_); @*/
+        /*@ open  chars(p+1,_,_); @*/
+        /*@ assert [f]b[i]        |-> ?x; @*/
+        /*@ assert [f]b[i+1..len] |-> ?xs; @*/
+        /*@ {
+            u_character_limits(b+i);
+            shiftright_div(x,N4);
+            bitand_pow_2(x,N4);
+            div_rem(x,16);
+        } @*/
+        p[0] = hex_of_nib((uint8_t)(b[i]>>4));
+        p[1] = hex_of_nib((uint8_t)(b[i]&0xf));
+
+        /*@ assert p[0] |-> ?c1; @*/
+        /*@ assert p[1] |-> ?c2; @*/
+        /*@ {
+            index_of_witness(x/16,c1,hex_chars());
+            index_of_witness(x%16,c2,hex_chars());
+        } @*/
+
+        /*@ recursive_call(); @*/
+
+        /*@ {
+            assert ret[2*(old_i+1)..2*len] |-> ?rest_hex;
+            assert base_n(hex_chars(),reverse(rest_hex),_,?rest_val);
+            close base_n(hex_chars(),{c1},{x/16},x/16);
+            close base_n(hex_chars(),{c2,c1},{x%16,x/16},x);
+            base_n_append(reverse(rest_hex),{c2,c1});
+            append_assoc(reverse(rest_hex),{c2},{c1});
+            assert base_n(hex_chars(),
+                reverse(cons(c1,cons(c2,rest_hex))),_,?final_val);
+            assert final_val == rest_val +
+                pow_nat(16,nat_of_int(length(rest_hex)))*x;
+            pow_times2(16,N2,len-1-old_i);
+        } @*/
     }
+    ret[2*len] = '\0';
 
     return ret;
 }
