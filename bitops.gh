@@ -46,21 +46,21 @@ SOFTWARE.
 
 // Definitions
 
-inductive Z = Zsign(boxed_bool) | Zdigit(Z, boxed_bool);
+inductive Z = Zsign(bool) | Zdigit(Z, bool);
 
 fixpoint int int_of_Z(Z z) {
     switch (z) {
-        case Zsign(b): return unboxed_bool(b) ? -1 : 0;
-        case Zdigit(z0, b0): return 2 * int_of_Z(z0) + (unboxed_bool(b0) ? 1 : 0);
+        case Zsign(b): return (b) ? -1 : 0;
+        case Zdigit(z0, b0): return 2 * int_of_Z(z0) + ((b0) ? 1 : 0);
     }
 }
 
 fixpoint Z Z_and(Z z1, Z z2) {
     switch (z1) {
-        case Zsign(b1): return unboxed_bool(b1) ? z2 : z1;
+        case Zsign(b1): return (b1) ? z2 : z1;
         case Zdigit(z10, b10): return switch (z2) {
-            case Zsign(b2): return unboxed_bool(b2) ? z1 : z2;
-            case Zdigit(z20, b20): return Zdigit(Z_and(z10, z20), boxed_bool(unboxed_bool(b10) && unboxed_bool(b20)));
+            case Zsign(b2): return (b2) ? z1 : z2;
+            case Zdigit(z20, b20): return Zdigit(Z_and(z10, z20), (b10) && (b20));
         };
     }
 }
@@ -71,8 +71,8 @@ lemma void bitand_def(int x1, Z z1, int x2, Z z2);
 
 fixpoint Z Z_not(Z z) {
     switch (z) {
-        case Zsign(b): return Zsign(boxed_bool(!unboxed_bool(b)));
-        case Zdigit(z0, b0): return Zdigit(Z_not(z0), boxed_bool(!unboxed_bool(b0)));
+        case Zsign(b): return Zsign(!(b));
+        case Zdigit(z0, b0): return Zdigit(Z_not(z0), !(b0));
     }
 }
 
@@ -82,10 +82,10 @@ lemma void bitnot_def(int x, Z z);
 
 fixpoint Z Z_xor(Z z1, Z z2) {
     switch (z1) {
-        case Zsign(b1): return unboxed_bool(b1) ? Z_not(z2) : z2;
+        case Zsign(b1): return (b1) ? Z_not(z2) : z2;
         case Zdigit(z10, b10): return switch (z2) {
-            case Zsign(b2): return unboxed_bool(b2) ? Z_not(z1) : z1;
-            case Zdigit(z20, b20): return Zdigit(Z_xor(z10, z20), boxed_bool(b10 != b20));
+            case Zsign(b2): return (b2) ? Z_not(z1) : z1;
+            case Zdigit(z20, b20): return Zdigit(Z_xor(z10, z20), b10 != b20);
         };
     }
 }
@@ -96,10 +96,10 @@ lemma void bitxor_def(int x1, Z z1, int x2, Z z2);
 
 fixpoint Z Z_or(Z z1, Z z2) {
     switch (z1) {
-        case Zsign(b1): return unboxed_bool(b1) ? z1 : z2;
+        case Zsign(b1): return (b1) ? z1 : z2;
         case Zdigit(z10, b10): return switch (z2) {
-            case Zsign(b2): return unboxed_bool(b2) ? z2 : z1;
-            case Zdigit(z20, b20): return Zdigit(Z_or(z10, z20), boxed_bool(unboxed_bool(b10) || unboxed_bool(b20)));
+            case Zsign(b2): return (b2) ? z2 : z1;
+            case Zdigit(z20, b20): return Zdigit(Z_or(z10, z20), (b10) || (b20));
         };
     }
 }
@@ -110,7 +110,7 @@ lemma void bitor_def(int x1, Z z1, int x2, Z z2);
 
 lemma void shiftleft_def(int x, nat n);
     requires true;
-    ensures x << int_of_nat(n) == x * powof_nat(2, n);
+    ensures x << int_of_nat(n) == x * pow_nat(2, n);
 
 fixpoint Z Z_shiftright(Z z, nat n) {
     switch (n) {
@@ -128,11 +128,11 @@ lemma void shiftright_def(int x, Z z, nat n);
 
 lemma void truncate_unsigned_def(int x, nat n);
     requires true;
-    ensures truncate_unsigned(x, int_of_nat(n)) == x % powof_nat(2, n);
+    ensures truncate_unsigned(x, int_of_nat(n)) == x % pow_nat(2, n);
 
 lemma_auto(truncate_unsigned(x,nb)) void truncate_unsigned_def_auto(int x, int nb)
     requires nb >= 0;
-    ensures truncate_unsigned(x, nb) == x % powof_nat(2, nat_of_int(nb));
+    ensures truncate_unsigned(x, nb) == x % pow_nat(2, nat_of_int(nb));
 {
     truncate_unsigned_def(x,nat_of_int(nb));
     int_of_nat_of_int(nb);
@@ -158,66 +158,66 @@ lemma void truncate_signed_def(int x, Z z, nat n);
 // Limits
 
 lemma void bitand_limits(int x, int y, nat n);
-    requires 0 <= x && x < powof_nat(2, n) || 0 <= y && y < powof_nat(2, n);
-    ensures 0 <= (x & y) &*& (x & y) < powof_nat(2, n);
+    requires 0 <= x && x < pow_nat(2, n) || 0 <= y && y < pow_nat(2, n);
+    ensures 0 <= (x & y) &*& (x & y) < pow_nat(2, n);
 
 lemma void bitand_signed_limits(int x, int y, nat n);
-    requires -powof_nat(2, n) <= x && x < powof_nat(2, n) || -powof_nat(2, n) <= y && y < powof_nat(2, n);
-    ensures -powof_nat(2, n) <= (x & y) &*& (x & y) < powof_nat(2, n);
+    requires -pow_nat(2, n) <= x && x < pow_nat(2, n) || -pow_nat(2, n) <= y && y < pow_nat(2, n);
+    ensures -pow_nat(2, n) <= (x & y) &*& (x & y) < pow_nat(2, n);
 
 lemma void bitxor_limits(int x, int y, nat n);
-    requires 0 <= x &*& x < powof_nat(2, n) &*& 0 <= y &*& y < powof_nat(2, n);
-    ensures 0 <= (x ^ y) &*& (x ^ y) < powof_nat(2, n);
+    requires 0 <= x &*& x < pow_nat(2, n) &*& 0 <= y &*& y < pow_nat(2, n);
+    ensures 0 <= (x ^ y) &*& (x ^ y) < pow_nat(2, n);
 
 lemma void bitxor_signed_limits(int x, int y, nat n);
-    requires -powof_nat(2, n) <= x &*& x < powof_nat(2, n) &*& -powof_nat(2, n) <= y &*& y < powof_nat(2, n);
-    ensures -powof_nat(2, n) <= (x | y) &*& (x | y) < powof_nat(2, n);
+    requires -pow_nat(2, n) <= x &*& x < pow_nat(2, n) &*& -pow_nat(2, n) <= y &*& y < pow_nat(2, n);
+    ensures -pow_nat(2, n) <= (x | y) &*& (x | y) < pow_nat(2, n);
 
 lemma void bitor_limits(int x, int y, nat n);
-    requires 0 <= x &*& x < powof_nat(2, n) &*& 0 <= y &*& y < powof_nat(2, n);
-    ensures 0 <= (x | y) &*& (x | y) < powof_nat(2, n);
+    requires 0 <= x &*& x < pow_nat(2, n) &*& 0 <= y &*& y < pow_nat(2, n);
+    ensures 0 <= (x | y) &*& (x | y) < pow_nat(2, n);
 
 lemma void bitor_signed_limits(int x, int y, nat n);
-    requires -powof_nat(2, n) <= x &*& x < powof_nat(2, n) &*& -powof_nat(2, n) <= y &*& y < powof_nat(2, n);
-    ensures -powof_nat(2, n) <= (x | y) &*& (x | y) < powof_nat(2, n);
+    requires -pow_nat(2, n) <= x &*& x < pow_nat(2, n) &*& -pow_nat(2, n) <= y &*& y < pow_nat(2, n);
+    ensures -pow_nat(2, n) <= (x | y) &*& (x | y) < pow_nat(2, n);
 
 lemma void shiftleft_limits(int x, nat m, nat n);
-    requires 0 <= x &*& x < powof_nat(2, m);
-    ensures 0 <= x << int_of_nat(n) &*& x << int_of_nat(n) < powof_nat(2, nat_plus(m, n));
+    requires 0 <= x &*& x < pow_nat(2, m);
+    ensures 0 <= x << int_of_nat(n) &*& x << int_of_nat(n) < pow_nat(2, nat_plus(m, n));
 
 lemma void shiftleft_signed_limits(int x, nat m, nat n);
-    requires -powof_nat(2, m) <= x &*& x < powof_nat(2, m);
-    ensures -powof_nat(2, nat_plus(m, n)) <= x << int_of_nat(n) &*& x << int_of_nat(n) < powof_nat(2, nat_plus(m, n));
+    requires -pow_nat(2, m) <= x &*& x < pow_nat(2, m);
+    ensures -pow_nat(2, nat_plus(m, n)) <= x << int_of_nat(n) &*& x << int_of_nat(n) < pow_nat(2, nat_plus(m, n));
 
 lemma void shiftright_limits(int x, nat m, nat n);
-    requires 0 <= x &*& x < powof_nat(2, m);
-    ensures 0 <= x >> int_of_nat(n) &*& x >> int_of_nat(n) < powof_nat(2, nat_minus(m, n));
+    requires 0 <= x &*& x < pow_nat(2, m);
+    ensures 0 <= x >> int_of_nat(n) &*& x >> int_of_nat(n) < pow_nat(2, nat_minus(m, n));
 
 lemma void shiftright_signed_limits(int x, nat m, nat n);
-    requires -powof_nat(2, m) <= x &*& x < powof_nat(2, m);
-    ensures -powof_nat(2, nat_minus(m, n)) <= x >> int_of_nat(n) &*& x >> int_of_nat(n) < powof_nat(2, nat_minus(m, n));
+    requires -pow_nat(2, m) <= x &*& x < pow_nat(2, m);
+    ensures -pow_nat(2, nat_minus(m, n)) <= x >> int_of_nat(n) &*& x >> int_of_nat(n) < pow_nat(2, nat_minus(m, n));
 
 lemma void truncate_limits(int x, nat n);
     requires true;
-    ensures 0 <= truncate_unsigned(x, int_of_nat(n)) &*& truncate_unsigned(x, int_of_nat(n)) < powof_nat(2, n);
+    ensures 0 <= truncate_unsigned(x, int_of_nat(n)) &*& truncate_unsigned(x, int_of_nat(n)) < pow_nat(2, n);
 
 lemma void truncate_signed_limits(int x, nat n);
     requires true;
-    ensures -powof_nat(2, n) <= truncate_signed(x, int_of_nat(n)) &*& truncate_signed(x, int_of_nat(n)) < powof_nat(2, n);
+    ensures -pow_nat(2, n) <= truncate_signed(x, int_of_nat(n)) &*& truncate_signed(x, int_of_nat(n)) < pow_nat(2, n);
 
 // Bit blasting
 
-fixpoint pair<int, list<boxed_bool> > bits_of_int(int x, nat n) {
+fixpoint pair<int, list<bool> > bits_of_int(int x, nat n) {
     switch (n) {
         case zero: return pair(x, nil);
-        case succ(n0): return pair(fst(bits_of_int(x / 2, n0)), cons(boxed_bool(x % 2 == 1), snd(bits_of_int(x / 2, n0))));
+        case succ(n0): return pair(fst(bits_of_int(x / 2, n0)), cons(x % 2 == 1, snd(bits_of_int(x / 2, n0))));
     }
 }
 
-fixpoint int int_of_bits(int xh, list<boxed_bool> bits) {
+fixpoint int int_of_bits(int xh, list<bool> bits) {
     switch (bits) {
         case nil: return xh;
-        case cons(b, bs0): return 2 * int_of_bits(xh, bs0) + (unboxed_bool(b) ? 1 : 0);
+        case cons(b, bs0): return 2 * int_of_bits(xh, bs0) + ((b) ? 1 : 0);
     }
 }
 
@@ -234,48 +234,213 @@ lemma void int_of_bits_of_int(int x, nat n)
     }
 }
 
-fixpoint Z Z_of_bits(Z zh, list<boxed_bool> bits) {
+fixpoint Z Z_of_bits(Z zh, list<bool> bits) {
     switch (bits) {
         case nil: return zh;
         case cons(b, bs0): return Zdigit(Z_of_bits(zh, bs0), b);
     }
 }
-//
-//lemma Z Z_of_uintN(int x, nat N)
-//    requires 0 <= x &*& x < powof_nat(2, N);
-//    ensures result == Z_of_bits(Zsign(boxed_bool(false)), snd(bits_of_int(x, N))) &*& x == int_of_Z(result);
-//{
-//    switch (N) {
-//        case zero:
-//            return Zsign(boxed_bool(false));
-//        case succ(N0):
-//            div_rem(x, 2);
-//            Z_of_uintN(x / 2, N0);
-//            int_of_bits_of_int(x, N);
-//            note(!!bounded(0,1,x%2));
-//            return Z_of_bits(Zsign(boxed_bool(false)), snd(bits_of_int(x, N)));
-//    }
-//}
-//
-//lemma Z Z_of_uint8(int x)
-//    requires 0 <= x &*& x <= 255;
-//    ensures result == Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zsign(boxed_bool(false)), _), _), _), _), _), _), _), _) &*& x == int_of_Z(result);
-//{
-//    return Z_of_uintN(x, N8);
-//}
-//
+
+lemma Z Z_of_uintN(int x, nat N)
+    requires 0 <= x &*& x < pow_nat(2, N);
+    ensures result == Z_of_bits(Zsign(false), snd(bits_of_int(x, N))) &*& x == int_of_Z(result);
+{
+    switch (N) {
+        case zero:
+            return Zsign(false);
+        case succ(N0):
+            div_rem(x, 2);
+            Z_of_uintN(x / 2, N0);
+            int_of_bits_of_int(x, N);
+            note(!!bounded(0,1,x%2));
+            return Z_of_bits(Zsign(false), snd(bits_of_int(x, N)));
+    }
+}
+
+lemma Z Z_of_uint8(int x)
+    requires 0 <= x &*& x <= 255;
+    ensures result == Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zsign(false), _), _), _), _), _), _), _), _) &*& x == int_of_Z(result);
+{
+    return Z_of_uintN(x, N8);
+}
+
 //lemma Z Z_of_uint16(int x)
 //    requires 0 <= x &*& x <= 65535;
-//    ensures result == Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zsign(boxed_bool(false)), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _) &*& x == int_of_Z(result);
+//    ensures result == Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zsign(false), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _) &*& x == int_of_Z(result);
 //{
 //    return Z_of_uintN(x, N16);
 //}
 //
 //lemma Z Z_of_uint32(int x)
 //    requires 0 <= x &*& x <= 0xffffffff;
-//    ensures result == Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zsign(boxed_bool(false)), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _) &*& x == int_of_Z(result);
+//    ensures result == Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zdigit(Zsign(false), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _), _) &*& x == int_of_Z(result);
 //{
 //    return Z_of_uintN(x, N32);
 //}
+
+lemma_auto(Z_or(x_Z,y_Z))
+void Z_or_commutes(Z x_Z, Z y_Z)
+    requires true;
+    ensures  Z_or(x_Z,y_Z) == Z_or(y_Z,x_Z);
+{
+    switch(y_Z) {
+    case Zsign(sy):
+        switch(x_Z) {
+        case Zsign(sx):
+        case Zdigit(x_z0,xb):
+        }
+    case Zdigit(y_z0,yb):
+        switch(x_Z) {
+        case Zsign(sx):
+        case Zdigit(x_z0,xb):
+            Z_or_commutes(x_z0,y_z0);
+            note_eq( xb || yb , yb || xb);
+        }
+    }
+}
+
+lemma void Z_or_zero(Z x_Z, Z y_Z)
+    requires int_of_Z(y_Z) == 0;
+    ensures  int_of_Z(Z_or(x_Z,y_Z)) == int_of_Z(x_Z);
+{
+    switch(y_Z) {
+    case Zsign(sy):
+        switch(x_Z) {
+        case Zsign(sx):
+        case Zdigit(x_z0,xb):
+        }
+    case Zdigit(y_z0,yb):
+        switch(x_Z) {
+        case Zsign(sx):
+        case Zdigit(x_z0,xb):
+            division_zero_unique(2,int_of_Z(y_z0),((yb) ? 1 : 0));
+            Z_or_zero(x_z0,y_z0);
+        }
+    }
+}
+
+lemma void bitor_no_overlap_inner(int x, Z x_Z, int y, Z y_Z, nat n)
+    requires x >= 0 &*& y >= 0 &*& y < pow_nat(2,n)
+        &*&  int_of_Z(x_Z) == x*pow_nat(2,n) &*& int_of_Z(y_Z) == y
+        ;
+    ensures  (x*pow_nat(2,n) | y) == x*pow_nat(2,n) + y;
+{
+    switch(n) {
+    case zero:
+        bitor_def(x*pow_nat(2,n), x_Z, y, y_Z);
+        Z_or_zero(x_Z,y_Z);
+    case succ(n0):
+        bitor_def(x*pow_nat(2,n), x_Z, y, y_Z);
+        mul_3var(2,x,pow_nat(2,n0));
+        division_unique(x*pow_nat(2,n),2,x*pow_nat(2,n0),0);
+
+        switch(y_Z) {
+        case Zsign(s):
+            Z_or_zero(x_Z,y_Z);
+        case Zdigit(y_z0,yb):
+            switch(x_Z) {
+            case Zsign(s):
+                if(!s) {
+                    Z_or_zero(y_Z,x_Z);
+                } else {
+                    assert int_of_Z(x_Z) == x*pow_nat(2,n);
+                    assert int_of_Z(x_Z) == -1;
+                    division_unique(x*pow_nat(2,n),2,0,-1);
+                    assert false;
+                }
+            case Zdigit(x_z0,xb):
+                assert (x*pow_nat(2,n))%2 == 0;
+                div_rem(y,2);
+
+                assert (xb?1:0) >= 0;
+                assert (xb?1:0) <= 1;
+
+                if(int_of_Z(x_z0) < 0) {
+                    assert x >= 0;
+                    assert pow_nat(2,n) >= 0;
+                    my_mul_mono_l(0,x,pow_nat(2,n));
+                    assert x*pow_nat(2,n) >= 0;
+                    my_mul_mono_r(2,int_of_Z(x_z0),1);
+                    assert false;
+                }
+
+                if(int_of_Z(y_z0) < 0) {
+                    assert false;
+                }
+
+                mul_abs_commute(2,int_of_Z(x_z0));
+                division_unique(x*pow_nat(2,n),2,int_of_Z(x_z0),
+                        xb ? 1 : 0);
+                assert xb == false;
+
+                assert Z_or(x_Z,y_Z)
+                    == Zdigit(Z_or(x_z0,y_z0),
+                                (xb) || (yb));
+
+                division_unique(y,2,int_of_Z(y_z0),yb?1:0);
+                assert int_of_Z(y_z0) == y/2;
+
+                bitor_no_overlap_inner(x, x_z0, (y/2),
+                        y_z0, n0);
+                bitor_def(x*pow_nat(2,n0), x_z0, y/2, y_z0);
+
+                assert Z_or(x_Z,y_Z)
+                    == Zdigit(Z_or(x_z0,y_z0), yb);
+                assert int_of_Z(Z_or(x_Z,y_Z))
+                    == y%2 + 2*(x*pow_nat(2,n0) + y/2);
+                assert int_of_Z(Z_or(x_Z,y_Z))
+                    == (y%2 + 2*(y/2)) + 2*(x*pow_nat(2,n0));
+                assert int_of_Z(Z_or(x_Z,y_Z))
+                    == y + x*pow_nat(2,n);
+            }
+        }
+    }
+}
+
+fixpoint nat log_nat_inner(int x,nat n) {
+    switch(n) {
+    case zero: return zero;
+    case succ(n0):
+        return (x == 0 ? zero : succ(log_nat_inner(x/2,n0)));
+    }
+}
+
+fixpoint nat log_nat(int x) {
+    return log_nat_inner(x,nat_of_int(abs(x)));
+}
+
+lemma_auto(log_nat_inner(x,n))
+void log_nat_prop_inner(int x, nat n)
+    requires abs(x) <= int_of_nat(n);
+    ensures  pow_nat(2,log_nat_inner(x,n)) > abs(x);
+{
+    switch(n) {
+    case zero:
+    case succ(n0):
+        if(x != 0) {
+            div_rem(x,2);
+            log_nat_prop_inner(x/2,n0);
+            assert abs(x/2) < pow_nat(2,log_nat_inner(x,n));
+            my_mul_mono_r(2,abs(x/2)+1,pow_nat(2,log_nat_inner(x,n)));
+        }
+    }
+}
+
+lemma_auto(log_nat(x))
+void log_nat_prop(int x)
+    requires true;
+    ensures  pow_nat(2,log_nat(x)) > abs(x);
+{ log_nat_prop_inner(x,nat_of_int(abs(x))); }
+
+lemma void bitor_no_overlap(int x, int y, nat n)
+    requires x >= 0 &*& y >= 0 &*& y < pow_nat(2,n);
+    ensures  (x*pow_nat(2,n) | y) == x*pow_nat(2,n) + y;
+{
+    nat lgY = log_nat(y);
+    my_mul_mono_l(0,x,pow_nat(2,n));
+    Z x_Z = Z_of_uintN(x*pow_nat(2,n),log_nat(x*pow_nat(2,n)));
+    Z y_Z = Z_of_uintN(y,lgY);
+    bitor_no_overlap_inner(x, x_Z, y, y_Z, n);
+}
 
 #endif

@@ -4,12 +4,6 @@
 #include "util.gh"
 #include "lists.gh"
 
-#if 1
-#define ALREADY_PROVEN()
-#else
-#define ALREADY_PROVEN() assume(false);
-#endif
-
 fixpoint int poly_eval(list<int> poly, int pt) {
     switch(poly) {
     case nil: return 0;
@@ -460,6 +454,33 @@ lemma void poly_max_roots(list<int> p, list<int> pts);
 lemma int poly_nonzero_pt(list<int> p);
     requires !poly_is_zero(p);
     ensures  poly_eval(p,result) != 0;
+
+lemma_auto(poly_eval(append(a,b),x))
+void poly_eval_append(list<int> a, list<int> b, int x)
+    requires true;
+    ensures  poly_eval(append(a,b),x)
+        ==   poly_eval(a,x)
+        +    pow_nat(x,nat_of_int(length(a)))*poly_eval(b,x);
+{
+    switch(a) {
+    case nil:
+    case cons(v,vs):
+        poly_eval_append(vs,b,x);
+        mul_3var(x,pow_nat(x,nat_of_int(length(vs))),poly_eval(b,x));
+        assert poly_eval(append(a,b),x)
+            == v + x*poly_eval(append(vs,b),x);
+        assert poly_eval(append(a,b),x)
+            == v + x*(poly_eval(vs,x) +
+                    pow_nat(x,nat_of_int(length(vs)))*poly_eval(b,x));
+        note_eq(x*(poly_eval(vs,x) +
+                    pow_nat(x,nat_of_int(length(vs)))*poly_eval(b,x)),
+                x*poly_eval(vs,x) +
+                x*(pow_nat(x,nat_of_int(length(vs)))*poly_eval(b,x)));
+        assert poly_eval(append(a,b),x)
+            == (v + x*poly_eval(vs,x)) +
+                    x*(pow_nat(x,nat_of_int(length(vs)))*poly_eval(b,x));
+    }
+}
 
 #endif
 

@@ -370,6 +370,7 @@ void indices_of_inner_correct<t>(t v, list<t> l, int b, int i)
     case nil: return;
     case cons(x,xs):
         indices_of_inner_correct(v,xs,b+1,i);
+        nth_of_bounds(i-b,l);
         if(i == b) {
             if(nth_of(i-b,l) != some(v)
                && mem(i,indices_of_inner(v,l,b))) {
@@ -513,6 +514,17 @@ void maximum_swap(int a, int b, list<int> l)
     ensures  maximum(cons(a,cons(b,l)))
         ==   maximum(cons(b,cons(a,l)));
 { TRIVIAL_LIST(l) }
+
+lemma void index_of_witness<t>(int i,t x,list<t> l)
+    requires !!distinct(l) &*& nth_of(i,l) == some(x);
+    ensures  index_of(x,l) == i;
+{ LIST_INDUCTION(l,xs,if(i > 0) index_of_witness(i-1,x,xs)) }
+
+lemma_auto(length(reverse(l)))
+void length_reverse<t>(list<t> l)
+    requires true;
+    ensures  length(reverse(l)) == length(l);
+{ LIST_INDUCTION(l,xs,length_reverse(xs)) }
 
 #endif
 

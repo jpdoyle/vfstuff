@@ -52,37 +52,15 @@ fixpoint option<t> nth_of<t>(int n, list<t> l) {
     }
 }
 
-lemma void index_of_positive<t>(t v, list<t> l)
+lemma void index_of_positive<t>(t v, list<t> l);
     requires true;
     ensures  index_of(v,l) >= 0;
-{
-    switch(l) { case nil: case cons(x,xs): index_of_positive(v,xs); }
-}
 
 lemma_auto(nth_of(index_of(v,l),l))
-void nth_of_index_of<t>(t v, list<t> l)
+void nth_of_index_of<t>(t v, list<t> l);
     requires true;
     ensures  (nth_of(index_of(v,l),l) == some(v))
         == mem(v,l);
-{
-    switch(l) {
-        case nil:
-        case cons(x,xs):
-            nth_of_index_of(v,xs);
-            if(v == x) {
-                assert index_of(v,l) == 0;
-                assert nth_of(0,l) == some(x);
-            } else {
-                assert index_of(v,xs)+1 == index_of(v,l);
-                index_of_positive(v,xs);
-                assert index_of(v,xs) >= 0;
-                assert nth_of(index_of(v,l),l)
-                    == nth_of(index_of(v,l)-1,xs);
-                assert nth_of(index_of(v,l),l)
-                    == nth_of(index_of(v,xs),xs);
-            }
-    }
-}
 
 //lemma_auto(nth_of(n,drop(m,l)))
 //void nth_of_of_drop<t>(int n, int m, list<t> l)
@@ -95,28 +73,33 @@ void nth_of_index_of<t>(t v, list<t> l)
 //    }
 //}
 
-lemma_auto(nth_of(n,l)) void nth_of_bounds<t>(int n, list<t> l)
+lemma_auto(nth_of(n,l))
+void nth_of_bounds<t>(int n, list<t> l);
     requires true;
-    ensures  (nth_of(n,l) == none) == (l == nil || n < 0 || n >=
-            length(l));
-{
-    switch(l) {
-        case nil:
-        case cons(x,xs):
-            nth_of_bounds(n-1,xs);
-    }
-}
+    ensures  (nth_of(n,l) == none) == (n < 0 || n >= length(l));
 
-lemma void nth_of_is_nth<t>(int n, list<t> l)
+//lemma_auto(nth_of(n,l))
+//void nth_of_bounds_auto1<t>(int n, list<t> l);
+//    requires nth_of(n,l) == none;
+//    ensures  (l == nil || n < 0 || n >= length(l));
+//
+//lemma_auto(nth_of(n,l))
+//void nth_of_bounds_auto2<t>(int n, list<t> l);
+//    requires n >= 0 && n < length(l);
+//    ensures  nth_of(n,l) != none;
+//
+//lemma_auto(nth_of(n,l))
+//void nth_of_bounds_auto3<t>(int n, list<t> l);
+//    requires (l == nil || n < 0 || n >= length(l));
+//    ensures  nth_of(n,l) == none;
+
+lemma void nth_of_is_nth<t>(int n, list<t> l);
     requires true;
     ensures  switch(nth_of(n,l)) {
         case none: return n < 0 || length(l) <= n;
         case some(x):
             return n >= 0 &*& n < length(l) &*& x == nth(n,l);
     };
-{
-    switch(l) { case nil: case cons(x,xs): nth_of_is_nth(n-1,xs); }
-}
 
 fixpoint option<t> safe_head<t>(list<t> l) {
     switch(l) {
@@ -242,15 +225,9 @@ inductive either<s,t> = left(s) | right(t);
 
 //lemma_auto(some(x) == some(y))
 lemma
-void option_eq<t>(t x, t y)
+void option_eq<t>(t x, t y);
     requires true;
     ensures  (some(x) == some(y)) == (x == y);
-{
-    option<t> ox = some(x);
-    option<t> oy = some(y);
-    TRIVIAL_OPTION(ox)
-    TRIVIAL_OPTION(oy)
-}
 
 fixpoint t option_into<s,t>(t noneVal, fixpoint(s,t) f, option<s> o) {
     switch(o) {
@@ -462,47 +439,23 @@ lemma void as_mul(int x, int y)
     ensures  mul(x,y) == x*y;
 {}
 
-// mul_mono_r/l from verifast's test/longlong.c, renamed because a later
-// version of verifast has these in its prelude
-lemma void my_mul_mono_l(int a1, int a2, int b)
+// mul_mono_r/l from verifast's test/longlong.c, renamed because a
+// later version of verifast has these in its prelude
+lemma void my_mul_mono_l(int a1, int a2, int b);
     requires a1 <= a2 &*& 0 <= b;
     ensures a1 * b <= a2 * b;
-{
-    for (int i = 0; i < b; i++)
-        invariant i <= b &*& a1 * i <= a2 * i;
-        decreases b - i;
-    {}
-}
 
-lemma void my_mul_mono_r(int a, int b1, int b2)
+lemma void my_mul_mono_r(int a, int b1, int b2);
     requires 0 <= a &*& b1 <= b2;
     ensures a * b1 <= a * b2;
-{
-    for (int i = 0; i < a; i++)
-        invariant i <= a &*& i * b1 <= i * b2;
-        decreases a - i;
-    {}
-}
 
-lemma void my_mul_strict_mono_l(int a1, int a2, int b)
+lemma void my_mul_strict_mono_l(int a1, int a2, int b);
     requires a1 < a2 &*& 0 < b;
     ensures a1 * b < a2 * b;
-{
-    for (int i = 1; i < b; i++)
-        invariant i <= b &*& a1 * i < a2 * i;
-        decreases b - i;
-    {}
-}
 
-lemma void my_mul_strict_mono_r(int a, int b1, int b2)
+lemma void my_mul_strict_mono_r(int a, int b1, int b2);
     requires 0 < a &*& b1 < b2;
     ensures a * b1 < a * b2;
-{
-    for (int i = 1; i < a; i++)
-        invariant i <= a &*& i * b1 < i * b2;
-        decreases a - i;
-    {}
-}
 
 fixpoint int mul_abstract(int a,int b) { return a*b; }
 lemma void mul_abstract_def(int a,int b)
@@ -510,98 +463,26 @@ lemma void mul_abstract_def(int a,int b)
     ensures  mul_abstract(a,b) == a*b;
 {}
 
-lemma void mul_assoc(int x, int y, int z)
+lemma void mul_assoc(int x, int y, int z);
     requires true;
     ensures x*(y*z) == (x*y)*z;
-{
-    if(x == 0) { return; }
-    if(x > 0) {
-        for(int i =  1; i < x; ++i)
-            invariant i >=  1 &*& i <= x &*& i*(y*z) == (i*y)*z;
-            decreases x-i;
-        { note_eq(((i+1)*y)*z, (i*y+y)*z); }
-    } else { assert x < 0;
-        for(int i = -1; i > x; --i)
-            invariant i <= -1 &*& i >= x &*& i*(y*z) == (i*y)*z;
-            decreases i-x;
-        { note_eq(((i-1)*y)*z, (i*y-y)*z); }
-    }
-}
 
-lemma void mul_commutes(int a, int b)
+lemma void mul_commutes(int a, int b);
     requires true;
     ensures  a*b == b*a;
-{
-    if(a >= 0) {
-        for(int i = 0; i < a; ++i)
-            invariant i*b == b*i
-                &*&   0 <= i &*& i <= a;
-            decreases a-i;
-        { }
-    } else {
-        for(int i = 0; i > a; --i)
-            invariant i*b == b*i
-                &*&   0 >= i &*& i >= a;
-            decreases i-a;
-        { }
-    }
-}
 
-lemma void mul_abs_commute(int x, int y)
+lemma void mul_3var(int x,int y,int z);
+    requires true;
+    ensures  x*(y*z) == (x*y)*z
+        &*&  x*(y*z) == x*(z*y)
+        &*&  x*(y*z) == (x*z)*y
+        &*&  x*(y*z) == (y*x)*z
+        &*&  x*(y*z) == y*(x*z)
+        &*&  x*(y*z) == y*(z*x);
+
+lemma void mul_abs_commute(int x, int y);
     requires true;
     ensures  abs(x)*abs(y) == abs(x*y);
-{
-    if(y >= 0) {
-        assert abs(y) == y;
-        if(x >= 0) {
-            assert abs(x) == x;
-            my_mul_mono_r(x,0,y);
-            assert x*y >= 0; assert abs(x*y) == x*y;
-            assert abs(x*y) == abs(x)*abs(y);
-
-        } else {
-            my_mul_mono_l(x,-1,y);
-            assert x*y <= -y;
-            assert x*y <= 0;
-            assert abs(x*y) == -(x*y);
-            assert abs(x) == -x;
-            as_mul(-x,y);
-            assert abs(x*y) == (-x)*y;
-            assert abs(x*y) == abs(x)*y;
-            assert abs(x*y) == abs(x)*abs(y);
-        }
-
-    } else {
-        assert y < 0;
-        assert abs(y) == -y;
-        assert y <= -1;
-
-        if(x >= 0) {
-            my_mul_mono_r(x,y,-1);
-            assert x*y <= -x;
-            assert x*y <= 0;
-            assert abs(x*y) == -(x*y);
-            assert abs(x*y) == x*(-y);
-            as_mul(x,-y);
-            assert abs(x*y) == x*abs(y);
-
-            assert abs(x*y) == abs(x)*abs(y);
-
-        } else {
-            assert x < 0;
-            assert abs(x) == -x;
-            assert x*y == (-x)*(-y);
-            my_mul_mono_l(1,-x,-y);
-            assert -y <= (-x)*(-y);
-            assert abs(x*y) == x*y;
-            as_mul(-x,-y);
-
-            assert abs(x*y) == abs(x)*abs(y);
-        }
-
-
-    }
-}
 
 //lemma_auto(abs(mul(x,y))) void mul_abs_commute_auto(int x, int y)
 //    requires true;
@@ -688,19 +569,13 @@ predicate malloced_strings(char* * base, int n;
             &*& strs == cons(first,rest)
         );
 
-lemma_auto void malloced_strings_public()
+lemma_auto void malloced_strings_public();
     requires [?f]malloced_strings(?base,?n,?strs);
     ensures  [ f]malloced_strings( base, n, strs)
         &*&  n >= 0
         &*&  base != 0
         &*&  length(strs) == n
         ;
-{
-    open [ f]malloced_strings( base, n, strs);
-    if(n != 0) {
-        malloced_strings_public();
-    }
-}
 
 lemma void u_llong_integer_limits(unsigned long long *p);
     requires [?f]u_llong_integer(p, ?v);
@@ -708,66 +583,108 @@ lemma void u_llong_integer_limits(unsigned long long *p);
         &*& p + 1 <= (unsigned long long *)UINTPTR_MAX &*& 0 <= v
         &*& v <= ULLONG_MAX;
 
-lemma void u_llong_integer_unique(unsigned long long *p)
+lemma void u_llong_integer_unique(unsigned long long *p);
     requires [?f]u_llong_integer(p, ?v);
     ensures [f]u_llong_integer(p, v) &*& f <= 1;
-{
-    if(f > 1) {
-        open u_llong_integer(_,_);
-        integer__to_chars(p,sizeof(unsigned long long),false);
-        chars_split((void*)p,sizeof(int));
-        chars_to_ints((char*)(void*)p,1);
-        integer_unique((int*)(void*)p);
-        assert false;
-    }
-}
 
-lemma void ullongs_split(unsigned long long *array, int offset)
+lemma void ullongs_split(unsigned long long *array, int offset);
     requires [?f]ullongs(array, ?N, ?as) &*& 0 <= offset &*& offset <= N;
     ensures [f]ullongs(array, offset, take(offset, as))
         &*& [f]ullongs(array + offset, N - offset, drop(offset, as))
         &*& as == append(take(offset, as), drop(offset, as));
-{
-    if(offset > 0) {
-        open ullongs(array,_,_);
-        ullongs_split(array+1,offset-1);
-        close [f]ullongs(array,offset,_);
-    }
-}
 
-lemma void ullongs_join(unsigned long long *a)
+lemma void ullongs_join(unsigned long long *a);
     requires [?f]ullongs(a, ?M, ?as) &*& [f]ullongs(a + M, ?N, ?bs);
     ensures [f]ullongs(a, M + N, append(as, bs));
-{
-    open ullongs(a,_,_);
-    if(M > 0) {
-        ullongs_join(a+1);
-        close [f]ullongs(a,M+N,_);
-    }
-}
 
 
 predicate u_llong_buffer(unsigned long long* start, int len, int cap; list<int> vals)
     =   start != 0 &*& cap > 0 &*& len >= 0 &*& start[..len] |-> vals
     &*& start[len..cap] |-> _;
 
-lemma_auto void u_llong_buffer_auto()
+lemma_auto void u_llong_buffer_auto();
     requires [?f]u_llong_buffer(?start,?len,?cap,?vals);
     ensures  [ f]u_llong_buffer( start, len, cap, vals)
         &*&  f <= 1 &*& start != 0
         &*&  len >= 0 &*& cap > 0 &*& length(vals) == len
         ;
-{
-    open u_llong_buffer(_,_,_,_);
-    if(f > 1) {
-        open ullongs(start,_,_);
-        if(len == 0) { open ullongs(start,_,_); }
-        u_llong_integer_unique(start);
-    }
-}
 
 fixpoint bool isbit(int x) { return x == 0 || x == 1; }
 
+//lemma_auto(pow_nat(x,n))
+//void pow_nat_nonneg(int x, nat n)
+//    requires x >= 0;
+//    ensures  pow_nat(x,n) >= 0;
+//{ NAT_INDUCTION(n,m,pow_nat_nonneg(x,m)) }
+
+lemma_auto(pow_nat(1,n))
+void pow_1(nat n)
+    requires true;
+    ensures pow_nat(1,n) == 1;
+{ NAT_INDUCTION(n,n0,pow_1(n0)) }
+
+lemma void pow_plus(int x,nat y,int z)
+    requires z >= 0;
+    ensures  pow_nat(x,nat_of_int(int_of_nat(y)+z))
+        ==   pow_nat(x,y)*pow_nat(x,nat_of_int(z));
+{
+    switch(y) {
+    case zero:
+    case succ(y0):
+        pow_plus(x,y0,z);
+        mul_assoc(x,pow_nat(x,y0),pow_nat(x,nat_of_int(z)));
+        assert nat_of_int(int_of_nat(y)+z)
+            == succ(nat_of_int(int_of_nat(y0)+z));
+    }
+}
+
+lemma void pow_times1(int x,int y,nat z)
+    requires true;
+    ensures  pow_nat(x,z)*pow_nat(y,z)
+        ==   pow_nat(x*y,z);
+{
+    switch(z) {
+    case zero:
+    case succ(z0):
+        pow_times1(x,y,z0);
+        mul_3var(x,pow_nat(x,z0),y*pow_nat(y,z0));
+        mul_3var(pow_nat(x,z0),y,pow_nat(y,z0));
+        mul_3var(x,y,pow_nat(x,z0)*pow_nat(y,z0));
+        assert pow_nat(x,z)*pow_nat(y,z)
+            == (x*pow_nat(x,z0))*(y*pow_nat(y,z0));
+        assert pow_nat(x,z)*pow_nat(y,z)
+            == x*(pow_nat(x,z0)*(y*pow_nat(y,z0)));
+        assert pow_nat(x,z)*pow_nat(y,z)
+            == x*(y*(pow_nat(x,z0)*pow_nat(y,z0)));
+    }
+}
+
+lemma void pow_times2(int x,nat y,int z)
+    requires z >= 0;
+    ensures  pow_nat(x,nat_of_int(int_of_nat(y)*z))
+        ==   pow_nat(pow_nat(x,y),nat_of_int(z));
+{
+    switch(y) {
+    case zero:
+    case succ(y0):
+        assert nat_of_int(int_of_nat(y))
+            == succ(nat_of_int(int_of_nat(y0)));
+        note_eq( int_of_nat(y) , 1+int_of_nat(y0));
+        note_eq((1+int_of_nat(y0))*z,z + int_of_nat(y0)*z);
+
+        assert pow_nat(x,nat_of_int(int_of_nat(y)*z))
+            == pow_nat(x,nat_of_int((1+int_of_nat(y0))*z));
+        assert pow_nat(x,nat_of_int(int_of_nat(y)*z))
+            == pow_nat(x,nat_of_int(z + int_of_nat(y0)*z));
+        my_mul_mono_r(int_of_nat(y0),0,z);
+        pow_plus(x,nat_of_int(z),int_of_nat(y0)*z);
+        assert pow_nat(x,nat_of_int(int_of_nat(y)*z))
+            == pow_nat(x,nat_of_int(z))
+              *pow_nat(x,nat_of_int(int_of_nat(y0)*z));
+        pow_times2(x,y0,z);
+        pow_times1(x,pow_nat(x,y0),nat_of_int(z));
+    }
+}
 
 #endif
 

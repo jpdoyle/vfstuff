@@ -1,5 +1,11 @@
 /*@ #include "poly.gh" @*/
 
+#if 1
+#define ALREADY_PROVEN()
+#else
+#define ALREADY_PROVEN() assume(false);
+#endif
+
 /*@
 
 lemma_auto(minimize(p)) void minimal_zero(list<int> p)
