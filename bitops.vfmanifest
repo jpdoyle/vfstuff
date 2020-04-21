@@ -1,0 +1,3 @@
+.provides ./bitops.gh#bitor_def
+.provides ./bitops.gh#shiftleft_def
+.provides ./bitops.gh#truncate_unsigned_def

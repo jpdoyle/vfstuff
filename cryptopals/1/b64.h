@@ -10,10 +10,10 @@
 #ifndef CRYPTOPALS_B64_H
 #define CRYPTOPALS_B64_H
 
-#if 0
-#define ALREADY_PROVEN()
+#if 1
+#define ALREADY_PROVEN() {}
 #else
-#define ALREADY_PROVEN() assume(false);
+#define ALREADY_PROVEN() { assume(false); }
 #endif
 
 #ifndef __FILE__
@@ -179,7 +179,7 @@ char b64_of_byte(uint8_t n)
     /*@ ensures  some(result) == nth_of(n,b64_chars()); @*/
     /*@ terminates; @*/
 {
-    /*@ SKIP_PROOF() @*/
+    /*@ ALREADY_PROVEN() @*/
     uint8_t thresh0 = (uint8_t)('Z'-'A');
     uint8_t thresh1 = (uint8_t)('z'-'a' + thresh0 + 1);
     uint8_t thresh2 = (uint8_t)('9'-'0' + thresh1 + 1);
@@ -421,19 +421,9 @@ uint8_t* bytes_of_hex(size_t len, char* s, size_t* outlen)
                 reverse(xs2), ?rest_hexits,
                 ?rest_val); @*/
         /*@ {
-
             index_of_witness(h,x1,hex_chars());
-            assert h == index_of(x1,hex_chars());
             index_of_witness(l,x2,hex_chars());
-            assert l == index_of(x2,hex_chars());
 
-            assert loop_hexits == append(append(rest_hexits,{l}),{h});
-            assert loop_hexits == append(append(rest_hexits,{l}),{h});
-
-            assert h >= 0;
-            assert h <  16;
-            assert l >= 0;
-            assert l <  16;
             shiftleft_def(h,N4);
             bitor_no_overlap(h,l,N4);
             open uchars(ret+(i/2),_,_);
@@ -455,22 +445,11 @@ uint8_t* bytes_of_hex(size_t len, char* s, size_t* outlen)
         /*@ assert *p |-> ?v; @*/
         /*@ {
             assert v == h*16+l;
-            //base_n_split(hex
             assert loop_val
                 == rest_val
                 + pow_nat(16,nat_of_int(length(rest_hexits)))
                     *v;
-            assert loop_val
-                == rest_val
-                + pow_nat(16,nat_of_int(length(rest_hexits)))
-                    *(h*16 + l);
 
-            assert length(rest_hexits)
-                == length(reverse(xs2));
-            assert length(rest_hexits)
-                == length(xs2);
-            assert length(xs2) + 2 == length(loop_hex);
-            assert length(xs2) + 2 == len-i;
             note_eq(length(rest_hexits),len-2-i);
 
             assert loop_val
@@ -490,27 +469,6 @@ uint8_t* bytes_of_hex(size_t len, char* s, size_t* outlen)
                 == rest_val
                 + pow_nat(16*16,nat_of_int(((len-2-i)/2)))
                     *v;
-        } @*/
-
-        /*@ recursive_call(); @*/
-
-        /*@ {
-            assert ret[(old_i/2)+1..len_out] |-> ?rest_bytes;
-            assert poly_eval(reverse(rest_bytes),16*16)
-                == rest_val;
-            assert poly_eval(reverse(cons(v,rest_bytes)),16*16)
-                == poly_eval(append(reverse(rest_bytes),{v}),16*16);
-            assert poly_eval(reverse(cons(v,rest_bytes)),16*16)
-                == poly_eval(reverse(rest_bytes),16*16)
-                +  pow_nat(16*16,nat_of_int(length(rest_bytes)))
-                   *v;
-
-            assert length(rest_bytes) == len_out - (old_i/2) - 1;
-            assert len_out == len/2;
-
-            assert length(rest_bytes) == (len-2-old_i)/2;
-            assert poly_eval(reverse(cons(v,rest_bytes)),16*16)
-                == loop_val;
         } @*/
     }
 
