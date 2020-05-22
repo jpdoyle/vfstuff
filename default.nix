@@ -54,15 +54,18 @@ let
   verifast =
       stdenv.mkDerivation rec {
 	name    = "verifast-${version}";
-	version = "1f0d748bc8a04fdb6eb84c113439ce374f6d4b4c";
+	version = "b37c1a25ed861f25de6df7f30ee42d804cdbeb7c";
 
 	src = fetchgit {
             url = "https://github.com/jpdoyle/verifast";
             #url = /home/joe/verifast.git;
             rev   = "${version}";
             sha256 =
-              "1yqk1azlyjyrfhd2xyj1lfkn6la143hyla3w5payli6qspjdmbs5";
+              "0hipxwghjv23awrymsdhvplls2ylqhzvvzyvlx3hzqh77zrqny65";
 	};
+
+	dontStrip = true;
+        phases = "buildPhase";
 
         buildInputs = [
           ocaml git coreutils which
@@ -77,63 +80,68 @@ let
           gnome2.gtksourceview
           gtk2-x11
 
+          gnumake
+
         ] ++ (with ocamlPackages; [
           num findlib camlp4
           lablgtk
         ]);
 
-	dontStrip = true;
-        phases = "buildPhase installPhase";
-        #enableParallelBuilding = true;
+        Z3_DLL_DIR="${z3WithOcaml.lib}/lib";
+        LD_LIBRARY_PATH = "${z3WithOcaml.lib}/lib";
+        VFVERSION = "${version}";
+
         buildCommand = ''
-            pwd
             echo ------ build --------
-            ls -laF
             cp -r $src .
             cd $(basename $src)
             chmod -R +w .
             cd src
-            ls -laF
-            pwd
-
-            export VFVERSION="${version}"
-            #export CAML_LD_LIBRARY_PATH="$CAML_LD_LIBRARY_PATH:${ocamlPackages.num}"
-            #echo $CAML_LD_LIBRARY_PATH
-            echo ${ocamlPackages.num}
-            echo ${ocamlPackages.camlp4}
-            echo ${z3WithOcaml}
-            echo ${z3WithOcaml.lib}
-            export Z3_DLL_DIR="${z3WithOcaml.lib}/lib"
-            export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${z3WithOcaml.lib}/lib"
-            echo ${z3WithOcaml.ocaml}
-
-            echo
-            echo -n "  Looking for num: "
-            ocamlfind query -qe num
-
-            echo
-            echo -n "  Looking for z3: "
-            ocamlfind query -qe z3 || true
-
-            echo
-            echo -n "  Looking for Z3: "
-            ocamlfind query -qe Z3 || true
-
-            ls -laF ${ocamlPackages.num}
-
-            ocamlfind query num
-            make NUMCPU=1 VERBOSE=1 || sleep 1h
-            # make install --prefix $out
+            make -j2 NUMCPU=2 VERBOSE=1
             mkdir -p $out
             mv ../bin $out/
-            echo $out
-            ls -laF $out
         '';
-        installCommand = ''
-            echo ------ install --------
-            pwd
-            ls -laF
-        '';
+            #ls -laF
+            #cp -r $src .
+            #cd $(basename $src)
+            #chmod -R +w .
+            #cd src
+            #ls -laF
+            #pwd
+
+            #export VFVERSION="${version}"
+            ##export CAML_LD_LIBRARY_PATH="$CAML_LD_LIBRARY_PATH:${ocamlPackages.num}"
+            ##echo $CAML_LD_LIBRARY_PATH
+            #echo ${ocamlPackages.num}
+            #echo ${ocamlPackages.camlp4}
+            #echo ${z3WithOcaml}
+            #echo ${z3WithOcaml.lib}
+            #export Z3_DLL_DIR="${z3WithOcaml.lib}/lib"
+            #export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${z3WithOcaml.lib}/lib"
+            #echo ${z3WithOcaml.ocaml}
+
+            #echo
+            #echo -n "  Looking for num: "
+            #ocamlfind query -qe num
+
+            #echo
+            #echo -n "  Looking for z3: "
+            #ocamlfind query -qe z3 || true
+
+            #echo
+            #echo -n "  Looking for Z3: "
+            #ocamlfind query -qe Z3 || true
+
+            #ls -laF ${ocamlPackages.num}
+
+#             ocamlfind query num
+#             make NUMCPU=1 VERBOSE=1 || sleep 1h
+#             # make install --prefix $out
+#             mkdir -p $out
+#             mv ../bin $out/
+#             echo $out
+#             ls -laF $out
+#         '';
 
 	meta = {
 	  description = "Verification for C and Java programs via separation logic";
@@ -150,9 +158,7 @@ stdenv.mkDerivation rec {
     env = buildEnv { name = name; paths = buildInputs;
     };
     buildInputs = [
-        gnumake
         verifast
-    ] ++ verifast.buildInputs
-    ;
+    ];
 }
 

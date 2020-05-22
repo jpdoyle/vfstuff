@@ -51,26 +51,19 @@ void slowsort_inner(int* arr, size_t i, size_t j)
     /*@ assert arr[i..m] |-> ?pref_sorted; @*/
 
     /*@ {
-      ints_join(arr+i);
-      assert arr[i..j] |-> append(pref_sorted,suff);
       call_perm_level_weaken(1,lt,j-i, {slowsort_inner}, 4,j-m);
       consume_call_perm_level_for(slowsort_inner);
-      ints_split(arr+i,m-i);
     } @*/
 
     rec(arr,m,j);
     /*@ assert arr[m..j] |-> ?suff_sorted; @*/
 
     /*@ {
-      ints_join(arr+i);
-      assert arr[i..j] |-> append(pref_sorted,suff_sorted);
-
       maximum_permutation(pref,pref_sorted);
       assert maximum(pref_sorted) == maximum(pref);
       maximum_permutation(suff,suff_sorted);
       assert maximum(suff_sorted) == maximum(suff);
 
-      ints_split(arr+i,m-i);
       ints_split(arr+i,m-1-i);
       ints_split(arr+m,(j-1)-m);
       open ints(arr+(m-1),_,_);
