@@ -569,7 +569,115 @@ char* hex_of_bytes(size_t len, uint8_t* b)
     return ret;
 }
 
+/* @
+
+predicate b64_string(list<char> s; nat n_padding,
+                     list<char> b64_str,list<int> b64_seq,
+                     list<int> bytes,int val)
+    = switch(s) {
+    case nil:
+        return  b64_str == nil
+            &*& base_n(b64_chars(), b64_str,b64_seq,val)
+            &*& bytes == {};
+    case cons(c0,cs0):
+        return switch(cs0) {
+        case nil: return false;
+        case cons(c1,cs1):
+            return switch(cs1) {
+            case nil: return false;
+            case cons(c2,cs2):
+                return switch(cs2) {
+                case nil: return false;
+                case cons(c3,cs3):
+                    return  switch(c3) {
+                    case nil:
+
+                        return (c1 == '=')
+                            ?   n_padding == N3
+                            &*& c2 == '=' &*& c3 == '='
+                            &*& b64_str == {c0}
+                            &*& base_n(b64_chars(),reverse(b64_str),
+                                       ?rev_seq,val)
+                            &*& b64_seq == reverse(rev_seq)
+
+                            : (c2 == '=')
+                            ?   n_padding == N2
+                            &*& c3 == '='
+                            &*& b64_str == {c0,c1}
+                            &*& base_n(b64_chars(),reverse(b64_str),
+                                       ?rev_seq,val)
+                            &*& b64_seq == reverse(rev_seq)
+
+                            : (c3 == '=')
+                            ?   n_padding == N1
+                            &*& b64_str == {c0,c1,c2}
+                            &*& base_n(b64_chars(),reverse(b64_str),
+                                       ?rev_seq,val)
+                            &*& b64_seq == reverse(rev_seq)
+
+                            :   n_padding == zero
+                            &*& b64_str == {c0,c1,c2,c3}
+                            &*& base_n(b64_chars(),reverse(b64_str),
+                                       ?rev_seq,val)
+                            &*& b64_seq == reverse(rev_seq)
+                            ;
+
+                    case cons(c4,cs4):
+                        return b64_string(cs3, n_padding, ?b64_rest,
+                                          ?seq_rest, ?bytes_rest,
+                                          ?rest_val)
+                        &*& base_n(b64_chars(),reverse({c0,c1,c2,c3}),
+                                   ?pref_seq, ?pref_val)
+                        &*& b64_str == append({c0,c1,c2,c3},b64_rest)
+                        &*& base_n(b64_chars(), reverse(b64_str),
+                                   ?rev_seq,val)
+                        &*& b64_seq == reverse(rev_seq)
+                        &*& bytes
+                            == cons(pref_val/256/256,
+                               cons((pref_val/256)%256,
+                               cons(pref_val%256,bytes_rest)))
+
+                        // should be consequences
+                        &*& b64_seq == append(seq_rest,pref_seq)
+                        &*& b64_str == append(s,repeat('=',n_padding))
+                        ;
+
+                    };
+                };
+            };
+        };
+    };
+
+lemma_auto b64_string_inv()
+    requires [?f]b64_string(?s,?n_padding,?b64_str,?b64_seq,?bytes,
+             ?val);
+    ensures  [ f]b64_string( s, n_padding, b64_str, b64_seq, bytes,
+              val)
+        &*&  length(b64_str) == length(b64_seq)
+        &*&  3*length(bytes) == 4*length(s)
+        &*&  length(s)%3 == 0
+        &*&  int_of_nat(n_padding) < 3
+        &*&  s == append(b64_str,repeat('=',n_padding))
+        &*&  val == poly_eval(reverse(b64_seq),64)
+        &*&  val == poly_eval(reverse(bytes),256)
+        &*&  !!forall(b64_str,(flip)(mem,b64_chars()))
+        ;
+
+  @*/
+
 char* b64_of_bytes(size_t len, uint8_t *b)
+    /*@ requires [?f]b[..len] |-> ?bytes
+            &*&  2*len+1 <= ULONG_MAX
+            ; @*/
+    /*@ ensures  [ f]b[..len] |->  bytes
+            &*&  string(result,?b64_str)
+            &*&  
+            &*&  length(hex_str) == 2*len
+            &*&  base_n(hex_chars(),reverse(hex_str),_,?val)
+            &*&  malloc_block_chars(result,_)
+            &*&  poly_eval(reverse(bytes),256) == val
+            ; @*/
+    /*@ terminates; @*/
 {
     // not a fan of this expression but it's correct
     size_t n_padding = (3-len%3)%3;
