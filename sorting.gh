@@ -78,6 +78,18 @@ fixpoint int count_of<t>(t x, list<t> l) {
     }
 }
 
+lemma_auto(count_of(x,nil))
+void count_of_nil<t>(t x)
+  requires true;
+  ensures  count_of(x,nil) == 0;
+{}
+
+lemma_auto(count_of(x,l))
+void count_of_nonneg<t>(t x, list<t> l)
+  requires true;
+  ensures  count_of(x,l) >= 0;
+{ LIST_INDUCTION(l,ls,count_of_nonneg(x,ls)) }
+
 lemma void count_of_mem<t>(t x, list<t> l)
     requires true;
     ensures  mem(x,l) ? count_of(x,l) > 0 : count_of(x,l) == 0;
@@ -102,6 +114,18 @@ lemma void count_of_remove<t>(t x, t y, list<t> l)
         if(x != v) {
             count_of_remove(x,y,vs);
         }
+    }
+}
+
+lemma_auto(count_of(x,append(a,b)))
+void count_of_append<t>(t x, list<t> a, list<t> b)
+    requires true;
+    ensures  count_of(x,append(a,b)) == count_of(x,a) + count_of(x,b);
+{
+    switch(a) {
+    case nil:
+    case cons(v,vs):
+      count_of_append(x,vs,b);
     }
 }
 
@@ -153,6 +177,55 @@ lemma void is_permutation2_mem(list<int> a, list<int> b)
 
         assert false;
     }
+}
+
+lemma void permutation2_append(list<int> a1, list<int> a2,
+                               list<int> b1, list<int> b2)
+    requires !!is_permutation2(a1,a2) &*& !!is_permutation2(b1,b2);
+    ensures  !!is_permutation2(append(a1,b1),append(a2,b2));
+{
+  if(!forall(append(a1,b1),(count_matches)(append(a1,b1),append(a2,b2)))) {
+    int cx = not_forall(append(a1,b1),
+        (count_matches)(append(a1,b1),append(a2,b2)));
+    count_of_mem(cx,a1);
+    count_of_mem(cx,a2);
+    count_of_mem(cx,b1);
+    count_of_mem(cx,b2);
+    if(mem(cx,a1)) {
+      forall_elim(a1,(count_matches)(a1,a2),cx);
+    }
+    if(mem(cx,a2)) {
+      forall_elim(a2,(count_matches)(a1,a2),cx);
+    }
+    if(mem(cx,b1)) {
+      forall_elim(b1,(count_matches)(b1,b2),cx);
+    }
+    if(mem(cx,b2)) {
+      forall_elim(b2,(count_matches)(b1,b2),cx);
+    }
+    assert false;
+  }
+  if(!forall(append(a2,b2),(count_matches)(append(a1,b1),append(a2,b2)))) {
+    int cx = not_forall(append(a2,b2),
+        (count_matches)(append(a1,b1),append(a2,b2)));
+    count_of_mem(cx,a1);
+    count_of_mem(cx,a2);
+    count_of_mem(cx,b1);
+    count_of_mem(cx,b2);
+    if(mem(cx,a1)) {
+      forall_elim(a1,(count_matches)(a1,a2),cx);
+    }
+    if(mem(cx,a2)) {
+      forall_elim(a2,(count_matches)(a1,a2),cx);
+    }
+    if(mem(cx,b1)) {
+      forall_elim(b1,(count_matches)(b1,b2),cx);
+    }
+    if(mem(cx,b2)) {
+      forall_elim(b2,(count_matches)(b1,b2),cx);
+    }
+    assert false;
+  }
 }
 
 lemma
@@ -424,7 +497,7 @@ void permutation2_prepend(list<int> prefix, list<int> a, list<int> b)
 
 lemma
 void permutation2_transitive<t>(list<t> a, list<t> b, list<t> c)
-    requires is_permutation2(a,b) && is_permutation2(b,c);
+    requires !!is_permutation2(a,b) &*& !!is_permutation2(b,c);
     ensures  is_permutation2(a,c) == true;
 {
     if(!forall(a,(count_matches)(a,c))) {
@@ -572,6 +645,192 @@ lemma void sorted_append(list<int> a, list<int> b)
     }
 }
 
+lemma
+void sorted_max_cons(int x, list<int> xs)
+    requires xs != nil &*& !!sorted(cons(x,xs));
+    ensures  maximum(cons(x,xs)) == maximum(xs);
+{
+  switch(xs) {
+  case nil:
+  case cons(v,vs):
+    forall_elim(cons(x,xs),(le)(x),maximum(cons(x,xs)));
+    forall_elim(xs,(le)(x),maximum(xs));
+  }
+}
+
+lemma_auto(maximum(append(a,cons(x,nil))))
+void sorted_max(list<int> a, int x)
+    requires !!sorted(append(a,cons(x,nil)));
+    ensures  maximum(append(a,cons(x,nil))) == x;
+{
+  switch(a) {
+  case nil:
+  case cons(ax,as):
+    forall_elim(append(as,cons(x,nil)),(le)(ax),x);
+    sorted_max(as,x);
+    switch(as) {
+    case nil:
+    case cons(as_x,ax_xs):
+      assert maximum(append(a,cons(x,nil)))
+        == max_of(ax,maximum(append(as,cons(x,nil))));
+    }
+    assert maximum(append(a,cons(x,nil)))
+      == max_of(ax,x);
+  }
+}
+
+lemma
+void maximum_append(list<int> a, list<int> b)
+    requires a != nil &*& b != nil;
+    ensures  maximum(append(a,b)) == max_of(maximum(a),maximum(b));
+{
+  switch(a) {
+  case nil:
+  case cons(ax,as):
+    switch(as) {
+    case nil: TRIVIAL_LIST(b)
+    case cons(as_x,ax_xs):
+      maximum_append(as,b);
+    }
+  }
+}
+
+lemma
+void sorted_max_extend(list<int> a, int x)
+    requires !!sorted(a) &*& maximum(append(a,cons(x,nil))) == x;
+    ensures  !!sorted(append(a,cons(x,nil)));
+{
+  switch(a) {
+  case nil:
+  case cons(v,vs):
+    switch(append(vs,cons(x,nil)))
+    { case nil: case cons(vs2x,vs2xs): }
+    assert maximum(append(a,cons(x,nil)))
+      ==   max_of(v,maximum(append(vs,cons(x,nil))));
+
+    if(vs != nil) {
+      maximum_append(vs,cons(x,nil));
+      if(mem(maximum(append(vs,cons(x,nil))),vs)) {
+        forall_elim(vs,(le)(v),maximum(append(vs,cons(x,nil))));
+      }
+    }
+
+    sorted_max_extend(vs,x);
+
+    if(!sorted(append(a,cons(x,nil)))) {
+      int cx = not_forall(append(vs,cons(x,nil)),(le)(v));
+      if(cx != x) {
+        forall_elim(vs,(le)(v),cx);
+      }
+      assert false;
+    }
+  }
+}
+
+lemma_auto(is_permutation2(a,b))
+void permutation_equiv<t>(list<t> a, list<t> b)
+  requires true;
+  ensures  is_permutation(a,b) == is_permutation2(a,b);
+{
+  switch(a) {
+  case nil: TRIVIAL_LIST(b)
+  case cons(ax,axs):
+    list<t> new_b = remove(ax,b);
+
+    permutation_equiv(axs,new_b);
+
+    if(is_permutation2(a,b)) {
+      if(!forall(new_b,(count_matches)(axs,new_b))) {
+        t cx = not_forall(new_b,(count_matches)(axs,new_b));
+        forall_elim(b,(count_matches)(a,b),cx);
+        count_of_remove(ax,cx,b);
+        assert false;
+      }
+      if(!forall(axs,(count_matches)(axs,new_b))) {
+        t cx = not_forall(axs,(count_matches)(axs,new_b));
+        forall_elim(a,(count_matches)(a,b),cx);
+        count_of_mem(cx,b);
+        count_of_remove(ax,cx,b);
+        if(cx == ax) {
+          assert count_of(cx,a) == 1 + count_of(cx,axs);
+          assert 1+count_of(cx,new_b) == count_of(cx,b);
+        } else {
+          assert count_of(cx,a) == count_of(cx,axs);
+          assert count_of(cx,new_b) == count_of(cx,b);
+        }
+        assert false;
+      }
+
+      assert !!is_permutation(axs,new_b);
+      count_of_mem(ax,b);
+      assert !!mem(ax,b);
+    }
+
+
+    if(is_permutation(a,b)) {
+      if(!forall(b,(count_matches)(a,b))) {
+        t cx = not_forall(b,(count_matches)(a,b));
+        if(mem(cx,new_b)) {
+          forall_elim(new_b,(count_matches)(axs,new_b),cx);
+        } else if(mem(cx,axs)) {
+          forall_elim(axs,(count_matches)(axs,new_b),cx);
+        } else {
+          remove_exact(cx,ax,b);
+          assert cx == ax;
+          count_of_mem(cx,axs);
+          count_of_mem(cx,new_b);
+        }
+        count_of_remove(ax,cx,b);
+        assert false;
+      }
+      if(!forall(a,(count_matches)(a,b))) {
+        t cx = not_forall(a,(count_matches)(a,b));
+        if(mem(cx,new_b)) {
+          forall_elim(new_b,(count_matches)(axs,new_b),cx);
+        } else if(mem(cx,axs)) {
+          forall_elim(axs,(count_matches)(axs,new_b),cx);
+        } else {
+          remove_exact(cx,ax,b);
+          assert cx == ax;
+          count_of_mem(cx,axs);
+          count_of_mem(cx,new_b);
+        }
+
+        count_of_remove(ax,cx,b);
+        assert false;
+      }
+    }
+  }
+}
+
+lemma
+t not_permutation2<t>(list<t> a, list<t> b)
+    requires !is_permutation2(a,b);
+    ensures  count_of(result,a) != count_of(result,b);
+{
+  switch(a) {
+  case nil:
+    switch(b) {
+    case nil: assert false;
+    case cons(v,vs): return v;
+    }
+  case cons(x,xs):
+    if(!mem(x,b)) {
+      count_of_mem(x,b);
+      return x;
+    } else {
+      permutation_equiv(a,b);
+
+      list<t> rest_b = remove(x,b);
+
+      permutation_equiv(xs,rest_b);
+      t ret = not_permutation2(xs,rest_b);
+      count_of_remove(x,ret,b);
+
+      return ret;
+    }
+  }
+}
 
 #endif
 

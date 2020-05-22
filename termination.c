@@ -308,7 +308,8 @@ lemma void not_mem_remove<t>(t x, list<t> xs)
 
 lemma void count_eq_remove_all<t>(t z, list<t> xs, list<t> ys)
     requires true;
-    ensures count_eq(z, remove_all(xs, ys)) == max_(0, count_eq(z, ys) - count_eq(z, xs));
+    ensures count_eq(remove_all(xs, ys), z) == max_(0, count_eq(ys, z)
+        - count_eq(xs, z));
 {
     switch (xs) {
         case nil:
@@ -321,7 +322,7 @@ lemma void count_eq_remove_all<t>(t z, list<t> xs, list<t> ys)
             } else {
                 not_mem_remove(x, remove_all(xs0, ys));
                 if (x == z) {
-                    if (count_eq(z, remove_all(xs0, ys)) != 0) {
+                    if (count_eq(remove_all(xs0, ys), z) != 0) {
                         count_non_zero(remove_all(xs0, ys), (eq)(z));
                         assert false;
                     }
@@ -332,23 +333,24 @@ lemma void count_eq_remove_all<t>(t z, list<t> xs, list<t> ys)
 
 lemma void mem_count_eq<t>(t x, list<t> xs)
     requires true;
-    ensures mem(x, xs) == (count_eq(x, xs) > 0);
+    ensures mem(x, xs) == (count_eq(xs, x) > 0);
 {
     count_nonnegative(xs, (eq)(x));
     if (mem(x, xs)) {
-        if (count_eq(x, xs) == 0)
+        if (count_eq(xs, x) == 0)
             count_zero_mem(xs, (eq)(x), x);
     } else {
-        if (count_eq(x, xs) != 0)
+        if (count_eq(xs, x) != 0)
             count_non_zero(xs, (eq)(x));
     }
 }
 
 lemma void mem_remove_all_count_eq<t>(t z, list<t> xs, list<t> ys)
     requires true;
-    ensures mem(z, remove_all(xs, ys)) == (count_eq(z, ys) > count_eq(z, xs));
+    ensures mem(z, remove_all(xs, ys)) == (count_eq(ys, z) >
+        count_eq(xs, z));
 {
-    mem_count_eq(z, remove_all(xs, ys));
+    mem_count_eq(remove_all(xs, ys), z);
     count_eq_remove_all(z, xs, ys);
 }
 
@@ -356,8 +358,8 @@ lemma void mem_remove_all_append_l_commut<t>(t x, list<t> xs, list<t> ys, list<t
     requires true;
     ensures mem(x, remove_all(append(xs, ys), zs)) == mem(x, remove_all(append(ys, xs), zs));
 {
-    mem_remove_all_count_eq(x, append(xs, ys), zs);
-    mem_remove_all_count_eq(x, append(ys, xs), zs);
+    mem_remove_all_count_eq(append(xs, ys), zs, x);
+    mem_remove_all_count_eq(append(ys, xs), zs, x);
     count_append(xs, ys, (eq)(x));
     count_append(ys, xs, (eq)(x));
 }
@@ -366,8 +368,8 @@ lemma void mem_remove_all_append_r_commut<t>(t x, list<t> xs, list<t> ys, list<t
     requires true;
     ensures mem(x, remove_all(zs, append(xs, ys))) == mem(x, remove_all(zs, append(ys, xs)));
 {
-    mem_remove_all_count_eq(x, zs, append(xs, ys));
-    mem_remove_all_count_eq(x, zs, append(ys, xs));
+    mem_remove_all_count_eq(zs, append(xs, ys), x);
+    mem_remove_all_count_eq(zs, append(ys, xs), x);
     count_append(xs, ys, (eq)(x));
     count_append(ys, xs, (eq)(x));
 }
@@ -391,9 +393,9 @@ lemma void bag_le_append_r<t>(fixpoint(t, t, bool) lt, list<t> xs, list<t> ys)
     switch (remove_all(append(xs, ys), ys)) {
         case nil:
         case cons(x, xs0):
-            mem_remove_all_count_eq(x, append(xs, ys), ys);
+            mem_remove_all_count_eq(append(xs, ys), ys, x);
             count_append(xs, ys, (eq)(x));
-            assert count_eq(x, xs) + count_eq(x, ys) < count_eq(x, ys);
+            assert count_eq(xs, x) + count_eq(ys, x) < count_eq(ys, x);
             count_nonnegative(xs, (eq)(x));
             count_nonnegative(ys, (eq)(x));
             assert false;
@@ -437,7 +439,7 @@ lemma void bag_le_bag_le_append_l<t>(fixpoint(t, t, bool) lt, list<t> xs1, list<
     }
 }
 lemma void le_lt_trans<t>(fixpoint(t, t, bool) lt, t x, t y, t z)
-    requires [_]is_order(lt) &*& le(lt, x, y) && lt(y, z);
+    requires [_]is_order(lt) &*& fn_le(lt, x, y) && lt(y, z);
     ensures lt(x, z) == true;
 {
     if (x != y) {
@@ -513,7 +515,7 @@ lemma void bag_le_trans<t>(fixpoint(t, t, bool) lt, list<t> xs, list<t> ys, list
             assert mem(x, remove_all(zs, ys)) == true;
         }
         for (;;)
-            invariant [_]is_order(lt) &*& mem(x, remove_all(ys, xs)) || mem(x, remove_all(zs, ys)) &*& le(lt, x0, x) == true;
+            invariant [_]is_order(lt) &*& mem(x, remove_all(ys, xs)) || mem(x, remove_all(zs, ys)) &*& fn_le(lt, x0, x) == true;
             decreases count(remove_all(ys, xs), (lt)(x)) + count(remove_all(zs, ys), (lt)(x));
         {
             if (mem(x, remove_all(ys, xs))) {

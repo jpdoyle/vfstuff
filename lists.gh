@@ -31,6 +31,30 @@ void remove_distinct<t>(t x, list<t> l)
     ensures  !mem(x,remove(x,l));
 { LIST_INDUCTION(l, xs, remove_distinct(x, xs)) }
 
+lemma_auto(mem(x,remove(y,l)))
+void mem_remove<t>(t x, t y, list<t> l)
+    requires !!mem(x,remove(y,l));
+    ensures  !!mem(x,l);
+{ LIST_INDUCTION(l, xs, if(mem(x,remove(y,xs))) mem_remove(x, y, xs)) }
+
+lemma_auto(mem(x,remove(y,l)))
+void remove_other<t>(t x, t y, list<t> l)
+    requires x != y;
+    ensures  mem(x,remove(y,l)) == mem(x,l);
+{ LIST_INDUCTION(l, xs, remove_other(x, y, xs)) }
+
+lemma
+void remove_exact<t>(t x, t y, list<t> l)
+    requires !!mem(x,l) &*& !mem(x,remove(y,l));
+    ensures  x == y;
+{
+  switch(l) {
+  case nil:
+  case cons(v,vs):
+    if(x != v) { remove_exact(x,y,vs); }
+  }
+}
+
 lemma_auto(remove(x,remove(x,l)))
 void remove_idempotent<t>(t x, list<t> l)
     requires !!distinct(l);
@@ -59,6 +83,11 @@ lemma_auto(drop(n,append(p,s))) void drop_of_append<t>(
         int n, list<t> p, list<t> s);
     requires n == length(p);
     ensures drop(n,append(p,s)) == s;
+
+lemma_auto(take(n,append(p,s))) void take_of_append<t>(
+        int n, list<t> p, list<t> s);
+    requires n == length(p);
+    ensures take(n,append(p,s)) == p;
 
 lemma_auto(all_eq(drop(n,l),x)) void all_eq_drop<t>(list<t> l, int n,
         t x);
@@ -250,6 +279,18 @@ fixpoint int maximum(list<int> l) {
 lemma void maximum_correct(int x, list<int> l);
     requires !!mem(x,l);
     ensures  !!mem(maximum(l),l) &*& maximum(l) >= x;
+
+lemma_auto(mem(maximum(cons(x,xs)),cons(x,xs)))
+void maximum_is_mem(int x, list<int> xs)
+    requires true;
+    ensures  !!mem(maximum(cons(x,xs)),cons(x,xs));
+{
+  switch(xs) {
+  case nil:
+  case cons(v,vs):
+    maximum_is_mem(v,vs);
+  }
+}
 
 lemma void maximum_remove(int x,list<int> l);
     requires !!mem(x,l) &*& length(l) > 1;

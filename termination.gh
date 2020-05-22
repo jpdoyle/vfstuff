@@ -13,7 +13,9 @@
 // A library of useful definitions and lemmas for dealing with call permissions.
 
 #include "call_perms.gh"
+#include "util.gh"
 #include <listex.gh>
+#include <permutations.gh>
 
 // The natural well-founded order on (nonnegative) integers
 
@@ -34,8 +36,6 @@ lemma void is_wf_pair_lt<a, b>(fixpoint(a, a, bool) a_lt, fixpoint(b, b, bool) b
     ensures [_]is_wf((pair_lt)(a_lt, b_lt));
 
 // Well-founded induction 
-
-fixpoint c flip<a, b, c>(fixpoint(a, b, c) f, b y, a x) { return f(x, y); }
 
 fixpoint bool implies<t>(fixpoint(t, bool) p1, fixpoint(t, bool) p2, t x) { return !p1(x) || p2(x); }
 
@@ -108,21 +108,21 @@ lemma void not_mem_remove<t>(t x, list<t> xs);
 
 fixpoint bool eq<t>(t x, t y) { return x == y; }
 
-fixpoint int count_eq<t>(t x, list<t> xs) { return count(xs, (eq)(x)); }
-
 fixpoint int max_(int x, int y) { return x < y ? y : x; }
 
 lemma void count_eq_remove_all<t>(t z, list<t> xs, list<t> ys);
     requires true;
-    ensures count_eq(z, remove_all(xs, ys)) == max_(0, count_eq(z, ys) - count_eq(z, xs));
+    ensures count_eq(remove_all(xs, ys), z) == max_(0, count_eq(ys, z)
+        - count_eq(xs, z));
 
 lemma void mem_count_eq<t>(t x, list<t> xs);
     requires true;
-    ensures mem(x, xs) == (count_eq(x, xs) > 0);
+    ensures mem(x, xs) == (count_eq(xs, x) > 0);
 
 lemma void mem_remove_all_count_eq<t>(t z, list<t> xs, list<t> ys);
     requires true;
-    ensures mem(z, remove_all(xs, ys)) == (count_eq(z, ys) > count_eq(z, xs));
+    ensures mem(z, remove_all(xs, ys)) == (count_eq(ys, z) >
+        count_eq(xs, z));
 
 lemma t exists_get_witness<t>(list<t> xs, fixpoint(t, bool) p);
     requires exists(xs, p) == true; 
@@ -136,10 +136,10 @@ lemma void not_exists<t>(list<t> xs, fixpoint(t, bool) p, t x);
     requires mem(x, xs) && !exists(xs, p);
     ensures !p(x);
 
-fixpoint bool le<t>(fixpoint(t, t, bool) lt, t x, t y) { return x == y || lt(x, y); }
+fixpoint bool fn_le<t>(fixpoint(t, t, bool) lt, t x, t y) { return x == y || lt(x, y); }
 
 lemma void le_lt_trans<t>(fixpoint(t, t, bool) lt, t x, t y, t z);
-    requires [_]is_order(lt) &*& le(lt, x, y) && lt(y, z);
+    requires [_]is_order(lt) &*& fn_le(lt, x, y) && lt(y, z);
     ensures lt(x, z) == true;
 
 fixpoint bool implies_at<t>(fixpoint(t, bool) p1, fixpoint(t, bool) p2, t x) { return !p1(x) || p2(x); }
