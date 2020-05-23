@@ -67,6 +67,12 @@ lemma_auto(drop(n,append(p,s))) void drop_of_append<t>(
     }
 }
 
+lemma_auto(take(n,append(p,s))) void take_of_append<t>(
+        int n, list<t> p, list<t> s)
+    requires n == length(p);
+    ensures take(n,append(p,s)) == p;
+{ LIST_INDUCTION(p,ps,take_of_append(n-1,ps,s)) }
+
 lemma_auto(all_eq(drop(n,l),x)) void all_eq_drop<t>(list<t> l, int n,
         t x)
     requires n >= 0 && n <= length(l) && all_eq(l,x);

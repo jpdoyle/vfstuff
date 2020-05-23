@@ -97,12 +97,6 @@ lemma void is_wf_lt()
 
 // Lexicographic ordering
 
-lemma void note(bool b)
-    requires b;
-    ensures b;
-{
-}
-
 fixpoint bool has_pair<a, b>(fixpoint(pair<a, b>, bool) set, a x, b y) { return set(pair(x, y)); }
 
 fixpoint bool fst_set<a, b>(fixpoint(fixpoint(b, bool), bool) forall_b, fixpoint(pair<a, b>, bool) set, a x) {
@@ -308,8 +302,7 @@ lemma void not_mem_remove<t>(t x, list<t> xs)
 
 lemma void count_eq_remove_all<t>(t z, list<t> xs, list<t> ys)
     requires true;
-    ensures count_eq(remove_all(xs, ys), z) == max_(0, count_eq(ys, z)
-        - count_eq(xs, z));
+    ensures count_eq_(z, remove_all(xs, ys)) == max_(0, count_eq_(z, ys) - count_eq_(z, xs));
 {
     switch (xs) {
         case nil:
@@ -322,7 +315,7 @@ lemma void count_eq_remove_all<t>(t z, list<t> xs, list<t> ys)
             } else {
                 not_mem_remove(x, remove_all(xs0, ys));
                 if (x == z) {
-                    if (count_eq(remove_all(xs0, ys), z) != 0) {
+                    if (count_eq_(z, remove_all(xs0, ys)) != 0) {
                         count_non_zero(remove_all(xs0, ys), (eq)(z));
                         assert false;
                     }
@@ -333,24 +326,23 @@ lemma void count_eq_remove_all<t>(t z, list<t> xs, list<t> ys)
 
 lemma void mem_count_eq<t>(t x, list<t> xs)
     requires true;
-    ensures mem(x, xs) == (count_eq(xs, x) > 0);
+    ensures mem(x, xs) == (count_eq_(x, xs) > 0);
 {
     count_nonnegative(xs, (eq)(x));
     if (mem(x, xs)) {
-        if (count_eq(xs, x) == 0)
+        if (count_eq_(x, xs) == 0)
             count_zero_mem(xs, (eq)(x), x);
     } else {
-        if (count_eq(xs, x) != 0)
+        if (count_eq_(x, xs) != 0)
             count_non_zero(xs, (eq)(x));
     }
 }
 
 lemma void mem_remove_all_count_eq<t>(t z, list<t> xs, list<t> ys)
     requires true;
-    ensures mem(z, remove_all(xs, ys)) == (count_eq(ys, z) >
-        count_eq(xs, z));
+    ensures mem(z, remove_all(xs, ys)) == (count_eq_(z, ys) > count_eq_(z, xs));
 {
-    mem_count_eq(remove_all(xs, ys), z);
+    mem_count_eq(z, remove_all(xs, ys));
     count_eq_remove_all(z, xs, ys);
 }
 
@@ -358,8 +350,8 @@ lemma void mem_remove_all_append_l_commut<t>(t x, list<t> xs, list<t> ys, list<t
     requires true;
     ensures mem(x, remove_all(append(xs, ys), zs)) == mem(x, remove_all(append(ys, xs), zs));
 {
-    mem_remove_all_count_eq(append(xs, ys), zs, x);
-    mem_remove_all_count_eq(append(ys, xs), zs, x);
+    mem_remove_all_count_eq(x, append(xs, ys), zs);
+    mem_remove_all_count_eq(x, append(ys, xs), zs);
     count_append(xs, ys, (eq)(x));
     count_append(ys, xs, (eq)(x));
 }
@@ -368,8 +360,8 @@ lemma void mem_remove_all_append_r_commut<t>(t x, list<t> xs, list<t> ys, list<t
     requires true;
     ensures mem(x, remove_all(zs, append(xs, ys))) == mem(x, remove_all(zs, append(ys, xs)));
 {
-    mem_remove_all_count_eq(zs, append(xs, ys), x);
-    mem_remove_all_count_eq(zs, append(ys, xs), x);
+    mem_remove_all_count_eq(x, zs, append(xs, ys));
+    mem_remove_all_count_eq(x, zs, append(ys, xs));
     count_append(xs, ys, (eq)(x));
     count_append(ys, xs, (eq)(x));
 }
@@ -393,9 +385,9 @@ lemma void bag_le_append_r<t>(fixpoint(t, t, bool) lt, list<t> xs, list<t> ys)
     switch (remove_all(append(xs, ys), ys)) {
         case nil:
         case cons(x, xs0):
-            mem_remove_all_count_eq(append(xs, ys), ys, x);
+            mem_remove_all_count_eq(x, append(xs, ys), ys);
             count_append(xs, ys, (eq)(x));
-            assert count_eq(xs, x) + count_eq(ys, x) < count_eq(ys, x);
+            assert count_eq_(x, xs) + count_eq_(x, ys) < count_eq_(x, ys);
             count_nonnegative(xs, (eq)(x));
             count_nonnegative(ys, (eq)(x));
             assert false;

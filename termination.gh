@@ -12,10 +12,9 @@
 
 // A library of useful definitions and lemmas for dealing with call permissions.
 
-#include "call_perms.gh"
 #include "util.gh"
+#include "call_perms.gh"
 #include <listex.gh>
-#include <permutations.gh>
 
 // The natural well-founded order on (nonnegative) integers
 
@@ -108,21 +107,21 @@ lemma void not_mem_remove<t>(t x, list<t> xs);
 
 fixpoint bool eq<t>(t x, t y) { return x == y; }
 
+fixpoint int count_eq_<t>(t x, list<t> xs) { return count(xs, (eq)(x)); }
+
 fixpoint int max_(int x, int y) { return x < y ? y : x; }
 
 lemma void count_eq_remove_all<t>(t z, list<t> xs, list<t> ys);
     requires true;
-    ensures count_eq(remove_all(xs, ys), z) == max_(0, count_eq(ys, z)
-        - count_eq(xs, z));
+    ensures count_eq_(z, remove_all(xs, ys)) == max_(0, count_eq_(z, ys) - count_eq_(z, xs));
 
 lemma void mem_count_eq<t>(t x, list<t> xs);
     requires true;
-    ensures mem(x, xs) == (count_eq(xs, x) > 0);
+    ensures mem(x, xs) == (count_eq_(x, xs) > 0);
 
 lemma void mem_remove_all_count_eq<t>(t z, list<t> xs, list<t> ys);
     requires true;
-    ensures mem(z, remove_all(xs, ys)) == (count_eq(ys, z) >
-        count_eq(xs, z));
+    ensures mem(z, remove_all(xs, ys)) == (count_eq_(z, ys) > count_eq_(z, xs));
 
 lemma t exists_get_witness<t>(list<t> xs, fixpoint(t, bool) p);
     requires exists(xs, p) == true; 
