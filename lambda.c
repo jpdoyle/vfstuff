@@ -2,29 +2,6 @@
 /*@ #include <nat.gh> @*/
 /*@ #include "termination.gh" @*/
 
-/*@
-
-fixpoint int max_of(int x, int y) { return x > y ? x : y; }
-
-lemma void max_of_correct(int x, int y)
-    requires true;
-    ensures  max_of(x,y) >= x &*& max_of(x,y) >= y
-        &*&  (max_of(x,y) == x || max_of(x,y) == y);
-{}
-
-lemma_auto(max_of(x,y))
-void max_of_correct_auto1(int x, int y)
-    requires true;
-    ensures  max_of(x,y) >= x;
-{ max_of_correct(x,y); }
-
-lemma_auto(max_of(x,y))
-void max_of_correct_auto2(int x, int y)
-    requires true;
-    ensures  max_of(x,y) >= y;
-{ max_of_correct(x,y); }
-
-  @*/
 
 /***********************************************************
  * Hello! 
@@ -341,7 +318,7 @@ LambdaTerm* newLambdaTerm()
 
 typedef LambdaTerm* cloneLambdaTerm_inner_t(const LambdaTerm* term);
     /*@ requires [?f]valid_LambdaTerm(term,?depth,?val)
-            &*&  [2]call_perm_level(pair(lt, lambda_depth(val)),
+            &*&  [2]call_perm_level(currentThread,pair(lt, lambda_depth(val)),
                     {cloneLambdaTerm_inner})
             ;
       @*/
@@ -354,7 +331,7 @@ typedef LambdaTerm* cloneLambdaTerm_inner_t(const LambdaTerm* term);
 LambdaTerm* cloneLambdaTerm_inner(const LambdaTerm* term)
         /*@ : cloneLambdaTerm_inner_t @*/
     /*@ requires [?f]valid_LambdaTerm(term,?depth,?val)
-            &*&  [2]call_perm_level(pair(lt, lambda_depth(val)),
+            &*&  [2]call_perm_level(currentThread,pair(lt, lambda_depth(val)),
                     {cloneLambdaTerm_inner})
             ;
       @*/
@@ -379,7 +356,7 @@ LambdaTerm* cloneLambdaTerm_inner(const LambdaTerm* term)
     case LambVar:
         ret->ptr1 = term->ptr1;
         ret->ptr2 = term->ptr2;
-        /*@ leak [2]call_perm_level(_,_); @*/
+        /*@ leak [2]call_perm_level(currentThread,_,_); @*/
         break;
 
     case LambFn:
@@ -451,7 +428,7 @@ typedef LambdaTerm* lambdaSubst_inner_t(const LambdaTerm* term,
             &*&  ind >= 0
             &*&  int_of_nat(depth) > ind
             &*&  [?vf]valid_LambdaTerm(v,zero,?v_val)
-            &*&  [2]call_perm_level(pair(lt, lambda_depth(t_val)),
+            &*&  [2]call_perm_level(currentThread,pair(lt, lambda_depth(t_val)),
                     {lambdaSubst_inner})
             &*&  int_of_nat(depth) +
                     lambda_depth(lambda_subst(t_val,nat_of_int(ind),
@@ -472,7 +449,7 @@ LambdaTerm* lambdaSubst_inner(const LambdaTerm* term, uintptr_t ind,
             &*&  ind >= 0
             &*&  int_of_nat(depth) > ind
             &*&  [?vf]valid_LambdaTerm(v,zero,?v_val)
-            &*&  [2]call_perm_level(pair(lt, lambda_depth(t_val)),
+            &*&  [2]call_perm_level(currentThread,pair(lt, lambda_depth(t_val)),
                     {lambdaSubst_inner})
             &*&  int_of_nat(depth) +
                     lambda_depth(lambda_subst(t_val,nat_of_int(ind),
@@ -501,7 +478,7 @@ LambdaTerm* lambdaSubst_inner(const LambdaTerm* term, uintptr_t ind,
     case LambSymbol:
         ret->ptr1 = term->ptr1;
         ret->ptr2 = term->ptr2;
-        /*@ leak [2]call_perm_level(_,_); @*/
+        /*@ leak [2]call_perm_level(_,_,_); @*/
         break;
     case LambVar:
         if((uintptr_t)term->ptr1 == ind) {
@@ -517,7 +494,7 @@ LambdaTerm* lambdaSubst_inner(const LambdaTerm* term, uintptr_t ind,
             ret->ptr1 = term->ptr1;
             ret->ptr2 = 0;
         }
-        /*@ leak [2]call_perm_level(_,_); @*/
+        /*@ leak [2]call_perm_level(_,_,_); @*/
         break;
 
     case LambFn:

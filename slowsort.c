@@ -2,18 +2,17 @@
 /*@ #include "termination.gh" @*/
 /*@ #include "sorting.gh" @*/
 
-typedef void slowsort_t(int* arr, size_t i, size_t j);
-    /*@ requires arr[i..j] |-> ?l
-            &*&  [3]call_perm_level(pair(lt, j-i), {slowsort_inner})
-      ; @*/
-    /*@ ensures  arr[i..j] |-> ?new_l &*& !!sorted(new_l)
-            &*&  !!is_permutation2(l,new_l); @*/
-    /*@ terminates; @*/
+//typedef void slowsort_t(int* arr, size_t i, size_t j);
+//    /*@ requires arr[i..j] |-> ?l
+//      ; @*/
+//    /*@ ensures  arr[i..j] |-> ?new_l &*& !!sorted(new_l)
+//            &*&  !!is_permutation2(l,new_l); @*/
+//    /*@ terminates; @*/
 
 void slowsort_inner(int* arr, size_t i, size_t j)
-  /*@ : slowsort_t @*/
+  /* @ : slowsort_t @*/
     /*@ requires arr[i..j] |-> ?l
-            &*&  [3]call_perm_level(pair(lt, j-i), {slowsort_inner})
+            &*&  [3]call_perm_level(currentThread,pair(lt, j-i), {slowsort_inner})
       ; @*/
     /*@ ensures  arr[i..j] |-> ?new_l &*& !!sorted(new_l)
             &*&  !!is_permutation2(l,new_l); @*/
@@ -21,10 +20,9 @@ void slowsort_inner(int* arr, size_t i, size_t j)
 {
   /* For recursion */
   /*@ is_wf_lt(); @*/
-  slowsort_t* rec = slowsort_inner;
 
   if(i >= j || i+1 >= j) {
-    /*@ leak [?f]call_perm_level(_,_); @*/
+    /*@ leak [?f]call_perm_level(currentThread,_,_); @*/
     return;
   } else {
     /*@ div_rem(j-i,2); @*/
@@ -47,7 +45,7 @@ void slowsort_inner(int* arr, size_t i, size_t j)
       consume_call_perm_level_for(slowsort_inner);
     } @*/
 
-    rec(arr,i,m);
+    slowsort_inner(arr,i,m);
     /*@ assert arr[i..m] |-> ?pref_sorted; @*/
 
     /*@ {
@@ -55,7 +53,7 @@ void slowsort_inner(int* arr, size_t i, size_t j)
       consume_call_perm_level_for(slowsort_inner);
     } @*/
 
-    rec(arr,m,j);
+    slowsort_inner(arr,m,j);
     /*@ assert arr[m..j] |-> ?suff_sorted; @*/
 
     /*@ {
@@ -119,7 +117,7 @@ void slowsort_inner(int* arr, size_t i, size_t j)
       call_perm_level_weaken(1,lt,j-i, {slowsort_inner}, 4,j-1-i);
       consume_call_perm_level_for(slowsort_inner);
     } @*/
-    rec(arr,i,j-1);
+    slowsort_inner(arr,i,j-1);
 
     /*@ {
       assert arr[i..j-1] |-> ?start;
