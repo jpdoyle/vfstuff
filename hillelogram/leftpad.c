@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdlib.h>
 /*@ #include <nat.gh> @*/
+/*@ #include <listex.gh> @*/
 
 /*@
 
@@ -66,59 +67,42 @@ void repchar_mem(char x, nat n, char c)
     }
 }
 
+lemma_auto(length(repchar(n,c)))
+void length_repchar(nat n, char c)
+    requires true;
+    ensures  length(repchar(n,c)) == int_of_nat(n);
+{
+    switch(n) {
+    case zero:
+    case succ(n0):
+        length_repchar(n0,c);
+    }
+}
+
+lemma_auto(take(length(l),append(l,r)))
+void take_length_append<t>(list<t> l,list<t> r)
+    requires true;
+    ensures  take(length(l),append(l,r)) == l;
+{
+    switch(l) {
+    case nil:
+    case cons(x,xs): take_length_append(xs,r);
+    }
+}
+
+lemma_auto void string_inv()
+    requires [?f]string(?s,?cs);
+    ensures  [ f]string( s, cs)
+        &*&  s > 0 &*& !mem('\0',cs);
+{
+    if(s <= 0 || mem('\0',cs)) {
+        open string(s,_);
+        assert [_]character(s,?c);
+        if(c != 0) string_inv();
+    }
+}
+
   @*/
-
-/* VeriFast's strlen and strcpy are not currently labeled
- * "terminates", so to prove total correctness I implement them here.
- */
-
-char *my_strcpy(char *d, char *s)
-    /*@ requires [?f]string(s, ?cs) &*& chars(d, length(cs) + 1, _);
-      @*/
-    /*@ ensures [f]string(s, cs)
-            &*& string(d, cs)
-            &*& result == d;
-      @*/
-    /*@ terminates; @*/
-{
-    char* ret = d;
-    while(true)
-        /*@ requires [ f]string(s, ?loop_cs)
-                &*&  chars(d, length(loop_cs) + 1, _);
-          @*/
-        /*@ ensures [f]string(old_s, loop_cs)
-                &*& string(old_d, loop_cs)
-                ;
-          @*/
-        /*@ decreases length(loop_cs); @*/
-    {
-        *d = *s;
-        if(!*s) { break; }
-        ++s;
-        ++d;
-    }
-    return ret;
-}
-
-size_t my_strlen(char *string)
-    /*@ requires [?f]string(string, ?cs)
-            &*&  length(cs) <= ULONG_MAX; @*/
-    /*@ ensures  [ f]string(string,  cs) &*& result == length(cs); @*/
-    /*@ terminates; @*/
-{
-    size_t ret = 0;
-    while(*string)
-        /*@ requires [f]string(string,     ?loop_cs)
-                &*&  ret + length(loop_cs) == length(cs); @*/
-        /*@ ensures  [f]string(old_string,  loop_cs)
-                &*&  ret == old_ret + length(loop_cs); @*/
-        /*@ decreases length(loop_cs); @*/
-    {
-        ++ret;
-        ++string;
-    }
-    return ret;
-}
 
 char* leftpad(char pad, size_t len, const char* s)
     /*@ requires [?f]string(s, ?cs)
@@ -145,13 +129,14 @@ char* leftpad(char pad, size_t len, const char* s)
     char* ret;
     size_t i;
     size_t pad_len;
-    size_t orig_len = my_strlen(s);
+    size_t orig_len = strlen(s);
 
     if(orig_len >= len) {
         len = orig_len;
     }
 
     pad_len = len-orig_len;
+    /*@ assert pad_len >= 0; @*/
     ret = malloc(len+1);
 
     if(ret) {
@@ -169,7 +154,8 @@ char* leftpad(char pad, size_t len, const char* s)
             ++i;
         }
 
-        my_strcpy(ret+i,s);
+        strcpy(ret+i,s);
+        /*@ chars_to_string(ret+i); @*/
         /*@ chars_string_join(ret); @*/
     }
 

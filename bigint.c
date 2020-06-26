@@ -1,10 +1,13 @@
 #include "bigint.h"
 /*@ #include "util.gh" @*/
 
-// fill out a 64-bytee cache line
-#define N_INTS 14
+// fill out a 64-byte cache line
+#define N_INTS 12
+// number of bits to reserve for carries
+#define CARRY_BITS 4
 
 typedef struct big_int_block {
+    struct big_int_block* prev;
     struct big_int_block* next;
     uint32_t chunks[N_INTS];
 } big_int_block;
@@ -12,28 +15,33 @@ typedef struct big_int_block {
 struct big_int {
     struct big_int_block *first;
     struct big_int_block *last;
-    bool sign;
+    bool is_pos;
 };
 
 /*@
 
-predicate bi_block(big_int_block* b;
-            big_int_block* last, list<int> chunks) =
-        struct_big_int_block_padding(b)
-    &*& b > 0
-    &*& b->next   |-> ?next
-    &*& b->chunks[..N_INTS] |-> ?my_chunks
-    &*& next == 0
-    ?       last == b &*& chunks == my_chunks
-    :       bi_block(next, last, ?more_chunks)
+predicate bi_block(big_int_block* first,
+                   big_int_block* last;
+                   big_int_block* first_prev;
+                   big_int_block* last_next;
+                   list<int> chunks) =
+        malloc_struct_big_int(first)
+        //struct_big_int_block_padding(first)
+    &*& first > 0
+    &*& first->next   |-> ?next
+    &*& first->prev   |-> first_prev
+    &*& first->chunks[..N_INTS] |-> ?my_chunks
+    &*& first == last
+    ?       last_next == next &*& chunks == my_chunks
+    :       bi_block(next, first, last, ?more_chunks)
         &*& chunks == append(my_chunks, more_chunks)
     ;
 
 lemma_auto void bi_block_inv()
-    requires [?f]bi_block(?b, ?last, ?chunks);
-    ensures  [ f]bi_block( b,  last,  chunks)
+    requires [?f]bi_block(?b, ?last, ?fprev, ?lnext, ?chunks);
+    ensures  [ f]bi_block( b,  last,  fprev,  lnext,  chunks)
         &*&  b > 0 &*& last > 0 &*& length(chunks)%N_INTS == 0
-        &*&  !!forall(chunks, (bounded)(0,pow_nat(2,N32)))
+        &*&  !!forall(chunks, (bounded)(0,pow_nat(2,N32)-1))
         ;
 {
     open bi_block(_,_,_);
@@ -72,7 +80,33 @@ lemma_auto void bi_block_inv()
     }
 }
 
+predicate bi_big_int(big_int* b, int free_carries; int i)
+    = malloc_big_int(b)
+    &*& b->first |-> ?first
+    &*& b->last |-> ?last
+    &*& b->is_pos |-> ?is_pos
+    &*& free_carries >= 0 &*& free_carries <= CARRY_BITS
+    &*& bi_block(first,last,0,0,?chunks)
+    &*& forall(chunks,
+        (bounded)(0,
+                  pow_nat(2,nat_of_int(32-free_carries)-1)))
+    &*& let(poly_eval(chunks,
+                pow_nat(2,nat_of_int(32-CARRY_BITS))),
+            ?abs_i)
+    &*& is_pos ? i == abs_i : i == -abs_i;
+
   @*/
+
+big_int* big_int_from_hex(const char* s)
+    /*@ requires [?f]string(s,?cs)
+            &*&  base_n(hex_chars(),reverse(cs),_,?val)
+            ; @*/
+    /*@ ensures  [ f]string(s, cs)
+            &*&  bi_big_int(result, CARRY_BITS, val); @*/
+    /*@ terminates; @*/
+{
+
+}
 
 void test1(void)
     /*@ requires true; @*/

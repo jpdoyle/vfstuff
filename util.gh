@@ -101,6 +101,21 @@ lemma void nth_of_is_nth<t>(int n, list<t> l);
             return n >= 0 &*& n < length(l) &*& x == nth(n,l);
     };
 
+lemma void nth_of_append<t>(int n, list<t> a,list<t> b)
+    requires n >= 0;
+    ensures  n < length(a)
+        ?    nth_of(n,append(a,b)) == nth_of(n,a)
+        :    nth_of(n,append(a,b)) == nth_of(n-length(a),b);
+{
+    switch(a) {
+    case nil:
+    case cons(x,xs):
+        if(n > 0) {
+            nth_of_append(n-1,xs,b);
+        }
+    }
+}
+
 fixpoint option<t> safe_head<t>(list<t> l) {
     switch(l) {
     case nil: return none;
