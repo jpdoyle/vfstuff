@@ -2,6 +2,73 @@
 
 /*@
 
+lemma void chars_split_as(char *array,
+        list<char> pref,list<char> suff)
+    requires [?f]chars(array, ?N, append(pref,suff));
+    ensures [f]chars(array, length(pref), pref)
+        &*& [f]chars(array + length(pref), length(suff), suff);
+{
+    take_append(length(pref),pref,suff);
+    drop_append(length(pref),pref,suff);
+}
+
+lemma void uints_split_as(unsigned *array,
+        list<unsigned> pref,list<unsigned> suff)
+    requires [?f]uints(array, ?N, append(pref,suff));
+    ensures [f]uints(array, length(pref), pref)
+        &*& [f]uints(array + length(pref), length(suff), suff);
+{
+    switch(pref) {
+    case nil:
+        close [f]uints(array, length(pref), pref);
+    case cons(x,xs):
+        open [f]uints(array, _,_);
+        uints_split_as(array+1,xs,suff);
+        close [f]uints(array, length(pref), pref);
+    }
+}
+
+lemma void uints_split(unsigned *array, int offset)
+    requires [?f]uints(array, ?N, ?as) &*& 0 <= offset &*& offset <= N;
+    ensures [f]uints(array, offset, take(offset, as))
+        &*& [f]uints(array + offset, N - offset, drop(offset, as))
+        &*& as == append(take(offset, as), drop(offset, as));
+{
+    if(offset == 0) {
+        close [f]uints(array, offset, take(offset, as));
+    } else {
+        open [f]uints(array, _,_);
+        uints_split(array+1,offset-1);
+        close [f]uints(array, offset,_);
+    }
+}
+
+lemma void uints_join(unsigned *a)
+    requires [?f]uints(a, ?M, ?as) &*& [f]uints(a + M, ?N, ?bs);
+    ensures [f]uints(a, M + N, append(as, bs));
+{
+    open uints(a,M,_);
+    if(M != 0) {
+        uints_join(a+1);
+        close [f]uints(a, M + N, append(as, bs));
+    }
+}
+
+lemma void uints_limits(unsigned *array)
+    requires [?f]uints(array, ?n, ?cs) &*& n > 0;
+    ensures [f]uints(array, n, cs) &*& (unsigned *)0 < array &*&
+        array + n <= (unsigned *)UINTPTR_MAX;
+{
+    if(array <= 0 || array + n > (unsigned *)UINTPTR_MAX) {
+        open uints(array,n,_);
+        if(n > 1) {
+            uints_limits(array+1);
+        }
+        u_integer_limits(array);
+        assert false;
+    }
+}
+
 lemma void index_of_positive<t>(t v, list<t> l)
     requires true;
     ensures  index_of(v,l) >= 0;
@@ -900,6 +967,44 @@ lemma void pow_times2(int x,nat y,int z)
         pow_times1(x,pow_nat(x,y0),nat_of_int(z));
     }
 }
+
+lemma void pow_monotonic(int x,nat y,nat z)
+    requires x > 1 &*& int_of_nat(y) < int_of_nat(z);
+    ensures  pow_nat(x,y) < pow_nat(x,z);
+{
+    switch(y) {
+    case zero:
+        switch(z) {
+        case zero: assert false;
+        case succ(z0):
+            pow_nat_pos(x,z0);
+            my_mul_mono_r(x,1,pow_nat(x,z0));
+        }
+    case succ(y0):
+        switch(z) {
+        case zero: assert false;
+        case succ(z0):
+            pow_monotonic(x,y0,z0);
+            my_mul_strict_mono_r(x,pow_nat(x,y0),pow_nat(x,z0));
+        }
+    }
+}
+
+lemma void pow_soft_monotonic(int x,nat y,nat z)
+    requires x >= 1 &*& int_of_nat(y) <= int_of_nat(z);
+    ensures  pow_nat(x,y) <= pow_nat(x,z);
+{
+    if(x > 1 && int_of_nat(y) != int_of_nat(z)) pow_monotonic(x,y,z);
+    else if(int_of_nat(y) == int_of_nat(z)) {
+        assert nat_of_int(int_of_nat(y)) == y;
+        assert nat_of_int(int_of_nat(z)) == z;
+        assert pow_nat(x,y) == pow_nat(x,z);
+    } else { assert x == 1;
+        assert pow_nat(x,y) == 1;
+        assert pow_nat(x,z) == 1;
+    }
+}
+
 
 @*/
 

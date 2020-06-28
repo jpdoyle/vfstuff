@@ -8,6 +8,11 @@
 
 /*@
 
+lemma_auto(poly_is_zero(p)) void poly_all_eq_zero(list<int> p)
+    requires true;
+    ensures  all_eq(p,0) == poly_is_zero(p);
+{ LIST_INDUCTION(p,ps,poly_all_eq_zero(ps)) }
+
 lemma_auto(minimize(p)) void minimal_zero(list<int> p)
     requires true;
     ensures  (minimize(p) == nil) == poly_is_zero(p);

@@ -700,11 +700,11 @@ lemma void pow_times2(int x,nat y,int z);
         ==   pow_nat(pow_nat(x,y),nat_of_int(z));
 
 lemma void pow_soft_monotonic(int x,nat y,nat z);
-    requires x >= 0 &*& int_of_nat(y) <= int_of_nat(z);
+    requires x >= 1 &*& int_of_nat(y) <= int_of_nat(z);
     ensures  pow_nat(x,y) <= pow_nat(x,z);
 
 lemma void pow_monotonic(int x,nat y,nat z);
-    requires x >= 0 &*& int_of_nat(y) < int_of_nat(z);
+    requires x > 1 &*& int_of_nat(y) < int_of_nat(z);
     ensures  pow_nat(x,y) < pow_nat(x,z);
 
 #endif

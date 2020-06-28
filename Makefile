@@ -34,7 +34,7 @@ poly.vfmanifest: poly.c poly.gh util.vfmanifest nats.vfmanifest axioms/prelude.v
 slowsort.vfmanifest: slowsort.c sorting.h sorting.gh util.vfmanifest nats.vfmanifest axioms/prelude.vfmanifest lists.vfmanifest termination.vfmanifest axioms/call_perms.vfmanifest
 	${VF} axioms/prelude.vfmanifest nats.vfmanifest util.vfmanifest lists.vfmanifest axioms/call_perms.vfmanifest termination.vfmanifest slowsort.c
 
-bigint.vfmanifest: bigint.c bigint.h util.vfmanifest nats.vfmanifest axioms/prelude.vfmanifest lists.vfmanifest b64.h axioms/bitops_axioms.vfmanifest bitops.vfmanifest
-	${VF} axioms/prelude.vfmanifest nats.vfmanifest util.vfmanifest lists.vfmanifest axioms/bitops_axioms.vfmanifest bitops.vfmanifest bigint.c
+bigint.vfmanifest: bigint.c bigint.h util.vfmanifest nats.vfmanifest axioms/prelude.vfmanifest lists.vfmanifest b64.h axioms/bitops_axioms.vfmanifest bitops.vfmanifest poly.vfmanifest
+	${VF} axioms/prelude.vfmanifest nats.vfmanifest util.vfmanifest lists.vfmanifest axioms/bitops_axioms.vfmanifest bitops.vfmanifest poly.vfmanifest bigint.c
 
 
