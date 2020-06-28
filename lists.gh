@@ -209,6 +209,16 @@ fixpoint list<t> repeat<t>(t v, nat n) {
     }
 }
 
+lemma_auto(repeat(v,n)) void repeat_nil<t>(t v, nat n)
+    requires true;
+    ensures  (repeat(v,n) == nil) == (n == zero);
+{ TRIVIAL_NAT(n) }
+
+lemma_auto(all_eq(repeat(v,n),v)) void repeat_all_eq<t>(t v, nat n)
+    requires true;
+    ensures  !!all_eq(repeat(v,n),v);
+{ NAT_INDUCTION(n,n0,repeat_all_eq(v,n0)) }
+
 lemma_auto(length(repeat(v,n))) void repeat_len<t>(t v, nat n)
     requires true;
     ensures  length(repeat(v,n)) == int_of_nat(n);

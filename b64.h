@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <malloc.h>
 #include <stdbool.h>
-/*@ #include "../../lists.gh" @*/
-/*@ #include "../../poly.gh" @*/
-/*@ #include "../../bitops.gh" @*/
+/*@ #include "lists.gh" @*/
+/*@ #include "poly.gh" @*/
+/*@ #include "bitops.gh" @*/
 
 #ifndef CRYPTOPALS_B64_H
 #define CRYPTOPALS_B64_H
@@ -90,7 +90,10 @@ char hex_of_nib(uint8_t c)
 
 uint8_t nib_of_hex(char c)
     /*@ requires !!mem(c,hex_chars()); @*/
-    /*@ ensures  some(c) == nth_of(result,hex_chars()); @*/
+    /*@ ensures  some(c) == nth_of(result,hex_chars())
+            &*&  index_of(c,hex_chars()) == result
+            &*&  0 <= result &*& result < length(hex_chars())
+            ; @*/
     /*@ terminates; @*/
 {
     if(c >= 'a' && c <= 'f') {
@@ -506,6 +509,7 @@ char* hex_of_bytes(size_t len, uint8_t* b)
             ; @*/
     /*@ terminates; @*/
 {
+    /*@ ALREADY_PROVEN() @*/
     char* ret;
     char* p;
     size_t i;
@@ -665,60 +669,59 @@ lemma_auto b64_string_inv()
 
   @*/
 
-char* b64_of_bytes(size_t len, uint8_t *b)
-    /*@ requires [?f]b[..len] |-> ?bytes
-            &*&  2*len+1 <= ULONG_MAX
-            ; @*/
-    /*@ ensures  [ f]b[..len] |->  bytes
-            &*&  string(result,?b64_str)
-            &*&  
-            &*&  length(hex_str) == 2*len
-            &*&  base_n(hex_chars(),reverse(hex_str),_,?val)
-            &*&  malloc_block_chars(result,_)
-            &*&  poly_eval(reverse(bytes),256) == val
-            ; @*/
-    /*@ terminates; @*/
-{
-    // not a fan of this expression but it's correct
-    size_t n_padding = (3-len%3)%3;
-    size_t out_len = ((len+n_padding)/3)*4;
-    size_t i;
-    char* p;
-    char* ret = calloc(out_len+1,sizeof(char));
-
-    if(!ret) { abort(); }
-
-    for(i = 0,p = ret; i < len; p+=4,i+=3) {
-        p[0] = b64_of_byte(b[i]>>2);
-
-        if(i+1 >= len) {
-            p[1] = b64_of_byte((b[i  ]&0x03)<<4);
-            break;
-        } else {
-            p[1] = b64_of_byte((b[i  ]&0x03)<<4 | b[i+1]>>4);
-        }
-
-        if(i+2 >= len) {
-            p[2] = b64_of_byte((b[i+1]&0x0f)<<2);
-            break;
-        } else {
-            p[2] = b64_of_byte((b[i+1]&0x0f)<<2 | b[i+2]>>6);
-        }
-
-        p[3] = b64_of_byte((b[i+2]&0x3f));
-    }
-
-    // Coincidentally, there will be exactly n_padding padding bytes
-    // to output, even though the calculation mod 3 and the number
-    // left in the group of 4 seem unrelated at first glance (check
-    // the cases).
-
-    for(i = 0; i < n_padding; ++i) {
-        p[3-n_padding+i] = '=';
-    }
-
-    return ret;
-}
+//char* b64_of_bytes(size_t len, uint8_t *b)
+//    /*@ requires [?f]b[..len] |-> ?bytes
+//            &*&  2*len+1 <= ULONG_MAX
+//            ; @*/
+//    /*@ ensures  [ f]b[..len] |->  bytes
+//            &*&  string(result,?b64_str)
+//            &*&  length(hex_str) == 2*len
+//            &*&  base_n(hex_chars(),reverse(hex_str),_,?val)
+//            &*&  malloc_block_chars(result,_)
+//            &*&  poly_eval(reverse(bytes),256) == val
+//            ; @*/
+//    /*@ terminates; @*/
+//{
+//    // not a fan of this expression but it's correct
+//    size_t n_padding = (3-len%3)%3;
+//    size_t out_len = ((len+n_padding)/3)*4;
+//    size_t i;
+//    char* p;
+//    char* ret = calloc(out_len+1,sizeof(char));
+//
+//    if(!ret) { abort(); }
+//
+//    for(i = 0,p = ret; i < len; p+=4,i+=3) {
+//        p[0] = b64_of_byte(b[i]>>2);
+//
+//        if(i+1 >= len) {
+//            p[1] = b64_of_byte((b[i  ]&0x03)<<4);
+//            break;
+//        } else {
+//            p[1] = b64_of_byte((b[i  ]&0x03)<<4 | b[i+1]>>4);
+//        }
+//
+//        if(i+2 >= len) {
+//            p[2] = b64_of_byte((b[i+1]&0x0f)<<2);
+//            break;
+//        } else {
+//            p[2] = b64_of_byte((b[i+1]&0x0f)<<2 | b[i+2]>>6);
+//        }
+//
+//        p[3] = b64_of_byte((b[i+2]&0x3f));
+//    }
+//
+//    // Coincidentally, there will be exactly n_padding padding bytes
+//    // to output, even though the calculation mod 3 and the number
+//    // left in the group of 4 seem unrelated at first glance (check
+//    // the cases).
+//
+//    for(i = 0; i < n_padding; ++i) {
+//        p[3-n_padding+i] = '=';
+//    }
+//
+//    return ret;
+//}
 
 #endif
 

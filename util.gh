@@ -124,6 +124,10 @@ fixpoint option<t> safe_head<t>(list<t> l) {
     }
 }
 
+//lemma void cons_head_tail<t>(list<t> l);
+//    requires l != nil;
+//    ensures  l == cons(head(l),tail(l));
+
 
 fixpoint option<pair<k,v> > assoc_of<k,v>(k key, list<pair<k,v> > l) {
     switch(l) {
@@ -175,6 +179,12 @@ lemma_auto(mem(x,reverse(l))) void reverse_mem<t>(list<t> l, t x);
 lemma void forall_reverse<t>(list<t> l, fixpoint(t,bool) p);
     requires true;
     ensures  forall(l,p) == forall(reverse(l),p);
+
+lemma_auto(reverse(append(a,b)))
+void reverse_append_auto<t>(list<t> a,list<t> b)
+    requires true;
+    ensures  reverse(append(a,b)) == append(reverse(b),reverse(a));
+{ reverse_append(a,b); }
 
 #if 0
 
@@ -602,6 +612,43 @@ lemma void u_llong_integer_unique(unsigned long long *p);
     requires [?f]u_llong_integer(p, ?v);
     ensures [f]u_llong_integer(p, v) &*& f <= 1;
 
+lemma void chars_split_as(char *array,
+        list<char> pref,list<char> suff);
+    requires [?f]chars(array, ?N, append(pref,suff));
+    ensures [f]chars(array, length(pref), pref)
+        &*& [f]chars(array + length(pref), length(suff), suff);
+
+lemma void uints_split_as(unsigned *array,
+        list<unsigned> pref,list<unsigned> suff);
+    requires [?f]uints(array, ?N, append(pref,suff));
+    ensures [f]uints(array, length(pref), pref)
+        &*& [f]uints(array + length(pref), length(suff), suff);
+
+lemma void uints_split(unsigned *array, int offset);
+    requires [?f]uints(array, ?N, ?as) &*& 0 <= offset &*& offset <= N;
+    ensures [f]uints(array, offset, take(offset, as))
+        &*& [f]uints(array + offset, N - offset, drop(offset, as))
+        &*& as == append(take(offset, as), drop(offset, as));
+
+lemma void uints_join(unsigned *a);
+    requires [?f]uints(a, ?M, ?as) &*& [f]uints(a + M, ?N, ?bs);
+    ensures [f]uints(a, M + N, append(as, bs));
+
+lemma void uints_limits(unsigned *array);
+    requires [?f]uints(array, ?n, ?cs) &*& n > 0;
+    ensures [f]uints(array, n, cs) &*& (unsigned *)0 <= array &*&
+        array + n <= (unsigned *)UINTPTR_MAX;
+
+//lemma void uints_limits(unsigned *p);
+//    requires [?f]uints(p, ?v);
+//    ensures [f]uints(p, v) &*& p > (unsigned *)0
+//        &*& p + 1 <= (unsigned *)UINTPTR_MAX &*& 0 <= v
+//        &*& v <= UINT_MAX;
+//
+//lemma void uints_unique(unsigned *p);
+//    requires [?f]uints(p, ?v);
+//    ensures [f]uints(p, v) &*& f <= 1;
+
 lemma void ullongs_split(unsigned long long *array, int offset);
     requires [?f]ullongs(array, ?N, ?as) &*& 0 <= offset &*& offset <= N;
     ensures [f]ullongs(array, offset, take(offset, as))
@@ -651,6 +698,14 @@ lemma void pow_times2(int x,nat y,int z);
     requires z >= 0;
     ensures  pow_nat(x,nat_of_int(int_of_nat(y)*z))
         ==   pow_nat(pow_nat(x,y),nat_of_int(z));
+
+lemma void pow_soft_monotonic(int x,nat y,nat z);
+    requires x >= 0 &*& int_of_nat(y) <= int_of_nat(z);
+    ensures  pow_nat(x,y) <= pow_nat(x,z);
+
+lemma void pow_monotonic(int x,nat y,nat z);
+    requires x >= 0 &*& int_of_nat(y) < int_of_nat(z);
+    ensures  pow_nat(x,y) < pow_nat(x,z);
 
 #endif
 

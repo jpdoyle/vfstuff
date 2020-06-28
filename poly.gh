@@ -1,5 +1,5 @@
-#ifndef VFSTUFF_BIGINT_H
-#define VFSTUFF_BIGINT_H
+#ifndef VFSTUFF_POLY_H
+#define VFSTUFF_POLY_H
 
 #include "util.gh"
 #include "lists.gh"
@@ -34,6 +34,10 @@ fixpoint list<int> minimize(list<int> poly) {
             :  (cons(x,minimize(xs)));
     }
 }
+
+lemma_auto(poly_is_zero(p)) void poly_all_eq_zero(list<int> p);
+    requires true;
+    ensures  all_eq(p,0) == poly_is_zero(p);
 
 lemma_auto(minimize(p)) void minimal_zero(list<int> p);
     requires true;
