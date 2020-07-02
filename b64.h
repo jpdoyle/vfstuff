@@ -18,6 +18,9 @@
 
 #ifndef __FILE__
 #define calloc(a,b) malloc((a)*b)
+#define INLINE static inline
+#else
+#define INLINE static inline
 #endif
 
 /*@
@@ -69,7 +72,7 @@ void hex_chars_range(char c)
 
   @*/
 
-bool is_hex(char c)
+INLINE bool is_hex(char c)
     /*@ requires true; @*/
     /*@ ensures  result == mem(c,hex_chars()); @*/
     /*@ terminates; @*/
@@ -77,18 +80,22 @@ bool is_hex(char c)
     return (c >= 'a' && c <= 'f') || (c >= '0' && c <= '9');
 }
 
-char hex_of_nib(uint8_t c)
+INLINE char hex_of_nib(uint8_t c)
     /*@ requires c >= 0 &*& c < 16; @*/
-    /*@ ensures  some(result) == nth_of(c,hex_chars()); @*/
+    /*@ ensures  some(result) == nth_of(c,hex_chars())
+            &*&  !!mem(result,hex_chars())
+            &*&  index_of(result,hex_chars()) == c
+            ; @*/
     /*@ terminates; @*/
 {
     /*@ ALREADY_PROVEN() @*/
+    /*@ nth_of_index_of(c,hex_chars()); @*/
     if(c < 10)      { return (char)('0'+c);      }
     else if(c < 16) { return (char)('a'+(c-10)); }
     else { /*@ assert false; @*/ abort(); }
 }
 
-uint8_t nib_of_hex(char c)
+INLINE uint8_t nib_of_hex(char c)
     /*@ requires !!mem(c,hex_chars()); @*/
     /*@ ensures  some(c) == nth_of(result,hex_chars())
             &*&  index_of(c,hex_chars()) == result
@@ -193,7 +200,7 @@ lemma void b64_cases(int n)
   @*/
 
 
-char b64_of_byte(uint8_t n)
+INLINE char b64_of_byte(uint8_t n)
     /*@ requires 0 <= n &*& n < 64; @*/
     /*@ ensures  some(result) == nth_of(n,b64_chars()); @*/
     /*@ terminates; @*/
@@ -372,7 +379,7 @@ lemma void base_n_append(list<char> symbs_l,list<char> symbs_r)
 
   @*/
 
-uint8_t* bytes_of_hex(size_t len, char* s, size_t* outlen)
+INLINE uint8_t* bytes_of_hex(size_t len, char* s, size_t* outlen)
     /*@ requires [?f]s[..len] |-> ?hex_str &*& *outlen |-> _
             &*&  base_n(hex_chars(),reverse(hex_str),?hexits,?val)
             &*&  len%2 == 0
@@ -496,7 +503,7 @@ uint8_t* bytes_of_hex(size_t len, char* s, size_t* outlen)
     return ret;
 }
 
-char* hex_of_bytes(size_t len, uint8_t* b)
+INLINE char* hex_of_bytes(size_t len, uint8_t* b)
     /*@ requires [?f]b[..len] |-> ?bytes
             &*&  2*len+1 <= ULONG_MAX
             ; @*/

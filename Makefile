@@ -2,10 +2,10 @@ VF=verifast -target Linux64 -shared -emit_vfmanifest
 
 .PHONY: all clean
 
+all: nats.vfmanifest util.vfmanifest lists.vfmanifest bitops.vfmanifest termination.vfmanifest isort.vfmanifest slowsort.vfmanifest poly.vfmanifest numtheo.vfmanifest bigint.vfmanifest 
+
 clean:
 	rm *.vfmanifest
-
-all: nats.vfmanifest util.vfmanifest lists.vfmanifest bitops.vfmanifest termination.vfmanifest isort.vfmanifest slowsort.vfmanifest poly.vfmanifest numtheo.vfmanifest bigint.vfmanifest 
 
 nats.vfmanifest: nats.c nats.gh axioms/prelude.vfmanifest
 	${VF} axioms/prelude.vfmanifest nats.c

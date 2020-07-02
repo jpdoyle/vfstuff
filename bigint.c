@@ -680,6 +680,267 @@ void free_big_int_inner(big_int* p)
     free(p);
 }
 
+/*@
+
+lemma_auto(reverse(l))
+void reverse_1<t>(list<t> l)
+    requires length(l) <= 1;
+    ensures  reverse(l) == l;
+{ TRIVIAL_LIST2(l) }
+
+@*/
+
+
+void chars_reverse(char* p,size_t n)
+    /*@ requires p[..n] |-> ?cs; @*/
+    /*@ ensures  p[..n] |-> reverse(cs); @*/
+    /*@ terminates; @*/
+{
+    if(n > 1) {
+        size_t lo = 0,hi = n;
+        for(lo=0,hi=n;hi > lo && hi-1 > lo;++lo,--hi)
+            /*@ requires p[lo..hi] |-> ?loop_cs
+                    &*&  lo >= 0 &*& hi <= n
+                    &*&  hi >= lo;
+              @*/
+            /*@ ensures  p[old_lo..old_hi] |-> reverse(loop_cs); @*/
+            /*@ decreases hi-lo; @*/
+        {
+            /*@ open chars(p+lo,_,_); @*/
+            /*@ chars_split(p+lo+1,hi-1-lo-1); @*/
+            /*@ open chars(p+hi-1,1,_); @*/
+            /*@ assert p[lo]   |-> ?x; @*/
+            /*@ assert p[hi-1] |-> ?y; @*/
+            /*@ assert p[lo+1..hi-1] |-> ?l; @*/
+            char tmp = p[hi-1];
+            p[hi-1] = p[lo];
+            p[lo] = tmp;
+
+            /*@ recursive_call(); @*/
+            /*@ {
+                reverse_ends(x,l,y);
+                close chars(p+old_hi-1,1,cons(x,nil));
+                chars_join(p+old_lo+1);
+                close chars(p+old_lo,old_hi-old_lo,
+                    cons(y,append(reverse(l),cons(x,nil))));
+            } @*/
+        }
+    }
+}
+
+char* big_int_to_hex(const big_int* s)
+    /* @ requires [?f]bi_big_int(s, CARRY_BITS, ?val); @*/
+    /* @ ensures  [ f]bi_big_int(s, CARRY_BITS, val)
+             &*&  string(result,?cs)
+             &*&  base_n(hex_chars(),reverse(cs),?cs_seq,val)
+             // minimality
+             &*&  val == 0 ? cs == "0"
+             :    !!minimal(cs_seq); @*/
+    /* @ terminates; @*/
+{
+    size_t cap = (size_t)(N_INTS*(CHUNK_BITS/4)) + (size_t)1;
+    size_t len = 0, zeroes = 0;
+    big_int_block* b = s->first;
+    char* ret = malloc(cap);
+    if(!ret) abort();
+    if(!s->is_pos) abort(); // TODO
+
+    for(b=s->first; b; b = b->next)
+        /*@ requires malloc_block(ret,cap)
+                &*&  ret[..len] |-> ?cs
+                &*&  ret[len..cap] |-> _
+                &*&  [ f]bi_block(b, ?last,?bprev,0,?ptrs,?loop_chunks)
+                &*&  !!forall(loop_chunks,(bounded)(0,CHUNK_BASE-1))
+                &*&  len+((uint32_t)N_INTS)*((uint32_t)CHUNK_BITS/4)
+                    < 2*cap
+                ;
+          @*/
+        /*@ ensures  malloc_block(ret,cap)
+                &*&  ret[..old_len] |-> cs
+                &*&  ret[old_len..len] |-> ?new_cs
+                &*&  len < cap
+                &*&  ret[len..cap] |-> _
+                &*&  [ f]bi_block(b, last,bprev,0,ptrs, loop_chunks)
+                &*&  base_n(hex_chars(),new_cs,?cs_seq,
+                        poly_eval(loop_chunks,CHUNK_BASE))
+                &*&  zeroes >= 0
+                &*&  zeroes <= length(append(cs,new_cs))
+                &*&  nth_of(zeroes,
+                        reverse(append(cs,new_cs))) != some('0')
+                &*&  !!all_eq(take(zeroes, reverse(append(cs,new_cs))),
+                            '0')
+                ;
+          @*/
+        /*@ decreases length(loop_chunks); @*/
+    {
+        size_t block_i;
+        if(cap >= UINT_MAX/2) abort();
+        if(len+((uint32_t)N_INTS)*((uint32_t)CHUNK_BITS/4) >= cap) {
+            /*@ assert chars(ret,cap,?realloc_cs); @*/
+            /*@ int prev_cap = cap; @*/
+            cap *= 2;
+            ret = realloc(ret,cap);
+            if(!ret) abort();
+            /*@ note_eq(take(2*prev_cap,realloc_cs),realloc_cs); @*/
+            /*@ assert chars(ret,prev_cap,realloc_cs); @*/
+            /*@ chars_join(ret); @*/
+        }
+        /*@ chars_split(ret,len); @*/
+
+        for(block_i = 0; block_i < N_INTS; ++block_i)
+            /*@ requires ret[len..cap] |-> _
+                    &*&  [f]b->chunks[block_i..N_INTS] |-> ?chk
+                    &*&  block_i >= 0 &*& block_i <= N_INTS
+                    &*&  !!forall(chk,(bounded)(0,CHUNK_BASE-1))
+                    &*&  len + (N_INTS-block_i)*(CHUNK_BITS/4) < cap
+                    &*&  block_i >= 0 &*& block_i <= N_INTS
+                    ;
+              @*/
+            /*@ ensures  ret[old_len..len] |-> ?new_cs
+                    &*&  ret[len..cap] |-> _
+                    &*&  [f]b->chunks[old_block_i..N_INTS] |-> chk
+                    &*&  old_len + (N_INTS-old_block_i)*(CHUNK_BITS/4)
+                        == len
+                    &*&  base_n(hex_chars(),new_cs, _,
+                            poly_eval(chk, CHUNK_BASE))
+                    &*&  !!all_eq(take(zeroes, reverse(new_cs)), '0')
+                    &*&  nth_of(zeroes, reverse(new_cs)) != some('0')
+                    ;
+              @*/
+            /*@ decreases length(chk); @*/
+        {
+            /*@ uints_limits((&b->chunks[0])+block_i); @*/
+            /*@ int chunk_chars_left = CHUNK_BITS/4; @*/
+            /*@ int prev_len = len; @*/
+            /*@ division_unique(CHUNK_BITS,4,CHUNK_BITS/4,0); @*/
+            uint32_t chunk_bits_left = (uint32_t)(int)CHUNK_BITS;
+            uint32_t chunk = *((&b->chunks[0])+block_i);
+            /*@ int orig_chunk = chunk; @*/
+            for(; chunk_bits_left; chunk_bits_left -= 4, chunk >>= 4)
+                /*@ requires chunk
+                            < pow_nat(2,nat_of_int(chunk_bits_left))
+                        &*&  ret[len..cap] |-> _
+                        &*&  chunk_bits_left >= 0
+                        &*&  4*chunk_chars_left == chunk_bits_left
+                        &*&  len+chunk_chars_left < cap
+                        &*&  chunk_bits_left >= 0
+                        &*&  base_n(hex_chars(),nil,nil,0)
+                        ; @*/
+                /*@ ensures  ret[old_len..len] |-> ?new_cs
+                        &*&  ret[len..cap] |-> _
+                        &*&  base_n(hex_chars(),new_cs, _, old_chunk)
+                        &*&  !!all_eq(take(zeroes, reverse(new_cs)), '0')
+                        &*&  nth_of(zeroes, reverse(new_cs)) != some('0')
+                        &*&  old_len + old_chunk_chars_left == len
+                        ; @*/
+                /*@ decreases chunk_bits_left; @*/
+            {
+                /*@ open chars(ret+len,_,_); @*/
+                /*@ bitand_pow_2(chunk,N4); @*/
+                /*@ div_rem(chunk,pow_nat(2,N4)); @*/
+                uint8_t nib = (uint8_t)(chunk&0xf);
+                ret[len] = hex_of_nib(nib);
+                /*@ assert ret[len] |-> ?c; @*/
+                ++len;
+                if(nib) {
+                    zeroes = 0;
+                } else {
+                    ++zeroes;
+                }
+                /*@ {
+                    if(chunk_bits_left < 4) {
+                        assert chunk_chars_left >= 1;
+                        my_mul_mono_r(4,1,chunk_chars_left);
+                        assert false;
+                    }
+                    --chunk_chars_left;
+                    assert chunk >= 0;
+                    shiftright_div(chunk,N4);
+                    div_rem(chunk,pow_nat(2,N4));
+                    assert (chunk>>4) >= 0;
+                    mul_abs_commute(pow_nat(2,N4),(chunk>>4));
+                    assert abs(pow_nat(2,N4)*(chunk>>4))
+                        == pow_nat(2,N4)*(chunk>>4);
+                    assert abs(chunk) == chunk;
+                    assert pow_nat(2,N4)*(chunk>>4) <= chunk;
+                    assert pow_nat(2,N4)*(chunk>>4)
+                        <  pow_nat(2,nat_of_int(chunk_bits_left));
+                    pow_plus(2,N4,chunk_bits_left-4);
+                    assert pow_nat(2,N4)*(chunk>>4)
+                        < pow_nat(2,N4)
+                            *pow_nat(2,nat_of_int(chunk_bits_left-4));
+                    my_inv_mul_strict_mono_r(pow_nat(2,N4), chunk>>4,
+                        pow_nat(2,nat_of_int(chunk_bits_left-4)));
+                    assert (chunk>>4)
+                        < pow_nat(2,nat_of_int(chunk_bits_left-4));
+
+                } @*/
+
+                /*@ recursive_call(); @*/
+
+                /*@ {
+                    assert base_n(hex_chars(), ?rest_cs, ?rest_nibs,
+                        old_chunk>>4);
+                    close base_n(hex_chars(), cons(c,rest_cs),
+                        cons(nib,rest_nibs), old_chunk);
+                } @*/
+            }
+            
+            /*@ assert ret[prev_len..len] |-> ?chk_cs; @*/
+            /*@ assert [f]b->chunks[old_block_i+1..N_INTS] |->
+                 ?chk_rest; @*/
+            /*@ assert prev_len + CHUNK_BITS/4 == len; @*/
+
+            /*@ recursive_call(); @*/
+
+            /*@ {
+                assert ret[old_len..len] |-> ?rest_cs;
+                assert length(chk_cs) == CHUNK_BITS/4;
+                assert base_n(hex_chars(), chk_cs, _,
+                    orig_chunk);
+                assert base_n(hex_chars(), rest_cs, _,
+                    poly_eval(chk_rest,CHUNK_BASE));
+                base_n_append(chk_cs,rest_cs);
+                assert base_n(hex_chars(), append(chk_cs,rest_cs), _,
+                    ?final_val);
+                assert final_val ==
+                    orig_chunk
+                    + poly_eval(chk_rest,CHUNK_BASE)
+                        *pow_nat(16,nat_of_int(length(chk_cs)));
+                assert final_val ==
+                    orig_chunk
+                    + poly_eval(chk_rest,CHUNK_BASE)
+                        *pow_nat(16,nat_of_int(CHUNK_BITS/4));
+                assert final_val ==
+                    orig_chunk
+                    + poly_eval(chk_rest,CHUNK_BASE)
+                        *pow_nat(pow_nat(2,N4),nat_of_int(CHUNK_BITS/4));
+                pow_times2(2,N4,CHUNK_BITS/4);
+                assert final_val ==
+                    orig_chunk
+                    + poly_eval(chk_rest,CHUNK_BASE)
+                        *pow_nat(2,nat_of_int(CHUNK_BITS));
+                note_eq( final_val ,
+                    poly_eval(cons(orig_chunk,chk_rest),
+                        CHUNK_BASE));
+                assert cons(orig_chunk,chk_rest) == chk;
+
+
+                assert old_len == prev_len;
+                assert old_len + (CHUNK_BITS/4) 
+                    + (N_INTS-(old_block_i+1))*(CHUNK_BITS/4)
+                        == len;
+            } @*/
+        }
+    }
+
+    len -= zeroes;
+    ret[len] = '\0';
+    chars_reverse(ret,len);
+    return ret;
+}
+
+
 void test1(void)
     /*@ requires true; @*/
     /*@ ensures  true; @*/

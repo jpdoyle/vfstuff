@@ -482,6 +482,22 @@ lemma void my_mul_strict_mono_r(int a, int b1, int b2);
     requires 0 < a &*& b1 < b2;
     ensures a * b1 < a * b2;
 
+lemma void my_inv_mul_mono_l(int a1, int a2, int b);
+    requires a1*b <= a2*b &*& 0 < b;
+    ensures a1 <= a2;
+
+lemma void my_inv_mul_mono_r(int a, int b1, int b2);
+    requires 0 < a &*& a*b1 <= a*b2;
+    ensures b1 <= b2;
+
+lemma void my_inv_mul_strict_mono_l(int a1, int a2, int b);
+    requires a1*b < a2*b &*& 0 < b;
+    ensures a1 < a2;
+
+lemma void my_inv_mul_strict_mono_r(int a, int b1, int b2);
+    requires 0 < a &*& a*b1 < a*b2;
+    ensures b1 < b2;
+
 fixpoint int mul_abstract(int a,int b) { return a*b; }
 lemma void mul_abstract_def(int a,int b)
     requires true;

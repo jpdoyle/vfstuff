@@ -370,5 +370,14 @@ lemma void maximum_permutation(list<int> a,list<int> b)
     }
 }
 
+lemma
+void reverse_ends<t>(t x,list<t> l,t y)
+    requires true;
+    ensures  reverse(cons(x,append(l,cons(y,nil))))
+        ==   cons(y,append(reverse(l),cons(x,nil)));
+{
+    reverse_append(l,cons(y,nil));
+}
+
 @*/
 

@@ -328,5 +328,17 @@ void length_reverse<t>(list<t> l)
     ensures  length(reverse(l)) == length(l);
 { LIST_INDUCTION(l,xs,length_reverse(xs)) }
 
+lemma
+void reverse_ends<t>(t x,list<t> l,t y);
+    requires true;
+    ensures  reverse(cons(x,append(l,cons(y,nil))))
+        ==   cons(y,append(reverse(l),cons(x,nil)));
+
+lemma_auto(take(n,l))
+void take_more<t>(int n, list<t> l)
+    requires n >= length(l);
+    ensures  take(n,l) == l;
+{ LIST_INDUCTION(l,xs,take_more(n-1,xs)) }
+
 #endif
 
