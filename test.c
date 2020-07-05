@@ -24,7 +24,7 @@ int foo()
             /*@ ensures  old_x + (7-old_j)*3 == x; @*/
             /*@ decreases 7-j; @*/
         {
-#if 0
+#if 1
             x += 3;
 #else
             for(k = 0; k < 3; ++k)
@@ -33,6 +33,7 @@ int foo()
                 /*@ decreases 3-k; @*/
             {
                 ++x;
+                /*@ recursive_call(); @*/
             }
 #endif
             /*@ recursive_call(); @*/
@@ -41,8 +42,10 @@ int foo()
                 assert old_x + (7-old_j)*3 == x; 
             } @*/
         }
+        /*@ recursive_call(); @*/
     }
     return x;
 }
+
 
 

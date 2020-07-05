@@ -729,14 +729,14 @@ void chars_reverse(char* p,size_t n)
 }
 
 char* big_int_to_hex(const big_int* s)
-    /* @ requires [?f]bi_big_int(s, CARRY_BITS, ?val); @*/
-    /* @ ensures  [ f]bi_big_int(s, CARRY_BITS, val)
-             &*&  string(result,?cs)
-             &*&  base_n(hex_chars(),reverse(cs),?cs_seq,val)
-             // minimality
-             &*&  val == 0 ? cs == "0"
-             :    !!minimal(cs_seq); @*/
-    /* @ terminates; @*/
+    /*@ requires [?f]bi_big_int(s, CARRY_BITS, ?val); @*/
+    /*@ ensures  [ f]bi_big_int(s, CARRY_BITS, val)
+            &*&  string(result,?cs)
+            &*&  base_n(hex_chars(),reverse(cs),?cs_seq,val)
+            // minimality
+            &*&  val == 0 ? cs == "0"
+            :    !!minimal(cs_seq); @*/
+    /*@ terminates; @*/
 {
     size_t cap = (size_t)(N_INTS*(CHUNK_BITS/4)) + (size_t)1;
     size_t len = 0, zeroes = 0;
