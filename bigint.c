@@ -773,10 +773,10 @@ lemma void base_n_trim(char p0, list<char> ps, list<char> symbs,
         &*&  trimmed == minimize(seq)
         ;
 {
-    ALREADY_PROVEN()
     switch(symbs) {
     case nil: assert false;
     case cons(c,cs):
+    ALREADY_PROVEN()
         open base_n(_,_,seq,_);
         cons_head_tail(seq);
         if(suff_len + 1 == length(symbs)) {
@@ -1363,8 +1363,11 @@ char* big_int_to_hex(const big_int* s)
 }
 
 
-/* void test1(void) */
+#ifndef FILE
+int test1(void)
+#else
 int main(void)
+#endif
     /*@ requires true; @*/
     /*@ ensures  result == 0; @*/
 {

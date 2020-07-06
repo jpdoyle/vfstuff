@@ -87,6 +87,37 @@ lemma_auto(all_eq(drop(n,l),x)) void all_eq_drop<t>(list<t> l, int n,
     }
 }
 
+lemma_auto(all_eq(append(a,b),x))
+void all_eq_append<t>(list<t> a,list<t> b, t x)
+    requires true;
+    ensures  all_eq(append(a,b),x) == (all_eq(a,x) && all_eq(b,x));
+{ LIST_INDUCTION(a,as,all_eq_append(as,b,x)) }
+
+lemma_auto(all_eq(reverse(l),x))
+void all_eq_reverse<t>(list<t> l, t x)
+    requires true;
+    ensures  all_eq(reverse(l),x) == all_eq(l,x);
+{
+    switch(l) {
+    case nil:
+    case cons(v,vs):
+        all_eq_append(reverse(vs),{v},x);
+        all_eq_reverse(vs,x);
+    }
+}
+
+lemma_auto(take(n,append(p,s))) void take_of_append_exact<t>(
+        int n, list<t> p, list<t> s)
+    requires n == length(p);
+    ensures take(n,append(p,s)) == p;
+{ LIST_INDUCTION(p,ps,if(n != 0) take_of_append_exact(n-1,ps,s)) }
+
+lemma_auto(take(n,append(p,s))) void take_of_append_r<t>(
+        int n, list<t> p, list<t> s)
+    requires n >= length(p);
+    ensures take(n,append(p,s)) == append(p,take(n-length(p),s));
+{ LIST_INDUCTION(p,ps,take_of_append_r(n-1,ps,s)) }
+
 lemma_auto(drop(n,drop(m,l)))
 void drop_n_of_drop_m<t>(int n, int m, list<t> l)
     requires n >= 0 && m >= 0;
@@ -153,6 +184,11 @@ void all_eq_take<t>(int n, list<t> l, t v)
         }
     }
 }
+
+lemma void all_eq_elim<t>(list<t> l, t x, t y)
+    requires !!all_eq(l,x) &*& !!mem(y,l);
+    ensures  y == x;
+{ LIST_INDUCTION(l,xs,if(mem(y,xs)) all_eq_elim(xs,x,y)) }
 
 lemma //_auto(is_permutation(a,b))
 void permutation_length<t>(list<t> a, list<t> b)

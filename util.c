@@ -178,6 +178,21 @@ lemma void my_mul_strict_mono_r(int a, int b1, int b2)
     {}
 }
 
+lemma void my_inv_mul_strict_mono_r(int a, int b1, int b2)
+    requires 0 < a &*& a*b1 < a*b2;
+    ensures b1 < b2;
+{
+    if(b1 >= b2) {
+        my_mul_mono_r(a,b2,b1);
+        assert false;
+    }
+}
+
+lemma void nth_of_mem<t>(int n, list<t> l, t v)
+    requires nth_of(n,l) == some(v);
+    ensures  !!mem(v,l);
+{ LIST_INDUCTION(l,xs,if(n != 0) nth_of_mem(n-1,xs,v)) }
+
 lemma void mul_assoc(int x, int y, int z)
     requires true;
     ensures x*(y*z) == (x*y)*z;

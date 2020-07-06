@@ -1,2 +1,3 @@
 .provides CRT/prelude.h#integer_unique
 .provides ../util.gh#u_llong_integer_limits
+.provides CRT/malloc.h#realloc
