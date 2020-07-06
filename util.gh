@@ -62,6 +62,10 @@ void nth_of_index_of<t>(t v, list<t> l);
     ensures  (nth_of(index_of(v,l),l) == some(v))
         == mem(v,l);
 
+lemma void nth_of_mem<t>(int n, list<t> l, t v);
+    requires nth_of(n,l) == some(v);
+    ensures  !!mem(v,l);
+
 //lemma_auto(nth_of(n,drop(m,l)))
 //void nth_of_of_drop<t>(int n, int m, list<t> l)
 //    requires true;
@@ -596,7 +600,7 @@ lemma_auto(bounded(l,l,x)) void bounded_base_case(int l, int x)
 { }
 
 predicate malloced_string(char* s; list<char> cs) =
-        string(s,cs) &*& malloc_block(s,?numbytes)
+        string(s,cs) &*& malloc_block_chars(s,?numbytes)
     &*& numbytes == length(cs) + 1;
 
 predicate malloced_strings(char* * base, int n;
@@ -722,6 +726,7 @@ lemma void pow_soft_monotonic(int x,nat y,nat z);
 lemma void pow_monotonic(int x,nat y,nat z);
     requires x > 1 &*& int_of_nat(y) < int_of_nat(z);
     ensures  pow_nat(x,y) < pow_nat(x,z);
+
 
 #endif
 

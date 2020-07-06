@@ -1,4 +1,5 @@
 #include <string.h>
+#include <limits.h>
 #include "bigint.h"
 #include "b64.h"
 /*@ #include "util.gh" @*/
@@ -27,6 +28,19 @@ typedef struct big_int {
 
 /*@
 
+predicate bi_block_opt
+        (big_int_block* first,
+         big_int_block* last;
+         big_int_block* first_prev,
+         big_int_block* last_next,
+         list<big_int_block*> ptrs,
+         list<uint32_t> chunks) =
+    first == 0
+    ? last == 0 &*& first_prev == 0 &*& last_next == 0
+    &*& ptrs == nil &*& chunks == nil
+    : bi_block(first,last,first_prev,last_next,ptrs,chunks)
+    ;
+
 predicate bi_block(big_int_block* first,
                    big_int_block* last;
                    big_int_block* first_prev,
@@ -54,11 +68,14 @@ lemma_auto void bi_block_inv()
         &*&  b > 0 &*& last > 0
         &*&  !!forall(chunks, (bounded)(0,pow_nat(2,N32)-1))
         &*&  length(chunks) >= N_INTS
-        &*& length(ptrs)*N_INTS == length(chunks)
+        &*&  length(ptrs)*N_INTS == length(chunks)
+        &*&  (length(ptrs) == 1) == ( b == last)
+        &*&  length(ptrs) >= 1
         &*&  (length(chunks) == N_INTS) == (b == last)
         &*&  !!mem(b,ptrs) &*& !!mem(last,ptrs)
         ;
 {
+    ALREADY_PROVEN()
     open bi_block(_,_,_,_,_,_);
     assert [f]b->next |-> ?next;
     assert [f]b->chunks[..N_INTS] |-> ?my_chunks;
@@ -91,6 +108,25 @@ lemma_auto void bi_block_inv()
     }
 }
 
+lemma_auto void bi_block_opt_inv()
+    requires [?f]bi_block_opt(?b, ?last, ?fprev, ?lnext, ?ptrs, ?chunks);
+    ensures  [ f]bi_block_opt( b,  last,  fprev,  lnext,  ptrs,  chunks)
+        &*&  !!forall(chunks, (bounded)(0,pow_nat(2,N32)-1))
+        &*&  length(ptrs)*N_INTS == length(chunks)
+        &*&  (length(chunks) == 0) == (b == 0)
+        ;
+{
+        ALREADY_PROVEN()
+    if(!(true
+            &&  !!forall(chunks, (bounded)(0,pow_nat(2,N32)-1))
+            &&  length(ptrs)*N_INTS == length(chunks)
+            &&  (length(chunks) == 0) == (b == 0))) {
+        open bi_block_opt(_,_,_,_,_,_);
+        if(b) bi_block_inv();
+        assert false;
+    }
+}
+
 predicate bi_big_int(big_int* b, int free_carries; int i)
     = malloc_block_big_int(b)
     &*& b->first |-> ?first
@@ -114,6 +150,7 @@ lemma void bi_block_disjoint(big_int_block* a,big_int_block* b)
         &*&  [ f2]bi_block(b, blast,  bfprev,  blnext, bptrs, bchunks)
         &*&  !!disjoint(aptrs,bptrs);
 {
+        ALREADY_PROVEN()
     if(!disjoint(aptrs,bptrs)) {
         open bi_block(a,_,_,_,_,_);
         if(mem(a,bptrs)) {
@@ -160,6 +197,7 @@ lemma void bi_block_extend(big_int_block* b)
     ensures  [ f]bi_block(b,  last,  fprev,  lnext2,
             append(ptrs1,ptrs2), append(chunks,chunks2));
 {
+        ALREADY_PROVEN()
     if(b == lnext || b == last) {
         forall_elim(ptrs1,(notf)((flip)(mem,ptrs2)),b);
         assert false;
@@ -195,6 +233,7 @@ big_int_block* new_block()
                     repeat(0,nat_of_int(N_INTS))); @*/
     /*@ terminates; @*/
 {
+    /*@ ALREADY_PROVEN() @*/
     size_t i;
     big_int_block* ret = malloc(sizeof(big_int_block));
     if(!ret) { abort(); }
@@ -216,6 +255,7 @@ big_int* new_big_int_zero()
     /*@ ensures  bi_big_int(result, CARRY_BITS, 0); @*/
     /*@ terminates; @*/
 {
+    /*@ ALREADY_PROVEN() @*/
     big_int* ret = malloc(sizeof(big_int));
     if(!ret) { abort(); }
     ret->is_pos = true;
@@ -667,6 +707,7 @@ void free_big_int_inner(big_int* p)
     /*@ ensures  true; @*/
     /*@ terminates; @*/
 {
+    /*@ ALREADY_PROVEN() @*/
     big_int_block* blk = p->first;
     do
         /*@ requires bi_block(blk,_,_,0,_,?chunks); @*/
@@ -688,6 +729,116 @@ void reverse_1<t>(list<t> l)
     ensures  reverse(l) == l;
 { TRIVIAL_LIST2(l) }
 
+lemma void base_n_nonzero(char p0, list<char> ps, list<char> symbs,
+                       char witness)
+    requires [?f]base_n(cons(p0,ps),symbs,?seq,?val)
+        &*&  !!mem(witness,symbs)
+        &*&  witness != p0
+        ;
+    ensures  [ f]base_n(cons(p0,ps),symbs, seq, val)
+        &*&  val != 0;
+{
+    ALREADY_PROVEN()
+    if(val == 0) {
+        open base_n(_,_,_,_);
+        switch(symbs) {
+        case nil: assert false;
+        case cons(x,xs):
+            assert [f]base_n(_,xs,_,?rest_v);
+            cons_head_tail(seq);
+            assert val == head(seq) + (length(ps)+1)*rest_v;
+            my_mul_mono_r(length(ps)+1,0,rest_v);
+            if(x == witness) {
+                assert head(seq) > 0;
+                assert false;
+            } else {
+                base_n_nonzero(p0,ps,xs,witness);
+            }
+        }
+        assert false;
+    }
+}
+
+lemma void base_n_trim(char p0, list<char> ps, list<char> symbs,
+                       int suff_len)
+    requires base_n(cons(p0,ps),symbs,?seq,?val)
+        &*&  val != 0
+        &*&  suff_len >= 0 &*& suff_len < length(symbs)
+        &*&  !!all_eq(take(suff_len,reverse(symbs)),p0)
+        &*&  nth_of(suff_len,reverse(symbs)) != some(p0)
+        ;
+    ensures  base_n(cons(p0,ps),
+                    take(length(symbs)-suff_len,symbs),
+                    ?trimmed,val)
+        &*&  trimmed == minimize(seq)
+        ;
+{
+    ALREADY_PROVEN()
+    switch(symbs) {
+    case nil: assert false;
+    case cons(c,cs):
+        open base_n(_,_,seq,_);
+        cons_head_tail(seq);
+        if(suff_len + 1 == length(symbs)) {
+            assert c != p0;
+            assert head(seq) != 0;
+            assert !!all_eq(take(suff_len,reverse(symbs)),p0);
+            assert take(suff_len,reverse(symbs))
+                == reverse(drop(1,symbs));
+            assert !!all_eq(reverse(cs),p0);
+            assert !!all_eq(reverse(cs),p0);
+            assert !!all_eq(cs,p0);
+            assert base_n(cons(p0,ps),cs,?cs_seq,0);
+            all_eq_map(cs,p0,(flip)(index_of,cons(p0,ps)));
+            assert !!all_eq(cs_seq,0);
+            assert !!poly_is_zero(cs_seq);
+            leak base_n(cons(p0,ps),cs,_,0);
+            close base_n(cons(p0,ps),{c},?pol,_);
+            assert !!minimal(pol);
+        } else {
+            assert suff_len < length(symbs)-1;
+            assert suff_len < length(cs);
+            nth_of_reverse(suff_len,symbs);
+            assert nth_of(suff_len,reverse(symbs))
+                == nth_of(length(symbs)-2-suff_len, cs);
+            switch(nth_of(suff_len,reverse(symbs))) {
+            case none:
+                nth_of_bounds(suff_len,reverse(symbs));
+                assert false;
+            case some(w):
+                nth_of_mem(length(symbs)-2-suff_len, cs, w);
+                base_n_nonzero(p0,ps,cs,w);
+                nth_of_map(length(symbs)-2-suff_len, cs,
+                        some);
+                nth_of_map(length(symbs)-2-suff_len, tail(seq),
+                        (flip)(nth_of,cons(p0,ps)));
+                switch(nth_of(length(symbs)-2-suff_len,tail(seq))) {
+                case none:
+                    assert false;
+                case some(ix):
+                    if(ix == 0) {
+                        assert false;
+                    }
+                    nth_of_mem(length(symbs)-2-suff_len,tail(seq),ix);
+                    if(poly_is_zero(tail(seq))) {
+                        all_eq_elim(tail(seq),0,ix);
+                        assert false;
+                    }
+                }
+            }
+            base_n_trim(p0,ps,cs,suff_len);
+            assert base_n(cons(p0,ps),
+                take(length(symbs)-1-suff_len,cs),?cs_pol,_);
+            assert minimize(tail(seq)) == cs_pol;
+            assert !!minimal(cs_pol);
+            close base_n(cons(p0,ps),
+                take(length(symbs)-suff_len,symbs),?pol,_);
+            assert minimize(seq) == pol;
+            assert !!minimal(pol);
+        }
+    }
+}
+
 @*/
 
 
@@ -696,6 +847,7 @@ void chars_reverse(char* p,size_t n)
     /*@ ensures  p[..n] |-> reverse(cs); @*/
     /*@ terminates; @*/
 {
+    /*@ ALREADY_PROVEN() @*/
     if(n > 1) {
         size_t lo = 0,hi = n;
         for(lo=0,hi=n;hi > lo && hi-1 > lo;++lo,--hi)
@@ -728,16 +880,41 @@ void chars_reverse(char* p,size_t n)
     }
 }
 
+char* reverse_and_dup(char* s,size_t len)
+    /*@ requires malloc_block_chars(s,?cap)
+            &*&  0 <= len &*& len < cap
+            &*&  s[..len] |-> ?cs
+            &*&  s[len] |-> _
+            &*&  s[len+1..cap] |-> _
+            &*&  !mem('\0',cs)
+            ; @*/
+    /*@ ensures  malloced_string(result,reverse(cs)); @*/
+    /*@ terminates; @*/
+{
+    /*@ ALREADY_PROVEN() @*/
+    s[len] = '\0';
+    chars_reverse(s,len);
+    {
+        char* orig_s = s;
+        /*@ body_chars_to_string(s); @*/
+        s = strdup(s);
+        if(!s) abort();
+        free(orig_s);
+    }
+    return s;
+}
+
 char* big_int_to_hex(const big_int* s)
     /*@ requires [?f]bi_big_int(s, CARRY_BITS, ?val); @*/
     /*@ ensures  [ f]bi_big_int(s, CARRY_BITS, val)
-            &*&  string(result,?cs)
+            &*&  malloced_string(result,?cs)
             &*&  base_n(hex_chars(),reverse(cs),?cs_seq,val)
             // minimality
             &*&  val == 0 ? cs == "0"
             :    !!minimal(cs_seq); @*/
     /*@ terminates; @*/
 {
+    /*@ ALREADY_PROVEN() @*/
     size_t cap = (size_t)(N_INTS*(CHUNK_BITS/4)) + (size_t)1;
     size_t len = 0, zeroes = 0;
     big_int_block* b = s->first;
@@ -745,47 +922,85 @@ char* big_int_to_hex(const big_int* s)
     if(!ret) abort();
     if(!s->is_pos) abort(); // TODO
 
+    /*@ {
+      assert [f]s->first |-> ?first;
+      assert [ f]bi_block(first,
+        ?last,?bprev,0,?ptrs,?loop_chunks);
+      close [ f]bi_block_opt(first,
+        last,_,0,_,_);
+    } @*/
+
     for(b=s->first; b; b = b->next)
         /*@ requires malloc_block(ret,cap)
                 &*&  ret[..len] |-> ?cs
                 &*&  ret[len..cap] |-> _
-                &*&  [ f]bi_block(b, ?last,?bprev,0,?ptrs,?loop_chunks)
-                &*&  !!forall(loop_chunks,(bounded)(0,CHUNK_BASE-1))
+                &*&  [ f]bi_block_opt(b, ?last,?bprev,0,?ptrs,?loop_chunks)
+                &*&  len >= 0 &*& len < cap
                 &*&  len+((uint32_t)N_INTS)*((uint32_t)CHUNK_BITS/4)
                     < 2*cap
+                &*&  !!forall(loop_chunks,(bounded)(0,CHUNK_BASE-1))
+                &*&  zeroes >= 0 &*& zeroes <= len
                 ;
           @*/
         /*@ ensures  malloc_block(ret,cap)
                 &*&  ret[..old_len] |-> cs
                 &*&  ret[old_len..len] |-> ?new_cs
+                &*&  !mem('\0',new_cs)
                 &*&  len < cap
                 &*&  ret[len..cap] |-> _
-                &*&  [ f]bi_block(b, last,bprev,0,ptrs, loop_chunks)
+                &*&  old_len + length(ptrs)*N_INTS*(CHUNK_BITS/4)
+                    == len
                 &*&  base_n(hex_chars(),new_cs,?cs_seq,
                         poly_eval(loop_chunks,CHUNK_BASE))
                 &*&  zeroes >= 0
                 &*&  zeroes <= length(append(cs,new_cs))
-                &*&  nth_of(zeroes,
-                        reverse(append(cs,new_cs))) != some('0')
-                &*&  !!all_eq(take(zeroes, reverse(append(cs,new_cs))),
+                &*&  nth_of(zeroes, reverse(new_cs)) != some('0')
+                &*&  !!all_eq(take(zeroes, reverse(new_cs)),
                             '0')
+                &*&  (zeroes < len-old_len ||
+                     zeroes - old_zeroes == len-old_len)
+                &*&  old_b == 0
+                ? [ f]bi_block_opt(old_b, last,_,_,_, _)
+                : [ f]bi_block(old_b, last,bprev,0,ptrs, loop_chunks)
                 ;
           @*/
         /*@ decreases length(loop_chunks); @*/
     {
+        /*@ int orig_len =len; @*/
         size_t block_i;
         if(cap >= UINT_MAX/2) abort();
         if(len+((uint32_t)N_INTS)*((uint32_t)CHUNK_BITS/4) >= cap) {
+            /*@ assert chars(ret,len,cs); @*/
             /*@ assert chars(ret,cap,?realloc_cs); @*/
             /*@ int prev_cap = cap; @*/
             cap *= 2;
             ret = realloc(ret,cap);
             if(!ret) abort();
             /*@ note_eq(take(2*prev_cap,realloc_cs),realloc_cs); @*/
+            /*@ note_eq(take(len,realloc_cs),cs); @*/
             /*@ assert chars(ret,prev_cap,realloc_cs); @*/
+            /*@ assert  ret[..prev_cap] |-> realloc_cs
+                    &*& ret[prev_cap..cap] |-> ?rest_cs
+              ; @*/
             /*@ chars_join(ret); @*/
+            /*@ assert ret[..cap] |-> ?new_cs; @*/
+            /*@ {
+              take_append(len,realloc_cs,rest_cs);
+              assert take(len,new_cs) == cs;
+            } @*/
         }
         /*@ chars_split(ret,len); @*/
+        /*@ open bi_block_opt(b,_,_,_,_,_); @*/
+        /*@ open bi_block(b,_,_,_,_,_); @*/
+        /*@ assert [f]b->next |-> ?b_next; @*/
+        /*@ assert [f]b->chunks[..N_INTS] |-> ?block_chunks; @*/
+        /*@ if(!forall(block_chunks,(bounded)(0,CHUNK_BASE-1))) {
+            int cx = not_forall(block_chunks,(bounded)(0,CHUNK_BASE-1));
+            forall_elim(loop_chunks,(bounded)(0,CHUNK_BASE-1),cx);
+            assert false;
+        } @*/
+
+        /*@ int orig_block = poly_eval(block_chunks,CHUNK_BASE); @*/
 
         for(block_i = 0; block_i < N_INTS; ++block_i)
             /*@ requires ret[len..cap] |-> _
@@ -794,9 +1009,12 @@ char* big_int_to_hex(const big_int* s)
                     &*&  !!forall(chk,(bounded)(0,CHUNK_BASE-1))
                     &*&  len + (N_INTS-block_i)*(CHUNK_BITS/4) < cap
                     &*&  block_i >= 0 &*& block_i <= N_INTS
+                    &*&  len >= 0
+                    &*&  zeroes >= 0 &*& zeroes <= len
                     ;
               @*/
             /*@ ensures  ret[old_len..len] |-> ?new_cs
+                    &*&  !mem('\0',new_cs)
                     &*&  ret[len..cap] |-> _
                     &*&  [f]b->chunks[old_block_i..N_INTS] |-> chk
                     &*&  old_len + (N_INTS-old_block_i)*(CHUNK_BITS/4)
@@ -805,6 +1023,8 @@ char* big_int_to_hex(const big_int* s)
                             poly_eval(chk, CHUNK_BASE))
                     &*&  !!all_eq(take(zeroes, reverse(new_cs)), '0')
                     &*&  nth_of(zeroes, reverse(new_cs)) != some('0')
+                    &*&  (zeroes < len-old_len ||
+                         zeroes - old_zeroes == len-old_len)
                     ;
               @*/
             /*@ decreases length(chk); @*/
@@ -825,13 +1045,17 @@ char* big_int_to_hex(const big_int* s)
                         &*&  len+chunk_chars_left < cap
                         &*&  chunk_bits_left >= 0
                         &*&  base_n(hex_chars(),nil,nil,0)
+                        &*&  zeroes >= 0 &*& zeroes <= len
                         ; @*/
                 /*@ ensures  ret[old_len..len] |-> ?new_cs
+                        &*&  !mem('\0',new_cs)
                         &*&  ret[len..cap] |-> _
                         &*&  base_n(hex_chars(),new_cs, _, old_chunk)
+                        &*&  old_len + old_chunk_chars_left == len
                         &*&  !!all_eq(take(zeroes, reverse(new_cs)), '0')
                         &*&  nth_of(zeroes, reverse(new_cs)) != some('0')
-                        &*&  old_len + old_chunk_chars_left == len
+                        &*&  (zeroes < len-old_len ||
+                             zeroes - old_zeroes == len-old_len)
                         ; @*/
                 /*@ decreases chunk_bits_left; @*/
             {
@@ -847,6 +1071,7 @@ char* big_int_to_hex(const big_int* s)
                 } else {
                     ++zeroes;
                 }
+                /*@ int next_zeroes = zeroes; @*/
                 /*@ {
                     if(chunk_bits_left < 4) {
                         assert chunk_chars_left >= 1;
@@ -879,7 +1104,41 @@ char* big_int_to_hex(const big_int* s)
                 /*@ recursive_call(); @*/
 
                 /*@ {
-                    assert base_n(hex_chars(), ?rest_cs, ?rest_nibs,
+                    assert ret[old_len+1..len] |-> ?rest_cs;
+                    assert ret[old_len] |-> c;
+                    assert reverse(cons(c,rest_cs)) ==
+                        append(reverse(rest_cs),{c});
+                    nth_of_append(zeroes,reverse(rest_cs),{c});
+                    if(zeroes < length(rest_cs)) {
+                        take_append(zeroes,reverse(rest_cs),{c});
+                        assert take(zeroes,reverse(cons(c,rest_cs)))
+                            == take(zeroes,reverse(rest_cs));
+                        assert !!all_eq(
+                            take(zeroes, reverse(cons(c,rest_cs))),
+                            '0');
+                    } else {
+                        assert zeroes == next_zeroes + length(rest_cs);
+                        take_more(zeroes,reverse(rest_cs));
+                        assert !!all_eq(reverse(rest_cs),'0');
+                        if(!nib) {
+                            assert c == '0';
+                            assert zeroes >= length(cons(c,rest_cs));
+                            assert !!all_eq(reverse(cons(c,rest_cs)),
+                                '0');
+                        } else {
+                            assert zeroes == length(rest_cs);
+                            assert nth_of(zeroes,reverse(cons(c,rest_cs)))
+                                == some(c);
+                        }
+                        //take_of_append_r(zeroes,reverse(rest_cs),{c});
+                    }
+                    assert !!all_eq(
+                        take(zeroes, reverse(cons(c,rest_cs))),
+                        '0');
+                    assert nth_of(zeroes, reverse(cons(c,rest_cs)))
+                        != some('0');
+
+                    assert base_n(hex_chars(), rest_cs, ?rest_nibs,
                         old_chunk>>4);
                     close base_n(hex_chars(), cons(c,rest_cs),
                         cons(nib,rest_nibs), old_chunk);
@@ -890,11 +1149,13 @@ char* big_int_to_hex(const big_int* s)
             /*@ assert [f]b->chunks[old_block_i+1..N_INTS] |->
                  ?chk_rest; @*/
             /*@ assert prev_len + CHUNK_BITS/4 == len; @*/
+            /*@ int next_len = len; @*/
+            /*@ int next_zeroes = zeroes; @*/
 
             /*@ recursive_call(); @*/
 
             /*@ {
-                assert ret[old_len..len] |-> ?rest_cs;
+                assert ret[next_len..len] |-> ?rest_cs;
                 assert length(chk_cs) == CHUNK_BITS/4;
                 assert base_n(hex_chars(), chk_cs, _,
                     orig_chunk);
@@ -925,6 +1186,36 @@ char* big_int_to_hex(const big_int* s)
                         CHUNK_BASE));
                 assert cons(orig_chunk,chk_rest) == chk;
 
+                chars_join(ret+old_len);
+                assert ret[old_len..len] |-> append(chk_cs,rest_cs);
+
+                assert reverse(append(chk_cs,rest_cs)) ==
+                    append(reverse(rest_cs),reverse(chk_cs));
+                nth_of_append(zeroes,reverse(rest_cs),reverse(chk_cs));
+                if(zeroes < length(rest_cs)) {
+                    take_append(zeroes,reverse(rest_cs),reverse(chk_cs));
+                    assert take(zeroes,reverse(append(chk_cs,rest_cs)))
+                        == take(zeroes,reverse(rest_cs));
+                    assert !!all_eq(
+                        take(zeroes, reverse(append(chk_cs,rest_cs))),
+                        '0');
+                } else {
+                    assert zeroes == next_zeroes + length(rest_cs);
+                    take_more(zeroes,reverse(rest_cs));
+                    assert !!all_eq(
+                        take(next_zeroes,reverse(chk_cs)),
+                        '0');
+                    assert !!all_eq(reverse(rest_cs), '0');
+                    assert !!all_eq(
+                        take(zeroes,reverse(append(chk_cs,rest_cs))),
+                        '0');
+                    //take_of_append_r(zeroes,reverse(rest_cs),{c});
+                }
+                assert !!all_eq(
+                    take(zeroes, reverse(append(chk_cs,rest_cs))),
+                    '0');
+                assert nth_of(zeroes, reverse(append(chk_cs,rest_cs)))
+                    != some('0');
 
                 assert old_len == prev_len;
                 assert old_len + (CHUNK_BITS/4) 
@@ -932,27 +1223,163 @@ char* big_int_to_hex(const big_int* s)
                         == len;
             } @*/
         }
+        /*@ list<int> rest_chunks; @*/
+        /*@ if(!b_next) {
+            close [ f]bi_block_opt(b_next, 0,_,0,_,nil);
+            rest_chunks = nil;
+        } else {
+            close [ f]bi_block_opt(b_next, last,_,0,_,?rest);
+            rest_chunks = rest;
+        } @*/
+        /*@ if(!forall(rest_chunks,(bounded)(0,CHUNK_BASE-1))) {
+            int cx = not_forall(rest_chunks,(bounded)(0,CHUNK_BASE-1));
+            forall_elim(loop_chunks,(bounded)(0,CHUNK_BASE-1),cx);
+            assert false;
+        } @*/
+        /*@ int next_len = len; @*/
+        /*@ int next_zeroes = zeroes; @*/
+        /*@ assert ret[orig_len..next_len] |-> ?block_cs; @*/
+
+        /*@ recursive_call(); @*/
+
+        /*@ {
+            
+        } @*/
+
+        /*@ {
+            chars_split(ret,old_len);
+            assert ret[..old_len] |-> cs;
+            assert ret[old_len..next_len] |-> block_cs;
+            assert ret[next_len..len] |-> ?rest_cs;
+
+            assert length(block_cs) == N_INTS*(CHUNK_BITS/4);
+            assert base_n(hex_chars(), block_cs, _,
+                orig_block);
+            assert base_n(hex_chars(), rest_cs, _,
+                poly_eval(rest_chunks,CHUNK_BASE));
+            base_n_append(block_cs,rest_cs);
+            assert base_n(hex_chars(), append(block_cs,rest_cs), _,
+                ?final_val);
+            assert final_val ==
+                orig_block
+                + poly_eval(rest_chunks,CHUNK_BASE)
+                    *pow_nat(16,nat_of_int(length(block_cs)));
+            assert final_val ==
+                orig_block
+                + poly_eval(rest_chunks,CHUNK_BASE)
+                    *pow_nat(16,nat_of_int(N_INTS*(CHUNK_BITS/4)));
+            assert final_val ==
+                orig_block
+                + poly_eval(rest_chunks,CHUNK_BASE)
+                    *pow_nat(pow_nat(2,N4),nat_of_int(N_INTS*(CHUNK_BITS/4)));
+            pow_times2(2,N4,N_INTS*(CHUNK_BITS/4));
+            assert final_val ==
+                orig_block
+                + poly_eval(rest_chunks,CHUNK_BASE)
+                    *pow_nat(2,nat_of_int(N_INTS*CHUNK_BITS));
+            pow_times2(2,nat_of_int(CHUNK_BITS),N_INTS);
+            assert final_val ==
+                orig_block
+                + poly_eval(rest_chunks,CHUNK_BASE)
+                    *pow_nat(CHUNK_BASE,nat_of_int(N_INTS));
+            note_eq( final_val ,
+                poly_eval(append(block_chunks,rest_chunks),
+                    CHUNK_BASE));
+            assert append(block_chunks,rest_chunks) == loop_chunks;
+
+            chars_join(ret+old_len);
+            assert ret[old_len..len] |-> append(block_cs,rest_cs);
+
+            assert reverse(append(block_cs,rest_cs)) ==
+                append(reverse(rest_cs),reverse(block_cs));
+            nth_of_append(zeroes,reverse(rest_cs),reverse(block_cs));
+            if(zeroes < length(rest_cs)) {
+                take_append(zeroes,reverse(rest_cs),reverse(block_cs));
+                assert take(zeroes,reverse(append(block_cs,rest_cs)))
+                    == take(zeroes,reverse(rest_cs));
+                assert !!all_eq(
+                    take(zeroes, reverse(append(block_cs,rest_cs))),
+                    '0');
+            } else {
+                assert zeroes == next_zeroes + length(rest_cs);
+                take_more(zeroes,reverse(rest_cs));
+                assert !!all_eq(
+                    take(next_zeroes,reverse(block_cs)),
+                    '0');
+                assert !!all_eq(reverse(rest_cs), '0');
+                assert !!all_eq(
+                    take(zeroes,reverse(append(block_cs,rest_cs))),
+                    '0');
+            }
+            assert !!all_eq(
+                take(zeroes, reverse(append(block_cs,rest_cs))),
+                '0');
+            assert nth_of(zeroes, reverse(append(block_cs,rest_cs)))
+                != some('0');
+
+            assert  old_len + N_INTS*(CHUNK_BITS/4)
+                    + (length(ptrs)-1)*N_INTS*(CHUNK_BITS/4)
+                == len;
+        } @*/
     }
 
-    len -= zeroes;
-    ret[len] = '\0';
-    chars_reverse(ret,len);
-    return ret;
+    /*@ assert ret[..len] |-> ?final_cs; @*/
+    if(len == zeroes) {
+        /*@ take_more(zeroes,reverse(final_cs));@*/
+        /*@ assert take(zeroes,reverse(final_cs)) == reverse(final_cs);@*/
+        /*@ assert !!all_eq(reverse(final_cs),'0');@*/
+        /*@ assert !!all_eq(final_cs,'0');@*/
+        free(ret);
+        /*@ leak base_n(_,final_cs,_,0); @*/
+        /*@ close base_n(hex_chars(),"0",_,0); @*/
+        ret = strdup("0");
+        if(!ret) abort();
+        return ret;
+    } else {
+        /*@ {
+            assert zeroes < len;
+            if(all_eq(final_cs,'0')) {
+                assert !!all_eq(reverse(final_cs),'0');
+                switch(nth_of(zeroes,reverse(final_cs))) {
+                case none: nth_of_bounds(zeroes,reverse(final_cs));
+                    assert false;
+                case some(c):
+                    nth_of_mem(zeroes,reverse(final_cs),c);
+                    assert c != '0';
+                    all_eq_elim(reverse(final_cs),'0',c);
+                    assert false;
+                }
+                assert false;
+            }
+            assert val != 0;
+            chars_split(ret,len-zeroes);
+            open chars(ret+len-zeroes,_,_);
+            base_n_trim('0',tail(hex_chars()),final_cs,zeroes);
+        } @*/
+
+        return reverse_and_dup(ret,len-zeroes);
+    }
+
 }
 
 
-void test1(void)
+/* void test1(void) */
+int main(void)
     /*@ requires true; @*/
-    /*@ ensures  true; @*/
-    /*@ terminates; @*/
+    /*@ ensures  result == 0; @*/
 {
     const char* s = "ff";
     /*@ close base_n(hex_chars(),"f",_,15); @*/
     /*@ close base_n(hex_chars(),"ff",_,255); @*/
     big_int* p = big_int_from_hex(s);
     /*@ assert bi_big_int(p,_,255); @*/
+    char* s2 = big_int_to_hex(p);
+    printf("%s\n",s);
+    printf("%s\n",s2);
     free_big_int_inner(p);
+    free(s2);
+    /*@ leak base_n(_,_,_,_); @*/
 
-    /* @ assert x < 2; @*/
+    return 0;
 }
 

@@ -241,24 +241,64 @@ predicate base_n(list<char> place_vals, list<char> symbs;
 lemma_auto void base_n_inv()
     requires [?f]base_n(?place_vals,?symbs,?seq,?val);
     ensures  [ f]base_n( place_vals, symbs, seq, val)
+        &*&  val >= 0
         &*&  place_vals != nil
         &*&  !!distinct(place_vals)
         &*&  length(seq) == length(symbs)
         &*&  !!forall(symbs,(flip)(mem,place_vals))
         &*&  !!forall(seq,(bounded)(0,length(place_vals)-1))
-        &*&  poly_eval(seq,length(place_vals)) == val;
+        &*&  all_eq(symbs,head(place_vals)) == (val == 0)
+        &*&  poly_eval(seq,length(place_vals)) == val
+        &*&  map(some,symbs) == map((flip)(nth_of,place_vals),seq)
+        &*&  seq == map((flip)(index_of,place_vals),symbs)
+        ;
 {
+    ALREADY_PROVEN()
     if(!(place_vals != nil
+        &&  val >= 0
         &&  distinct(place_vals)
         &&  length(seq) == length(symbs)
         &&  !!forall(symbs,(flip)(mem,place_vals))
         &&  !!forall(seq,(bounded)(0,length(place_vals)-1))
-        &&  poly_eval(seq,length(place_vals)) == val)) {
+        &&  all_eq(symbs,head(place_vals)) == (val == 0)
+        &&  poly_eval(seq,length(place_vals)) == val
+        &&  map(some,symbs) == map((flip)(nth_of,place_vals),seq)
+        &&  seq == map((flip)(index_of,place_vals),symbs)
+        )) {
         open base_n(_,_,_,_);
         switch(symbs) {
         case nil:
         case cons(s,ss):
             base_n_inv();
+            assert  [ f]base_n( place_vals, ss, _, ?rest_val);
+            //cons_head_tail(seq);
+            cons_head_tail(place_vals);
+            assert val == head(seq) + length(place_vals)*rest_val;
+            assert !!mem(s,place_vals);
+            assert head(seq) == index_of(s,place_vals);
+            mem_index_of(s,place_vals);
+            my_mul_mono_r(length(place_vals),0,rest_val);
+            my_mul_mono_l(1,length(place_vals),rest_val);
+            assert length(place_vals)*rest_val >= 0;
+            if(s != head(place_vals)) {
+                mem_index_of(s,tail(place_vals));
+                assert head(seq) > 0;
+                note(val > 0);
+                if(val == 0) assert false;
+                note( !all_eq(symbs,head(place_vals)));
+                assert all_eq(symbs,head(place_vals)) == (val == 0);
+            } else if(all_eq(ss,head(place_vals))) {
+                assert val == 0;
+                assert all_eq(symbs,head(place_vals)) == (val == 0);
+            } else {
+                assert val > 0;
+                if(val == 0) assert false;
+                my_inv_mul_strict_mono_l(0,rest_val,length(place_vals));
+                assert rest_val != 0;
+                assert !all_eq(ss,head(place_vals));
+                note( !all_eq(symbs,head(place_vals)));
+                assert all_eq(symbs,head(place_vals)) == (val == 0);
+            }
         }
         assert false;
     }
@@ -288,6 +328,7 @@ lemma void base_n_split(list<char> symbs_l,list<char> symbs_r)
                     + pow_nat(length(place_vals),
                               nat_of_int(length(symbs_l)))*v_r;
 {
+        ALREADY_PROVEN()
     switch(symbs_l) {
     case nil:
         close [f1]base_n(place_vals,nil,nil,0);
@@ -342,6 +383,7 @@ lemma void base_n_append(list<char> symbs_l,list<char> symbs_r)
                     + val_r*pow_nat(length(place_vals),
                                     nat_of_int(length(symbs_l))));
 {
+        ALREADY_PROVEN()
     switch(symbs_l) {
     case nil:
         open base_n(_,symbs_l,_,_);

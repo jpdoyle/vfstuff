@@ -84,15 +84,38 @@ lemma_auto(drop(n,append(p,s))) void drop_of_append<t>(
     requires n == length(p);
     ensures drop(n,append(p,s)) == s;
 
-lemma_auto(take(n,append(p,s))) void take_of_append<t>(
+lemma_auto(take(n,append(p,s))) void take_of_append_exact<t>(
         int n, list<t> p, list<t> s);
     requires n == length(p);
     ensures take(n,append(p,s)) == p;
+
+lemma_auto(take(n,append(p,s))) void take_of_append_r<t>(
+        int n, list<t> p, list<t> s);
+    requires n >= length(p);
+    ensures take(n,append(p,s)) == append(p,take(n-length(p),s));
+
+lemma_auto(all_eq(reverse(l),x))
+void all_eq_reverse<t>(list<t> l, t x);
+    requires true;
+    ensures  all_eq(reverse(l),x) == all_eq(l,x);
+
+lemma t not_all_eq<t>(list<t> l, t x);
+    requires !all_eq(l,x);
+    ensures  !!mem(result,l) &*& result != x;
+
+lemma void all_eq_elim<t>(list<t> l, t x, t y);
+    requires !!all_eq(l,x) &*& !!mem(y,l);
+    ensures  y == x;
 
 lemma_auto(all_eq(drop(n,l),x)) void all_eq_drop<t>(list<t> l, int n,
         t x);
     requires n >= 0 && n <= length(l) && all_eq(l,x);
     ensures  !!all_eq(drop(n,l),x);
+
+lemma_auto(all_eq(append(a,b),x))
+void all_eq_append<t>(list<t> a,list<t> b, t x);
+    requires true;
+    ensures  all_eq(append(a,b),x) == (all_eq(a,x) && all_eq(b,x));
 
 lemma_auto(drop(n,drop(m,l)))
 void drop_n_of_drop_m<t>(int n, int m, list<t> l);
@@ -339,6 +362,90 @@ void take_more<t>(int n, list<t> l)
     requires n >= length(l);
     ensures  take(n,l) == l;
 { LIST_INDUCTION(l,xs,take_more(n-1,xs)) }
+
+lemma_auto(nth_of(n,reverse(a)))
+void nth_of_reverse<t>(int n, list<t> a)
+    requires true;
+    ensures  nth_of(n,reverse(a)) == nth_of(length(a)-1-n,a);
+{
+    switch(a) {
+    case nil:
+    case cons(x,xs):
+        note_eq( nth_of(n,reverse(a))
+            ,  nth_of(n,append(reverse(xs),{x})));
+        nth_of_bounds(n,reverse(xs));
+        nth_of_bounds(n,reverse(a));
+        nth_of_bounds(length(a)-1-n,a);
+        if(n >= 0) nth_of_append(n,reverse(xs),{x});
+        if(n >= 0) {
+            if(n == length(xs)) {
+                if(n > length(reverse(xs))) assert false;
+                nth_of_append(n,reverse(xs),{x});
+                assert nth_of(n,reverse(a))
+                    == nth_of(n-length(xs),{x});
+                assert nth_of(n,reverse(a)) == some(x);
+                assert nth_of(length(a)-1-n,a) == some(x);
+            } else if(n > length(xs)) {
+                assert nth_of(n,reverse(a))
+                    == nth_of(n-length(xs),{x});
+            } else { assert n < length(xs);
+                assert nth_of(n,reverse(a))
+                    == nth_of(n,reverse(xs));
+                nth_of_reverse(n,xs);
+                assert nth_of(n,reverse(xs))
+                    == nth_of(length(xs)-1-n,xs);
+                assert nth_of(n,reverse(xs))
+                    == nth_of(length(a)-1-n,a);
+            }
+        } else {
+            option<t> nth_rev_a = nth_of(n,reverse(a));
+            option<t> nth_a = nth_of(length(a)-1-n,a);
+            TRIVIAL_OPTION(nth_rev_a)
+            TRIVIAL_OPTION(nth_a)
+        }
+    }
+}
+
+lemma_auto(take(n,reverse(a)))
+void take_reverse<t>(int n, list<t> a)
+    requires n >= 0 && n <= length(a);
+    ensures  take(n,reverse(a)) == reverse(drop(length(a)-n,a));
+{
+    switch(a) {
+    case nil:
+    case cons(x,xs):
+        assert take(n,reverse(a))
+            == take(n,append(reverse(xs),{x}));
+        if(n <= length(xs)) {
+            take_append(n,reverse(xs),{x});
+            assert take(n,reverse(a))
+                == take(n,reverse(xs));
+            take_reverse(n,xs);
+            assert take(n,reverse(a))
+                == reverse(drop(length(a)-1-n,xs));
+            assert take(n,reverse(a))
+                == reverse(drop(length(a)-n,a));
+        } else { assert n == length(a);
+            assert take(n,reverse(a))
+                == reverse(a);
+            assert drop(length(a)-n,a)
+                == a;
+        }
+    }
+}
+
+lemma
+void nth_of_map<s,t>(int n, list<s> l,fixpoint(s,t) f)
+    requires true;
+    ensures  nth_of(n,map(f,l))
+        ==   opmap(f,nth_of(n,l));
+{ LIST_INDUCTION(l,xs,nth_of_map(n-1,xs,f)) }
+
+lemma
+void all_eq_map<s,t>(list<s> l, s v, fixpoint(s,t) f)
+    requires !!all_eq(l,v);
+    ensures  !!all_eq(map(f,l),f(v));
+{ LIST_INDUCTION(l,xs,all_eq_map(xs,v,f)) }
 
 #endif
 
