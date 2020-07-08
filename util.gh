@@ -601,7 +601,7 @@ lemma_auto(bounded(l,l,x)) void bounded_base_case(int l, int x)
 
 predicate malloced_string(char* s; list<char> cs) =
         string(s,cs) &*& malloc_block_chars(s,?numbytes)
-    &*& numbytes == length(cs) + 1;
+    &*& numbytes >= length(cs) + 1;
 
 predicate malloced_strings(char* * base, int n;
     list<list<char> > strs) =

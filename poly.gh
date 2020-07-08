@@ -39,6 +39,15 @@ lemma_auto(poly_is_zero(p)) void poly_all_eq_zero(list<int> p);
     requires true;
     ensures  all_eq(p,0) == poly_is_zero(p);
 
+lemma_auto(poly_eval(p,pt))
+void poly_eval_zero(list<int> p,int pt);
+    requires !!poly_is_zero(p);
+    ensures  poly_eval(p,pt) == 0;
+
+lemma int poly_eval_neg(list<int> p,int pt);
+    requires pt >= 0 &*& poly_eval(p,pt) < 0;
+    ensures  result < 0 &*& !!mem(result,p);
+
 lemma_auto(minimize(p)) void minimal_zero(list<int> p);
     requires true;
     ensures  (minimize(p) == nil) == poly_is_zero(p);
