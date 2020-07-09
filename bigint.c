@@ -1701,6 +1701,7 @@ void big_int_pluseq(big_int* a,const big_int* b)
             &*&  [ f]bi_big_int(b, b_carry, bv); @*/
     /*@ terminates; @*/
 {
+    /*@ ALREADY_PROVEN() @*/
     /*@ open bi_big_int(a,_,av); @*/
     /*@ open bi_big_int(b,_,bv); @*/
     big_int_block* a_i    = a->first;
@@ -1946,11 +1947,112 @@ void big_int_pluseq(big_int* a,const big_int* b)
     a->last = a_last;
 }
 
-#ifndef FILE
+char* read_line(void)
+    /*@ requires true; @*/
+    /*@ ensures  malloced_string(result,?cs)
+            &*&  !mem('\n',cs); @*/
+{
+    size_t len = 0,cap = 8;
+    char* ret = malloc(cap*sizeof(char));
+    if(!ret) abort();
+
+    while(true)
+        /*@ requires len >= 0 &*& len < cap
+                &*&  malloc_block_chars(ret,cap)
+                &*&  ret[..len] |-> ?pref
+                &*&  ret[len..cap] |-> _
+                &*&  !mem('\n',pref)
+                &*&  !mem('\0',pref)
+                ; @*/
+        /*@ ensures  len >= 0 &*& len < cap
+                &*&  malloc_block_chars(ret,cap)
+                &*&  ret[..old_len] |-> pref
+                &*&  ret[old_len..len] |-> ?suff
+                &*&  ret[len..cap] |-> _
+                &*&  !mem('\n',append(pref,suff))
+                &*&  !mem('\0',append(pref,suff))
+                ; @*/
+    {
+        int i = getchar();
+        if(i <= 0) break;
+        if(i > CHAR_MAX) abort();
+
+        char c = (char)i;
+
+        if(c == '\n') break;
+
+        ret[len] = c;
+        /*@ close chars(ret+len,1,_); @*/
+        /*@ chars_join(ret); @*/
+        ++len;
+        if(len == cap) {
+            if(cap > UINT_MAX/2) abort();
+            cap *= 2;
+            ret = realloc(ret,cap);
+            if(!ret) abort();
+        }
+    }
+    ret[len] = '\0';
+    /*@ body_chars_to_string(ret); @*/
+    return ret;
+}
+
+bool is_hex_string(const char* s)
+    /*@ requires [?f]string(s,?cs); @*/
+    /*@ ensures  [ f]string(s, cs)
+            &*&  result
+            ?    base_n(hex_chars(),reverse(cs),_,_)
+            :    exists<char>(?c)
+            &*&  !mem(c,hex_chars())
+            &*&  !!mem(c,cs); @*/
+    /*@ terminates; @*/
+{
+    bool ret = true;
+    for(;*s;++s)
+        /*@ requires [f]string(s,?loop_cs) &*& !!ret; @*/
+        /*@ ensures  [f]string(old_s,loop_cs)
+                &*&  ret 
+                ?    base_n(hex_chars(),reverse(loop_cs),_,_)
+                :    exists<char>(?c)
+                &*&  !mem(c,hex_chars())
+                &*&  !!mem(c,loop_cs); @*/
+        /*@ decreases length(loop_cs); @*/
+    {
+        /*@ string_limits(s); @*/
+        /*@ assert [f]*s |-> ?c; @*/
+        if(!is_hex(*s)) {
+            ret = false;
+            /*@ {
+                close exists(c);
+            } @*/
+            break;
+        }
+        /*@ assert [f]string(s+1,?rest_cs); @*/
+
+        /*@ recursive_call(); @*/
+
+        /*@ if(ret) {
+            close base_n(hex_chars(),{c},_,_);
+            base_n_append(reverse(rest_cs),{c});
+        } @*/
+    }
+    return ret;
+}
+
+char* read_hex_string()
+    /*@ requires true; @*/
+    /*@ ensures  result == 0 ? emp
+            :    malloced_string(result,?cs)
+            &*&  base_n(hex_chars(),reverse(cs),_,_)
+            ; @*/
+{
+    char* ret = read_line();
+    if(is_hex_string(ret)) return ret;
+    free(ret);
+    return NULL;
+}
+
 int test1(void)
-#else
-int main(void)
-#endif
     /*@ requires true; @*/
     /*@ ensures  result == 0; @*/
 {
@@ -1964,6 +2066,70 @@ int main(void)
     printf("%s\n",s2);
     free_big_int_inner(p);
     free(s2);
+    /*@ leak base_n(_,_,_,_); @*/
+
+    return 0;
+}
+
+#ifndef __FILE__
+int test2(void)
+#else
+int main(void)
+#endif
+    /*@ requires true; @*/
+    /*@ ensures  result == 0; @*/
+{
+    big_int* x = NULL;
+    big_int* y = NULL;
+    /*@ int xv; @*/
+    /*@ int yv; @*/
+
+    while(true)
+        /*@ requires true; @*/
+        /*@ ensures  bi_big_int(x,CARRY_BITS,xv); @*/
+    {
+        printf("x? "); 
+        char* s = read_hex_string();
+        if(s) {
+            x = big_int_from_hex(s);
+            free(s);
+            /*@ assert bi_big_int(x,_,?x_v); @*/
+            /*@ xv = x_v; @*/
+            break;
+        }
+        printf("Please enter a hex string\n"); 
+    }
+
+    while(true)
+        /*@ requires true; @*/
+        /*@ ensures  bi_big_int(y,CARRY_BITS,yv); @*/
+    {
+        printf("y? "); 
+        char* s = read_hex_string();
+        if(s) {
+            y = big_int_from_hex(s);
+            free(s);
+            /*@ assert bi_big_int(y,_,?y_v); @*/
+            /*@ yv = y_v; @*/
+            break;
+        }
+        printf("Please enter a hex string\n"); 
+    }
+
+    /*@ assert bi_big_int(x,_,xv) &*& bi_big_int(y,_,yv); @*/
+    big_int_pluseq(x,y);
+    big_int_reduce(x);
+    
+    {
+        char* x_hex = big_int_to_hex(x);;
+         /*@ assert string(x_hex,?cs)
+                &*& base_n(hex_chars(),reverse(cs),_,xv+yv); @*/
+        printf("x+y=\n%s\n",x_hex);
+        free(x_hex);
+    }
+
+    free_big_int_inner(x);
+    free_big_int_inner(y);
     /*@ leak base_n(_,_,_,_); @*/
 
     return 0;
