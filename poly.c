@@ -13,6 +13,27 @@ lemma_auto(poly_is_zero(p)) void poly_all_eq_zero(list<int> p)
     ensures  all_eq(p,0) == poly_is_zero(p);
 { LIST_INDUCTION(p,ps,poly_all_eq_zero(ps)) }
 
+lemma_auto(poly_eval(p,pt))
+void poly_eval_zero(list<int> p,int pt)
+    requires !!poly_is_zero(p);
+    ensures  poly_eval(p,pt) == 0;
+{ LIST_INDUCTION(p,ps,poly_eval_zero(ps,pt)) }
+
+lemma int poly_eval_neg(list<int> p,int pt)
+    requires pt >= 0 &*& poly_eval(p,pt) < 0;
+    ensures  result < 0 &*& !!mem(result,p);
+{
+    switch(p) {
+    case nil: assert false;
+    case cons(x,xs):
+        assert x + pt*poly_eval(xs,pt) < 0;
+        if(x < 0) return x;
+        assert pt*poly_eval(xs,pt) < 0;
+        my_inv_mul_strict_mono_r(pt, poly_eval(xs,pt), 0);
+        return poly_eval_neg(xs,pt);
+    }
+}
+
 lemma_auto(minimize(p)) void minimal_zero(list<int> p)
     requires true;
     ensures  (minimize(p) == nil) == poly_is_zero(p);

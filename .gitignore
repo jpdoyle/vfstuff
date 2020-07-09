@@ -1,3 +1,4 @@
 .*.sw*
 Session.vim
 *.vfmanifest
+bin/
