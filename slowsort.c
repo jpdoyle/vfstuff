@@ -1,16 +1,11 @@
 #include <stddef.h>
+#include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
 /*@ #include "termination.gh" @*/
 /*@ #include "sorting.gh" @*/
 
-//typedef void slowsort_t(int* arr, size_t i, size_t j);
-//    /*@ requires arr[i..j] |-> ?l
-//      ; @*/
-//    /*@ ensures  arr[i..j] |-> ?new_l &*& !!sorted(new_l)
-//            &*&  !!is_permutation2(l,new_l); @*/
-//    /*@ terminates; @*/
-
 void slowsort_inner(int* arr, size_t i, size_t j)
-  /* @ : slowsort_t @*/
     /*@ requires arr[i..j] |-> ?l
             &*&  [3]call_perm_level(currentThread,pair(lt, j-i), {slowsort_inner})
       ; @*/
@@ -147,5 +142,74 @@ void slowsort(int* arr, size_t i, size_t j)
         call_perm_level(3, pair(lt,j-i), {slowsort_inner});
     } @*/
     slowsort_inner(arr,i,j);
+}
+
+#ifndef __FILE__
+int run_slowsort(void) /*@ : main @*/
+#else
+int main(void)
+#endif
+    /*@ requires true; @*/
+    /*@ ensures  true; @*/
+{
+    int orig_n,n;
+    int* nums;
+    int* p;
+
+    printf("How many numbers? ");
+    scanf("%d", &n);
+
+    if(n <= 0 || n >= (int)(INT_MAX/sizeof(int))) {
+        printf("Please enter a number greater than 0.");
+        return -1;
+    }
+
+    nums = malloc(sizeof(int)*n);
+    if(!nums) { abort(); }
+
+    orig_n = n;
+
+    for(n = orig_n, p = nums; n > 0; --n,++p)
+        /*@ requires n |-> ?n_val &*& n_val >= 0 &*& n_val <= orig_n
+                &*&  p[..n_val] |-> _ &*& p == nums+(orig_n-n_val); @*/
+        /*@ ensures  n |-> _ &*& old_p[..n_val] |-> _; @*/
+        /*@ decreases n_val; @*/
+    {
+        scanf(" %d",p);
+    }
+
+    printf("\nYour array:");
+
+    for(n = orig_n, p = nums; n > 0; --n,++p)
+        /*@ requires n |-> ?n_val &*& n_val >= 0 &*& n_val <= orig_n
+                &*&  p[..n_val] |-> _ &*& p == nums+(orig_n-n_val); @*/
+        /*@ ensures  n |-> _ &*& old_p[..n_val] |-> _; @*/
+        /*@ decreases n_val; @*/
+    {
+        printf(" %d",*p);
+    }
+
+    printf("\nsorting...\n");
+
+    slowsort(nums,0,(size_t)orig_n);
+
+    printf("\nDone!\n");
+
+
+    printf("Sorted array:");
+
+    for(n = orig_n, p = nums; n > 0; --n,++p)
+        /*@ requires n |-> ?n_val &*& n_val >= 0 &*& n_val <= orig_n
+                &*&  p[..n_val] |-> _ &*& p == nums+(orig_n-n_val); @*/
+        /*@ ensures  n |-> _ &*& old_p[..n_val] |-> _; @*/
+        /*@ decreases n_val; @*/
+    {
+        printf(" %d",*p);
+    }
+    printf("\n");
+
+    free(nums);
+
+    return 0;
 }
 

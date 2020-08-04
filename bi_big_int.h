@@ -7,7 +7,9 @@
 /*@ #include "util.gh" @*/
 /*@ #include "poly.gh" @*/
 
+#define CACHE_LINE 64
 // fill out a 64-byte cache line
+//#define N_INTS ((CACHE_LINE-2*sizeof(void*))/(sizeof(uint32_t)))
 #define N_INTS 12
 // number of bits to reserve for carries
 #define CARRY_BITS 4

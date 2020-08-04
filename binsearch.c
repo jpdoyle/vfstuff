@@ -840,6 +840,7 @@ int binsearch_tuerk(int* A, int n, int x)
     {
         /*@ div_rem(hi-lo,2); @*/
 
+        //int mid = (lo+hi)/2;
         int mid = lo+(hi-lo)/2;
 
         /*@ ints_split(A+lo,mid-lo); @*/
@@ -870,6 +871,7 @@ int binsearch_tuerk(int* A, int n, int x)
                 forall_elim(tail(suff),(is_above_eq)(v),x);
                 assert false;
             } @*/
+            /*@ assert true; @*/
         }
 
         /*@ recursive_call(); @*/

@@ -1,3 +1,27 @@
+/*@ #include "bitops.gh" @*/
+/*@ #include "util.gh" @*/
+
+/* @
+
+lemma void division_unique(int D, int d, int q, int r);
+    requires d != 0 &*& abs(r) < abs(d) &*& abs(d*q) <= abs(D)
+        &*&  D == d*q + r;
+    ensures  q == (D/d) &*& r == (D%d);
+
+  @*/
+
+void foo()
+    /*@ requires true; @*/
+    /*@ ensures true; @*/
+    /*@ terminates; @*/
+{
+    unsigned x = /*@ truncating @*/ -(unsigned)1;
+    /*@ truncate_unsigned_def(-1,N32); @*/
+    /*@ open euclid_div_sol(-1,pow_nat(2,N32),?q,x); @*/
+    /*@ euclid_div_unique(-1,pow_nat(2,N32),q,x,-1,pow_nat(2,N32)-1); @*/
+    /*@ assert x == pow_nat(2,N32) - 1; @*/
+}
+
 /* :@
 
   inductive opt<t> = non | som(t);
@@ -6,6 +30,7 @@
 
   @*/
 
+#if 0
 int foo()
     /*@ requires true; @*/
     /*@ ensures  result == 3*42; @*/
@@ -46,6 +71,6 @@ int foo()
     }
     return x;
 }
-
+#endif
 
 

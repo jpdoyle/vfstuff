@@ -461,6 +461,7 @@ lemma void pair_bifunctor<p,q,r, s,t,w>(
                 == pair_bimap((o)(lf,lg),(o)(rf,rg),e2)
         ;
 
+
 fixpoint int mul(int x, int y) { return x*y; }
 
 lemma void as_mul(int x, int y)
@@ -598,6 +599,129 @@ lemma_auto(bounded(l,l,x)) void bounded_base_case(int l, int x)
     requires true;
     ensures  (x == l) == bounded(l,l,x);
 { }
+
+fixpoint pair<int,int> euclid_div_inner(nat f, int D, int d, int q) {
+    switch(f) {
+    case zero:
+        return pair(q,D);
+    case succ(f0):
+        return D >= d ? euclid_div_inner(f0,D-d,d,q+1)
+            :  D <  0 ? euclid_div_inner(f0,D+d,d,q-1)
+                      : pair(q,D);
+    }
+}
+
+fixpoint pair<int,int> euclid_div(int D, int d) {
+    return euclid_div_inner(nat_of_int(abs(D)),D,d,0);
+}
+
+lemma void euclid_div_fuel(nat f1, nat f0, int D, int d, int q)
+    requires int_of_nat(f1) >= int_of_nat(f0)
+        &*&  int_of_nat(f0) >= abs(D)
+        &*&  d > 0;
+    ensures  euclid_div_inner(f1,D,d,q) == euclid_div_inner(f0,D,d,q);
+{
+    switch(f1) {
+    case zero:
+    case succ(f1_0):
+        switch(f0) {
+        case zero:
+        case succ(f0_0):
+            if(D >= d) {
+                euclid_div_fuel(f1_0,f0_0,D-d,d,q+1);
+            } else if(D <= -d) {
+                euclid_div_fuel(f1_0,f0_0,D+d,d,q-1);
+            } else if(D < 0) {
+                TRIVIAL_NAT(f0_0)
+                TRIVIAL_NAT(f1_0)
+            }
+        }
+    }
+}
+
+lemma void euclid_div_correct(nat f, int D, int d, int q)
+    requires int_of_nat(f) >= abs(D) &*& d > 0;
+    ensures  switch(euclid_div_inner(f,D,d,q)) {
+        case pair(qv,rv):
+            return  0 <= rv &*& rv < d &*& D + q*d == qv*d + rv;
+    };
+{
+    switch(f) {
+    case zero:
+    case succ(f0):
+        if(D >= d) {
+            euclid_div_correct(f0, D-d, d, q+1);
+        } else if(D <= -d) {
+            euclid_div_correct(f0, D+d, d, q-1);
+        } else if(D < 0) {
+            TRIVIAL_NAT(f0)
+            switch(euclid_div_inner(f,D,d,q)) {
+            case pair(qv,rv):
+                switch(euclid_div_inner(f0,D+d,d,q-1)) {
+                case pair(qv0,rv0):
+                    note_eq( (D+d) + (q-1)*d , qv0*d + rv0);
+                }
+            }
+        }
+    }
+}
+
+predicate euclid_div_sol(int D, int d; int q, int r)
+    = d > 0
+    &*& switch(euclid_div(D,d)) {
+        case pair(qv,rv): return q == qv &*& r == rv;
+
+    } &*& 0 <= r &*& r < d &*& D == q * d + r;
+
+lemma void euclid_div_zero(int d, int q, int r)
+    requires d > 0 &*& r >= 0 &*& r < d &*& 0 == q*d + r;
+    ensures  q == 0 &*& r == 0;
+{
+    if(q > 0) {
+        my_mul_mono_l(1,q,d);
+        assert false;
+    }
+    if(q < 0) {
+        my_mul_mono_l(q,-1,d);
+        assert false;
+    }
+    if(r > 0) {
+        assert false;
+    }
+}
+
+lemma void euclid_div_unique(int D, int d, int q1, int r1,
+                                           int q2, int r2)
+    requires d > 0 &*& r1 >= 0 &*& r1 < d &*& D == q1*d + r1
+        &*&  r2 >= 0 &*& r2 < d &*& D == q2*d + r2;
+    ensures  q1 == q2 &*& r1 == r2;
+{
+    if(r2 >= r1) {
+        euclid_div_zero(d,q2-q1,r2-r1);
+    } else {
+        euclid_div_zero(d,q1-q2,r1-r2);
+    }
+}
+
+lemma void euclid_div_intro(int D, int d)
+    requires d > 0;
+    ensures  euclid_div_sol(D,d,_,_);
+{
+    euclid_div_correct(nat_of_int(abs(D)),D,d,0);
+    close euclid_div_sol(D,d,_,_);
+}
+
+lemma_auto void euclid_div_auto()
+    requires [?f]euclid_div_sol(?D,?d,?q,?r);
+    ensures  [ f]euclid_div_sol( D, d, q, r)
+        &*&  r >= 0 &*& r < d &*& d > 0 &*& D == q*d + r;
+{
+    if(!(r >= 0 && r < d && d > 0 && D == q*d + r)) {
+        open euclid_div_sol(_,_,_,_);
+        assert false;
+    }
+}
+
 
 predicate malloced_string(char* s; list<char> cs) =
         string(s,cs) &*& malloc_block_chars(s,?numbytes)

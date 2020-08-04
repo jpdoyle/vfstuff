@@ -2,6 +2,54 @@
 
 /*@
 
+lemma_auto(Z_size(z))
+void Z_size_nonneg(Z z)
+    requires true;
+    ensures  Z_size(z) >= 0;
+{
+    switch(z) {
+    case Zsign(b):
+    case Zdigit(z0,b0): Z_size_nonneg(z0);
+    }
+}
+
+lemma_auto(Z_is_neg(z))
+void Z_neg_auto(Z z)
+    requires true;
+    ensures  Z_is_neg(z) == (int_of_Z(z) < 0);
+{
+    switch(z) {
+    case Zsign(b):
+    case Zdigit(z0,b0): Z_neg_auto(z0);
+    }
+}
+
+lemma_auto(Z_size(z))
+void Z_size_bound_pos(Z z)
+    requires !Z_is_neg(z);
+    ensures  int_of_Z(z) < pow_nat(2,nat_of_int(Z_size(z)));
+{
+    switch(z) {
+    case Zsign(b):
+    case Zdigit(z0,b0):
+        Z_size_bound_pos(z0);
+        assert nat_of_int(Z_size(z)) == succ(nat_of_int(Z_size(z0)));
+    }
+}
+
+lemma_auto(Z_size(z))
+void Z_size_bound_neg(Z z)
+    requires !!Z_is_neg(z);
+    ensures  -int_of_Z(z) <= pow_nat(2,nat_of_int(Z_size(z)));
+{
+    switch(z) {
+    case Zsign(b):
+    case Zdigit(z0,b0):
+        Z_size_bound_neg(z0);
+        assert nat_of_int(Z_size(z)) == succ(nat_of_int(Z_size(z0)));
+    }
+}
+
 lemma_auto(Z_or(x_Z,y_Z))
 void Z_or_commutes(Z x_Z, Z y_Z)
     requires true;

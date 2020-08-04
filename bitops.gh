@@ -48,12 +48,46 @@ SOFTWARE.
 
 inductive Z = Zsign(bool) | Zdigit(Z, bool);
 
+fixpoint bool Z_is_neg(Z z) {
+    switch(z) {
+    case Zsign(b): return b;
+    case Zdigit(z0,b0): return Z_is_neg(z0);
+    }
+}
+
+fixpoint int Z_size(Z z) {
+    switch(z) {
+    case Zsign(b): return 0;
+    case Zdigit(z0,b0): return 1+Z_size(z0);
+    }
+}
+
 fixpoint int int_of_Z(Z z) {
     switch (z) {
         case Zsign(b): return (b) ? -1 : 0;
         case Zdigit(z0, b0): return 2 * int_of_Z(z0) + ((b0) ? 1 : 0);
     }
 }
+
+lemma_auto(Z_size(z))
+void Z_size_nonneg(Z z);
+    requires true;
+    ensures  Z_size(z) >= 0;
+
+lemma_auto(Z_is_neg(z))
+void Z_neg_auto(Z z);
+    requires true;
+    ensures  Z_is_neg(z) == (int_of_Z(z) < 0);
+
+lemma_auto(Z_size(z))
+void Z_size_bound_pos(Z z);
+    requires !Z_is_neg(z);
+    ensures  int_of_Z(z) < pow_nat(2,nat_of_int(Z_size(z)));
+
+lemma_auto(Z_size(z))
+void Z_size_bound_neg(Z z);
+    requires !!Z_is_neg(z);
+    ensures  -int_of_Z(z) <= pow_nat(2,nat_of_int(Z_size(z)));
 
 fixpoint Z Z_and(Z z1, Z z2) {
     switch (z1) {
@@ -109,7 +143,7 @@ lemma void bitor_def(int x1, Z z1, int x2, Z z2);
     ensures (x1 | x2) == int_of_Z(Z_or(z1, z2));
 
 lemma void shiftleft_def(int x, nat n);
-    requires true;
+    requires x >= 0;
     ensures x << int_of_nat(n) == x * pow_nat(2, n);
 
 fixpoint Z Z_shiftright(Z z, nat n) {
@@ -123,18 +157,41 @@ fixpoint Z Z_shiftright(Z z, nat n) {
 }
 
 lemma void shiftright_def(int x, Z z, nat n);
-    requires x == int_of_Z(z);
+    requires x == int_of_Z(z) &*& x >= 0;
     ensures x >> int_of_nat(n) == int_of_Z(Z_shiftright(z, n));
 
 lemma void truncate_unsigned_def(int x, nat n);
     requires true;
-    ensures truncate_unsigned(x, int_of_nat(n)) == x % pow_nat(2, n);
+    ensures euclid_div_sol(x,pow_nat(2,n),
+        _,truncate_unsigned(x, int_of_nat(n)));
 
 lemma_auto(truncate_unsigned(x,nb)) void truncate_unsigned_def_auto(int x, int nb)
     requires nb >= 0;
-    ensures truncate_unsigned(x, nb) == x % pow_nat(2, nat_of_int(nb));
+    ensures truncate_unsigned(x, nb)
+        == (x % pow_nat(2, nat_of_int(nb)) + pow_nat(2,nat_of_int(nb))) % pow_nat(2, nat_of_int(nb));
 {
     truncate_unsigned_def(x,nat_of_int(nb));
+    open euclid_div_sol(x,pow_nat(2,nat_of_int(nb)),?q,
+        truncate_unsigned(x, nb));
+    div_rem(x,pow_nat(2,nat_of_int(nb)));
+    if(x%pow_nat(2,nat_of_int(nb)) >= 0) {
+        euclid_div_unique(x,pow_nat(2,nat_of_int(nb)),
+            q, truncate_unsigned(x, nb),
+            x/pow_nat(2,nat_of_int(nb)), x%pow_nat(2,nat_of_int(nb)));
+        division_unique(
+            x%pow_nat(2,nat_of_int(nb)) + pow_nat(2,nat_of_int(nb)),
+            pow_nat(2,nat_of_int(nb)),
+            1, x%pow_nat(2,nat_of_int(nb)));
+    } else {
+        euclid_div_unique(x,pow_nat(2,nat_of_int(nb)),
+            q, truncate_unsigned(x, nb),
+            x/pow_nat(2,nat_of_int(nb))-1,
+            x%pow_nat(2,nat_of_int(nb)) + pow_nat(2,nat_of_int(nb)));
+        division_unique(
+            x%pow_nat(2,nat_of_int(nb)) + pow_nat(2,nat_of_int(nb)),
+            pow_nat(2,nat_of_int(nb)),
+            0, x%pow_nat(2,nat_of_int(nb)) + pow_nat(2,nat_of_int(nb)));
+    }
     int_of_nat_of_int(nb);
 }
 

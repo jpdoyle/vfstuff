@@ -143,6 +143,10 @@ int main(void)
     big_int* y = NULL;
     /*@ int xv; @*/
     /*@ int yv; @*/
+    
+    if(sizeof(big_int_block) > (size_t)INT_MAX) abort();
+
+    printf("%d\n",(int)sizeof(big_int_block));
 
     while(true)
         /*@ requires true; @*/
@@ -211,6 +215,8 @@ int main(void)
         printf("x+n*y=\n%s\n",x_hex);
         free(x_hex);
     }
+
+    printf("%p\n",(void*)x->first);
 
     free_big_int_inner(x);
     free_big_int_inner(y);
