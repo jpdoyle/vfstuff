@@ -799,6 +799,56 @@ lemma void mod_plus(int x, int y, int d)
 
 }
 
+lemma void euclid_div_zero(int d, int q, int r)
+    requires d > 0 &*& r >= 0 &*& r < d &*& 0 == q*d + r;
+    ensures  q == 0 &*& r == 0;
+{
+    if(q > 0) {
+        my_mul_mono_l(1,q,d);
+        assert false;
+    }
+    if(q < 0) {
+        my_mul_mono_l(q,-1,d);
+        assert false;
+    }
+    if(r > 0) {
+        assert false;
+    }
+}
+
+lemma void euclid_div_unique(int D, int d, int q1, int r1,
+                                           int q2, int r2)
+    requires d > 0 &*& r1 >= 0 &*& r1 < d &*& D == q1*d + r1
+        &*&  r2 >= 0 &*& r2 < d &*& D == q2*d + r2;
+    ensures  q1 == q2 &*& r1 == r2;
+{
+    if(r2 >= r1) {
+        euclid_div_zero(d,q2-q1,r2-r1);
+    } else {
+        euclid_div_zero(d,q1-q2,r1-r2);
+    }
+}
+
+lemma void euclid_div_intro(int D, int d)
+    requires d > 0;
+    ensures  euclid_div_sol(D,d,_,_);
+{
+    euclid_div_correct(nat_of_int(abs(D)),D,d,0);
+    close euclid_div_sol(D,d,_,_);
+}
+
+lemma_auto void euclid_div_auto()
+    requires [?f]euclid_div_sol(?D,?d,?q,?r);
+    ensures  [ f]euclid_div_sol( D, d, q, r)
+        &*&  r >= 0 &*& r < d &*& d > 0 &*& D == q*d + r;
+{
+    if(!(r >= 0 && r < d && d > 0 && D == q*d + r)) {
+        open euclid_div_sol(_,_,_,_);
+        assert false;
+    }
+}
+
+
 lemma_auto(bounded(l,h,x)) void bounded_cases(int l, int h, int x)
     requires bounded(l,h,x) && l <= h;
     ensures  x == l || bounded(l+1,h,x);

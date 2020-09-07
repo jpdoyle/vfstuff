@@ -202,7 +202,7 @@ big_int_block* new_block()
 
 big_int* new_big_int_zero()
     /*@ requires true; @*/
-    /*@ ensures  bi_big_int(result, CARRY_BITS, 0); @*/
+    /*@ ensures  bi_big_int(result, CARRY_BITS, false, 0); @*/
     /*@ terminates; @*/
 {
     /*@ ALREADY_PROVEN() @*/
@@ -215,7 +215,7 @@ big_int* new_big_int_zero()
 }
 
 void free_big_int_inner(big_int* p)
-    /*@ requires bi_big_int(p, CARRY_BITS, _); @*/
+    /*@ requires bi_big_int(p, CARRY_BITS, false, _); @*/
     /*@ ensures  true; @*/
     /*@ terminates; @*/
 {

@@ -1,4 +1,5 @@
 /*@ #include "bitops.gh" @*/
+#include "bitops.h"
 
 /*@
 
@@ -374,6 +375,25 @@ lemma void shiftright_div(int x, nat n)
     shiftright_def(x,x_Z,n);
     shiftright_div_inner(x_Z,n);
 }
+
+lemma void ashr_euclid(int x,nat n)
+    requires true;
+    ensures  euclid_div_sol(x,pow_nat(2,n),ASHR(x,int_of_nat(n)),_);
+{
+    if(x >= 0) {
+        shiftright_div(x,n);
+        div_rem(x,pow_nat(2,n));
+        euclid_div_unique_intro(x,pow_nat(2,n),x>>int_of_nat(n),x%pow_nat(2,n));
+    } else {
+        shiftright_div(-(x+1),n);
+        div_rem(-(x+1),pow_nat(2,n));
+
+        euclid_div_unique_intro(x,pow_nat(2,n),
+                -((-(x+1))>>int_of_nat(n))-1,
+                -((-(x+1))%pow_nat(2,n)) + pow_nat(2,n) - 1);
+    }
+}
+
 
 @*/
 
