@@ -1,4 +1,8 @@
 #include "bi_big_int.h"
+#include "bitops.h"
+
+/*@ #define N30 (nat_predecessor(N31))
+  @*/
 
 #if 1
 #define ALREADY_PROVEN() {}
@@ -6,18 +10,36 @@
 #define ALREADY_PROVEN() assume(false);
 #endif
 
-void big_int_reduce(big_int* p)
-    /*@ requires bi_big_int(p,?carry_bits,?v)
-            &*&  carry_bits >= 1
-            &*&  v >= 0; @*/
-    /*@ ensures  bi_big_int(p,CARRY_BITS,v); @*/
+INLINE big_int_block*
+bi_block_reduce(big_int_block* first, big_int_block* last,
+        bool flip_sign, bool* needs_flip)
+    /*@ requires bi_block(first, last,?bprev, 0, _,
+                    ?chunks)
+            &*&  !!forall(chunks,
+                    (bounded)(-pow_nat(2,N30)+1, pow_nat(2,N30)-1))
+            &*&  *needs_flip |-> _
+            ; @*/
+    /*@ ensures  bi_block(first, result,bprev, 0, _,
+                    ?new_chunks)
+            &*&  *needs_flip |-> ?neg_val
+            &*&  neg_val == (poly_eval(new_chunks,CHUNK_BASE) < 0)
+            &*&  let(CHUNK_BASE-1,?upper)
+            &*&  !!forall(new_chunks, (bounded)(-upper,upper))
+            &*&  (!neg_val
+                    ? !!forall(new_chunks, (bounded)(0,upper))
+                    : true)
+            &*&  flip_sign
+                ?  poly_eval(new_chunks,CHUNK_BASE)
+                == -poly_eval(chunks,CHUNK_BASE)
+                :  poly_eval(new_chunks,CHUNK_BASE)
+                == poly_eval(chunks,CHUNK_BASE)
+            ; @*/
     /*@ terminates; @*/
 {
-    /*@ ALREADY_PROVEN() @*/
-    /*@ open bi_big_int(_,_,_); @*/
+    /*@ assume(false); @*/
     big_int_block* i = p->first;
     big_int_block* last = p->last;
-    uint32_t carry = 0;
+    int32_t carry = 0;
 
     /*@ assert bi_block(i,last,0,0,_,?chunks); @*/
     /*@ nat len_bits = log_nat(length(chunks)); @*/
@@ -29,9 +51,9 @@ void big_int_reduce(big_int* p)
         /*@ requires bi_block(i, last,?bprev, 0, _,
                         ?loop_chunks)
                 &*&  !!forall(loop_chunks,
-                        (bounded)(0,pow_nat(2,nat_of_int(32-carry_bits))-1))
-                &*&  carry >= 0
-                &*&  carry < pow_nat(2,nat_of_int(CARRY_BITS))
+                        (bounded)(-pow_nat(2,nat_of_int(31-carry_bits))+1,
+                                  pow_nat(2,nat_of_int(31-carry_bits))-1))
+                &*&  abs(carry) < pow_nat(2,nat_of_int(CARRY_BITS))
                 &*&  length(loop_chunks) < pow_nat(2,len_bits)
                 &*&  extra_blocks == 0
                 ?    !!poly_is_zero(loop_chunks)
@@ -40,7 +62,7 @@ void big_int_reduce(big_int* p)
         /*@ ensures  bi_block(old_i, last,bprev, 0, _,
                         ?new_chunks)
                 &*&  !!forall(new_chunks,
-                        (bounded)(0,pow_nat(2,nat_of_int(32-CARRY_BITS))-1))
+                        (bounded)(0,pow_nat(2,nat_of_int(31-CARRY_BITS))-1))
                 &*&  poly_eval(new_chunks,CHUNK_BASE)
                     == poly_eval(loop_chunks,CHUNK_BASE) + old_carry
                 &*&  carry == 0
@@ -54,12 +76,14 @@ void big_int_reduce(big_int* p)
         /*@ if(i != last) {
             assert bi_block(_,_,_,_,_,?rest_chunks);
             forall_append_exact(i_blk_chunks,rest_chunks,
-                (bounded)(0,pow_nat(2,nat_of_int(32-carry_bits))-1));
+                (bounded)(-pow_nat(2,nat_of_int(31-carry_bits))+1,
+                          pow_nat(2,nat_of_int(31-carry_bits))-1));
         } @*/
         /*@ if(poly_eval(i_blk_chunks,CHUNK_BASE) < 0) {
             int neg_x = poly_eval_neg(i_blk_chunks,CHUNK_BASE);
             forall_elim(i_blk_chunks,
-                (bounded)(0,pow_nat(2,nat_of_int(32-carry_bits))-1),
+                (bounded)(-pow_nat(2,nat_of_int(31-carry_bits))+1,
+                          pow_nat(2,nat_of_int(31-carry_bits))-1),
                 neg_x);
             assert false;
         } @*/
@@ -67,73 +91,72 @@ void big_int_reduce(big_int* p)
         for(chunk_i = 0; chunk_i <  N_INTS; ++chunk_i)
             /*@ requires i->chunks[chunk_i..N_INTS] |-> ?blk_chunks
                     &*&  !!forall(blk_chunks,
-                            (bounded)(0,pow_nat(2,nat_of_int(32-carry_bits))-1))
+                            (bounded)(-pow_nat(2,nat_of_int(31-carry_bits))+1,
+                                  pow_nat(2,nat_of_int(31-carry_bits))-1))
                     &*&  poly_eval(blk_chunks,CHUNK_BASE) >= 0
-                    &*&  carry >= 0
-                    &*&  carry < pow_nat(2,nat_of_int(CARRY_BITS))
+                    &*&  abs(carry) < pow_nat(2,nat_of_int(CARRY_BITS))
                     &*&  chunk_i >= 0 &*& chunk_i <= N_INTS
                     ; @*/
             /*@ ensures  i->chunks[old_chunk_i..N_INTS] |-> ?new_blk_chunks
                     &*&  !!forall(new_blk_chunks,
-                            (bounded)(0,pow_nat(2,nat_of_int(32-CARRY_BITS))-1))
+                            (bounded)(0,
+                                  pow_nat(2,nat_of_int(CHUNK_BITS))-1))
                     &*&  poly_eval(new_blk_chunks,CHUNK_BASE) >= 0
                     &*&  poly_eval(new_blk_chunks,CHUNK_BASE)
                          + carry
                             *pow_nat(CHUNK_BASE,
                                 nat_of_int(length(new_blk_chunks)))
                         == poly_eval(blk_chunks,CHUNK_BASE) + old_carry
-                    &*&  carry >= 0
-                    &*&  carry < pow_nat(2,nat_of_int(CARRY_BITS))
+                    &*&  abs(carry) < pow_nat(2,nat_of_int(CARRY_BITS))
                     ; @*/
             /*@ decreases length(blk_chunks); @*/
         {
-            /*@ open uints(&i->chunks[0]+chunk_i,_,_); @*/
-            /*@ u_integer_limits(&i->chunks[0]+chunk_i); @*/
-            uint32_t new_chunk = *(&i->chunks[0]+chunk_i);
+            /*@ open ints(&i->chunks[0]+chunk_i,_,_); @*/
+            /*@ integer_limits(&i->chunks[0]+chunk_i); @*/
+            int32_t new_chunk = *(&i->chunks[0]+chunk_i);
             /*@ int orig_chunk = new_chunk; @*/
             /*@ {
                 assert new_chunk
-                    < pow_nat(2,nat_of_int(32-carry_bits));
+                    < pow_nat(2,nat_of_int(31-carry_bits));
                 assert carry < pow_nat(2,nat_of_int(CARRY_BITS));
                 pow_monotonic(2,nat_of_int(CARRY_BITS),
-                    nat_of_int(32-carry_bits));
-                pow_soft_monotonic(2, nat_of_int(32-carry_bits+1),
-                    nat_of_int(32));
+                    nat_of_int(31-carry_bits));
+                pow_soft_monotonic(2, nat_of_int(31-carry_bits+1),
+                    nat_of_int(31));
                 assert carry
-                    < pow_nat(2,nat_of_int(32-carry_bits));
+                    < pow_nat(2,nat_of_int(31-carry_bits));
                 note( new_chunk+carry
-                    < 2*pow_nat(2,nat_of_int(32-carry_bits)));
+                    < 2*pow_nat(2,nat_of_int(31-carry_bits)));
                 assert new_chunk+carry
-                    < pow_nat(2,succ(nat_of_int(32-carry_bits)));
+                    < pow_nat(2,succ(nat_of_int(31-carry_bits)));
                 assert new_chunk+carry
-                    < pow_nat(2,nat_of_int(32-(carry_bits-1)));
-                assert new_chunk+carry < pow_nat(2,nat_of_int(32));
+                    < pow_nat(2,nat_of_int(31-(carry_bits-1)));
+                assert new_chunk+carry < pow_nat(2,nat_of_int(31));
             } @*/
             new_chunk += carry;
             /*@ {
-                shiftleft_def(1,nat_of_int(32-CARRY_BITS));
-                shiftright_div(new_chunk,nat_of_int(32-CARRY_BITS));
-                bitand_pow_2(new_chunk,nat_of_int(32-CARRY_BITS));
-                div_rem(new_chunk,pow_nat(2,nat_of_int(32-CARRY_BITS)));
-                assert new_chunk < pow_nat(2,N32);
-                assert pow_nat(2,nat_of_int(32-CARRY_BITS))
-                        *(new_chunk>>(32-CARRY_BITS))
+                shiftleft_def(1,nat_of_int(31-CARRY_BITS));
+                ashr_euclid(new_chunk,nat_of_int(CHUNK_BITS));
+                open euclid_div_sol(_,_,_,_);
+                assert new_chunk < pow_nat(2,N31);
+                assert pow_nat(2,nat_of_int(31-CARRY_BITS))
+                        *(ASHR(new_chunk,CHUNK_BITS))
                     <= new_chunk;
-                assert pow_nat(2,nat_of_int(32-CARRY_BITS))
-                        *(new_chunk>>(32-CARRY_BITS))
-                    < pow_nat(2,N32);
-                assert pow_nat(2,N32)
-                    == pow_nat(2,nat_of_int(32-CARRY_BITS))
+                assert pow_nat(2,nat_of_int(31-CARRY_BITS))
+                        *(ASHR(new_chunk,CHUNK_BITS))
+                    < pow_nat(2,N31);
+                assert pow_nat(2,N31)
+                    == pow_nat(2,nat_of_int(31-CARRY_BITS))
                         *pow_nat(2,nat_of_int(CARRY_BITS));
                 my_inv_mul_strict_mono_r(
-                    pow_nat(2,nat_of_int(32-CARRY_BITS)),
-                    (new_chunk>>(32-CARRY_BITS)),
+                    pow_nat(2,nat_of_int(31-CARRY_BITS)),
+                    (ASHR(new_chunk,CHUNK_BITS)),
                     pow_nat(2,nat_of_int(CARRY_BITS)));
             } @*/
             /*@ int orig_carry = carry; @*/
+            carry = ASHR(new_chunk,CHUNK_BITS);
             *(&i->chunks[0]+chunk_i) =
-                new_chunk&((1U<<(32-CARRY_BITS))-1U);
-            carry = new_chunk>>(32-CARRY_BITS);
+                new_chunk-(carry*(1<<CHUNK_BITS));
 
             /*@ int next_carry = carry; @*/
             /*@ assert *(&i->chunks[0]+chunk_i)|-> ?final_chunk; @*/
@@ -144,7 +167,7 @@ void big_int_reduce(big_int* p)
                     int neg_x = poly_eval_neg(rest_chunks,CHUNK_BASE);
                     forall_elim(rest_chunks,
                         (bounded)(0,pow_nat(2,
-                            nat_of_int(32-carry_bits))-1),
+                            nat_of_int(31-carry_bits))-1),
                         neg_x);
                     assert false;
                 }
@@ -276,12 +299,12 @@ void big_int_reduce(big_int* p)
             assert bi_block(next_i, last,old_i, 0, ?rest_ptrs,
                         ?new_chunks)
                 &*&  !!forall(new_chunks,
-                        (bounded)(0,pow_nat(2,nat_of_int(32-CARRY_BITS))-1))
+                        (bounded)(0,pow_nat(2,nat_of_int(31-CARRY_BITS))-1))
                 &*&  poly_eval(new_chunks,CHUNK_BASE)
                     == poly_eval(loop_rest_chunks,CHUNK_BASE) + next_carry
                 &*&  carry == 0;
             forall_append(final_chunks,new_chunks,
-                (bounded)(0,pow_nat(2,nat_of_int(32-CARRY_BITS))-1));
+                (bounded)(0,pow_nat(2,nat_of_int(31-CARRY_BITS))-1));
             if(mem(old_i,rest_ptrs)) {
                 close bi_block(old_i,old_i,_,_,{old_i},_);
                 bi_block_disjoint(old_i,next_i);
@@ -314,18 +337,84 @@ void big_int_reduce(big_int* p)
                 == poly_eval(loop_chunks,CHUNK_BASE) + old_carry;
         } @*/
     } while(i);
-    p->last = last;
 }
 
-void big_int_pluseq(big_int* a,const big_int* b)
-    /*@ requires     bi_big_int(a,?a_carry,?av)
-            &*&  [?f]bi_big_int(b,?b_carry,?bv)
-            &*&  a_carry > 0 &*& b_carry > 0
-            ; @*/
-    /*@ ensures      bi_big_int(a,min_of(a_carry,b_carry)-1,av+bv)
-            &*&  [ f]bi_big_int(b, b_carry, bv); @*/
+
+
+
+
+
+
+
+void big_int_reduce(big_int* p)
+    /*@ requires bi_big_int(p,?carry_bits,?underflow,?v)
+            &*&  carry_bits >= 1; @*/
+    /*@ ensures  bi_big_int(p,CARRY_BITS,false,v); @*/
     /*@ terminates; @*/
 {
+    bool needs_flip = false;
+
+    /*@ open bi_big_int(_,_,_,_); @*/
+    /*@ assert bi_block(_,_,0,0,_,?chunks); @*/
+    /*@ if(!forall(chunks,
+            (bounded)(-pow_nat(2,N30)+1, pow_nat(2,N30)-1))) {
+        int cx = not_forall(chunks,
+            (bounded)(-pow_nat(2,N30)+1, pow_nat(2,N30)-1));
+        forall_elim(chunks,
+            (bounded)(-pow_nat(2,nat_of_int(31-carry_bits))+1,
+                      pow_nat(2,nat_of_int(31-carry_bits))-1),
+            cx);
+        pow_soft_monotonic(2,nat_of_int(31-carry_bits),N30);
+        assert false;
+    } @*/
+
+    p->last = bi_block_reduce(p->first,p->last,false,&needs_flip);
+    if(needs_flip) {
+        /*@ assert bi_block(_,_,0,0,_,?new_chunks); @*/
+        /*@ if(!forall(new_chunks,
+                (bounded)(-pow_nat(2,N30)+1, pow_nat(2,N30)-1))) {
+            int cx = not_forall(new_chunks,
+                (bounded)(-pow_nat(2,N30)+1, pow_nat(2,N30)-1));
+            forall_elim(new_chunks,
+                (bounded)(-pow_nat(2,nat_of_int(CHUNK_BITS))+1,
+                        pow_nat(2,nat_of_int(CHUNK_BITS))-1),
+                cx);
+            pow_soft_monotonic(2,nat_of_int(CHUNK_BITS),N30);
+            note( cx <= pow_nat(2,N30)-1);
+            assert false;
+        } @*/
+
+        p->last = bi_block_reduce(p->first,p->last,true,&needs_flip);
+        p->is_pos = !p->is_pos;
+        /*@ assert needs_flip |-> false; @*/
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+void big_int_pluseq(big_int* a,const big_int* b)
+    /*@ requires     bi_big_int(a,?a_carry, ?a_under,?av)
+            &*&  [?f]bi_big_int(b,?b_carry, ?b_under,?bv)
+            &*&  a_carry > 0 &*& b_carry > 0
+            ; @*/
+    /*@ ensures      bi_big_int(a,min_of(a_carry,b_carry)-1,
+                        a_under||b_under||((av<0)!=(bv<0)),
+                        av+bv)
+            &*&  [ f]bi_big_int(b, b_carry, b_under, bv); @*/
+    /*@ terminates; @*/
+{
+    /*@ assume(false); @*/
+
     /*@ ALREADY_PROVEN() @*/
     /*@ open bi_big_int(a,_,av); @*/
     /*@ open bi_big_int(b,_,bv); @*/
@@ -347,7 +436,7 @@ void big_int_pluseq(big_int* a,const big_int* b)
                 &*&  [f]bi_block(b_i,b_last,?b_prev,0,?bptrs,?b_chunks)
                 &*&  !!forall(a_chunks,
                         (bounded)(0,
-                            pow_nat(2,nat_of_int(32-a_carry))-1))
+                            pow_nat(2,nat_of_int(31-a_carry))-1))
                 &*&  !!forall(b_chunks,
                         (bounded)(0,
                             pow_nat(2,nat_of_int(32-b_carry))-1))
@@ -414,9 +503,9 @@ void big_int_pluseq(big_int* a,const big_int* b)
             /*@ decreases length(b_i_loop_chunks); @*/
         {
             /*@ {
-                open uints(&a_i->chunks[0]+chunk_i,_,_);
-                u_integer_limits(&a_i->chunks[0]+chunk_i);
-                open [f]uints(&b_i->chunks[0]+chunk_i,_,_);
+                open ints(&a_i->chunks[0]+chunk_i,_,_);
+                integer_limits(&a_i->chunks[0]+chunk_i);
+                open [f]ints(&b_i->chunks[0]+chunk_i,_,_);
                 assert *(&a_i->chunks[0]+chunk_i) |-> ?a_chunk;
                 assert [f]*(&b_i->chunks[0]+chunk_i) |-> ?b_chunk;
                 pow_soft_monotonic(2,

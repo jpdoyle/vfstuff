@@ -12,14 +12,13 @@ lemma_auto void bi_block_inv()
     requires [?f]bi_block(?b, ?last, ?fprev, ?lnext, ?ptrs, ?chunks);
     ensures  [ f]bi_block( b,  last,  fprev,  lnext,  ptrs,  chunks)
         &*&  b > 0 &*& last > 0
-        &*&  !!forall(chunks, (bounded)(0,pow_nat(2,N32)-1))
+        &*&  !!forall(chunks, (bounded)(-pow_nat(2,N31),pow_nat(2,N31)-1))
         &*&  length(chunks) >= N_INTS
         &*&  length(ptrs)*N_INTS == length(chunks)
         &*&  (length(ptrs) == 1) == ( b == last)
         &*&  length(ptrs) >= 1
         &*&  (length(chunks) == N_INTS) == (b == last)
         &*&  !!mem(b,ptrs) &*& !!mem(last,ptrs)
-        &*&  poly_eval(chunks,CHUNK_BASE) >= 0
         ;
 {
     ALREADY_PROVEN()
@@ -27,63 +26,45 @@ lemma_auto void bi_block_inv()
     assert [f]b->next |-> ?next;
     assert [f]b->chunks[..N_INTS] |-> ?my_chunks;
 
-    if(!forall(my_chunks,(bounded)(0,pow_nat(2,N32)-1))) {
+    if(!forall(my_chunks,(bounded)(-pow_nat(2,N31),pow_nat(2,N31)-1))) {
         int i;
         for(i=0; i < N_INTS; ++i)
             invariant [f]b->chunks[i..N_INTS] |-> ?loop_chunks
-                &*&   !forall(loop_chunks,(bounded)(0,pow_nat(2,N32)-1))
+                &*&   !forall(loop_chunks,(bounded)(-pow_nat(2,N31),pow_nat(2,N31)-1))
                 &*&   i >= 0 &*& i <= N_INTS
                 ;
             decreases length(loop_chunks);
         {
-            open uints(_,_,_);
-            assert [f]u_integer(_,?v);
+            open ints(_,_,_);
+            assert [f]integer(_,?v);
 
-            u_integer_limits(&b->chunks[i]);
+            integer_limits(&b->chunks[i]);
 
-            leak [f]u_integer(_,v);
+            leak [f]integer(_,v);
 
         }
-        open uints(_,_,_);
-        assert false;
-    }
-
-    if(poly_eval(my_chunks,CHUNK_BASE) < 0) {
-        int neg_x = poly_eval_neg(my_chunks,CHUNK_BASE);
-        forall_elim(my_chunks,(bounded)(0,pow_nat(2,N32)-1),neg_x);
+        open ints(_,_,_);
         assert false;
     }
 
     if(b != last) {
         bi_block_inv();
         assert [f]bi_block(_,_,_,_,_,?rest_chunks);
-        forall_append_exact(my_chunks,rest_chunks,(bounded)(0,pow_nat(2,N32)-1));
-
-        assert poly_eval(rest_chunks,CHUNK_BASE) >= 0;
-        assert poly_eval(chunks,CHUNK_BASE)
-            == poly_eval(my_chunks,CHUNK_BASE)
-                + pow_nat(CHUNK_BASE,nat_of_int(N_INTS))
-                    *poly_eval(rest_chunks,CHUNK_BASE)
-            ;
-        my_mul_mono_r(pow_nat(CHUNK_BASE,nat_of_int(N_INTS)),
-                0,poly_eval(rest_chunks,CHUNK_BASE));
-        assert pow_nat(CHUNK_BASE,nat_of_int(N_INTS))
-                *poly_eval(rest_chunks,CHUNK_BASE) >= 0;
-        assert poly_eval(chunks,CHUNK_BASE) >= 0;
+        forall_append_exact(my_chunks,rest_chunks,(bounded)(-pow_nat(2,N31),pow_nat(2,N31)-1));
     }
 }
 
 lemma_auto void bi_block_opt_inv()
     requires [?f]bi_block_opt(?b, ?last, ?fprev, ?lnext, ?ptrs, ?chunks);
     ensures  [ f]bi_block_opt( b,  last,  fprev,  lnext,  ptrs,  chunks)
-        &*&  !!forall(chunks, (bounded)(0,pow_nat(2,N32)-1))
+        &*&  !!forall(chunks, (bounded)(-pow_nat(2,N31),pow_nat(2,N31)-1))
         &*&  length(ptrs)*N_INTS == length(chunks)
         &*&  (length(chunks) == 0) == (b == 0)
         ;
 {
         ALREADY_PROVEN()
     if(!(true
-            &&  !!forall(chunks, (bounded)(0,pow_nat(2,N32)-1))
+            &&  !!forall(chunks, (bounded)(-pow_nat(2,N31),pow_nat(2,N31)-1))
             &&  length(ptrs)*N_INTS == length(chunks)
             &&  (length(chunks) == 0) == (b == 0))) {
         open bi_block_opt(_,_,_,_,_,_);
@@ -215,7 +196,7 @@ big_int* new_big_int_zero()
 }
 
 void free_big_int_inner(big_int* p)
-    /*@ requires bi_big_int(p, CARRY_BITS, false, _); @*/
+    /*@ requires bi_big_int(p, _, _, _); @*/
     /*@ ensures  true; @*/
     /*@ terminates; @*/
 {

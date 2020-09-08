@@ -12,8 +12,8 @@
 //#define N_INTS ((CACHE_LINE-2*sizeof(void*))/(sizeof(uint32_t)))
 #define N_INTS 12
 // number of bits to reserve for carries
-#define CARRY_BITS 4
-#define CHUNK_BITS ((int)32-(int)CARRY_BITS)
+#define CARRY_BITS 3
+#define CHUNK_BITS ((int)31-(int)CARRY_BITS)
 #define CHUNK_BASE (pow_nat(2,nat_of_int(CHUNK_BITS)))
 
 typedef struct big_int_block {
@@ -77,13 +77,12 @@ lemma_auto void bi_block_inv();
         &*&  length(ptrs) >= 1
         &*&  (length(chunks) == N_INTS) == (b == last)
         &*&  !!mem(b,ptrs) &*& !!mem(last,ptrs)
-        &*&  poly_eval(chunks,CHUNK_BASE) >= 0
         ;
 
 lemma_auto void bi_block_opt_inv();
     requires [?f]bi_block_opt(?b, ?last, ?fprev, ?lnext, ?ptrs, ?chunks);
     ensures  [ f]bi_block_opt( b,  last,  fprev,  lnext,  ptrs,  chunks)
-        &*&  !!forall(chunks, (bounded)(0,pow_nat(2,N32)-1))
+        &*&  !!forall(chunks, (bounded)(-pow_nat(2,N31),pow_nat(2,N31)-1))
         &*&  length(ptrs)*N_INTS == length(chunks)
         &*&  (length(chunks) == 0) == (b == 0)
         ;
@@ -122,16 +121,12 @@ predicate bi_big_int(big_int* b, int free_carries, bool underflow; int i)
     &*& b->is_pos |-> ?is_pos
     &*& free_carries >= 0
     &*& bi_block(first,last,0,0,_,?chunks)
-    &*& underflow
-    ?   free_carries <= CARRY_BITS-1
-    &*& i == 0
-    :   free_carries <= CARRY_BITS
-    &*& !!forall(chunks,
-        (bounded)(0,
-                  pow_nat(2,nat_of_int(32-free_carries))-1))
-    &*& let(poly_eval(chunks,
-                CHUNK_BASE),
-            ?abs_i)
+    &*& let(pow_nat(2,nat_of_int(31-free_carries))-1,?upper)
+    &*& !!forall(chunks, (bounded)(-upper,upper))
+    &*& let(underflow ? -upper : 0,?lower)
+    &*& free_carries <= CARRY_BITS
+    &*& !!forall(chunks, (bounded)(lower,upper))
+    &*& let(poly_eval(chunks, CHUNK_BASE), ?abs_i)
     &*& is_pos ? i == abs_i : i == -abs_i;
 
 lemma void bi_block_disjoint(big_int_block* a,big_int_block* b);
@@ -154,8 +149,7 @@ lemma void bi_block_extend(big_int_block* b);
 big_int_block* new_block();
     /*@ requires true; @*/
     /*@ ensures  bi_block(result, result, 0,0,
-                    _,
-                    repeat(0,nat_of_int(N_INTS))); @*/
+                    _, repeat(0,nat_of_int(N_INTS))); @*/
     /*@ terminates; @*/
 
 big_int* new_big_int_zero();
@@ -165,41 +159,53 @@ big_int* new_big_int_zero();
 
 big_int* big_int_from_hex(const char* s);
     /*@ requires [?f]string(s,?cs)
-            &*&  base_n(hex_chars(),reverse(cs),_,?val)
-            ; @*/
-    /*@ ensures  [ f]string(s, cs)
-            &*&  bi_big_int(result, CARRY_BITS, false, val); @*/
+            &*&  (safe_head(cs) == some('-')
+            ?    base_n(hex_chars(),reverse(tail(cs)),_,?val)
+            &*& ensures [ f]string(s, cs)
+                   &*&  bi_big_int(result, CARRY_BITS, false, -val)
+            :    base_n(hex_chars(),reverse(cs),_,?val)
+            &*& ensures [ f]string(s, cs)
+                   &*&  bi_big_int(result, CARRY_BITS, false,  val)
+            ); @*/
+    /*@ ensures  true; @*/
     /*@ terminates; @*/
 
 void free_big_int_inner(big_int* p);
-    /*@ requires bi_big_int(p, CARRY_BITS, false, _); @*/
+    /*@ requires bi_big_int(p, _, _, _); @*/
     /*@ ensures  true; @*/
     /*@ terminates; @*/
 
 char* big_int_to_hex(const big_int* s);
     /*@ requires [?f]bi_big_int(s, CARRY_BITS, false, ?val); @*/
-    /*@ ensures  [ f]bi_big_int(s, CARRY_BITS, false, val)
+    /*@ ensures  [ f]bi_big_int(s, CARRY_BITS, false,  val)
             &*&  malloced_string(result,?cs)
-            &*&  base_n(hex_chars(),reverse(cs),?cs_seq,val)
-            // minimality
-            &*&  val == 0 ? cs == "0"
-            :    !!minimal(cs_seq); @*/
+            &*&  val == 0
+            ?    cs == "0"
+            &*&  base_n(hex_chars(),cs,_,val)
+            :    val > 0
+            ?    base_n(hex_chars(),reverse(cs),?cs_seq,val)
+            &*&  !!minimal(cs_seq)
+            :    val < 0 &*& safe_head(cs) == some('-')
+            &*&  base_n(hex_chars(),reverse(tail(cs)),?cs_seq,-val)
+            &*&  !!minimal(cs_seq)
+            ; @*/
     /*@ terminates; @*/
 
 void big_int_reduce(big_int* p);
-    /*@ requires bi_big_int(p,?carry_bits, false,?v)
-            &*&  carry_bits >= 1
-            &*&  v >= 0; @*/
-    /*@ ensures  bi_big_int(p,CARRY_BITS, false,v); @*/
+    /*@ requires bi_big_int(p,?carry_bits,?underflow,?v)
+            &*&  carry_bits >= 1; @*/
+    /*@ ensures  bi_big_int(p,CARRY_BITS,false,v); @*/
     /*@ terminates; @*/
 
 void big_int_pluseq(big_int* a,const big_int* b);
-    /*@ requires     bi_big_int(a,?a_carry, false,?av)
-            &*&  [?f]bi_big_int(b,?b_carry, false,?bv)
+    /*@ requires     bi_big_int(a,?a_carry, ?a_under,?av)
+            &*&  [?f]bi_big_int(b,?b_carry, ?b_under,?bv)
             &*&  a_carry > 0 &*& b_carry > 0
             ; @*/
-    /*@ ensures      bi_big_int(a,min_of(a_carry,b_carry)-1, false,av+bv)
-            &*&  [ f]bi_big_int(b, b_carry, false, bv); @*/
+    /*@ ensures      bi_big_int(a,min_of(a_carry,b_carry)-1,
+                        a_under||b_under||((av<0)!=(bv<0)),
+                        av+bv)
+            &*&  [ f]bi_big_int(b, b_carry, b_under, bv); @*/
     /*@ terminates; @*/
 
 #endif

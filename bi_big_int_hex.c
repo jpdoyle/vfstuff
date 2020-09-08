@@ -1,5 +1,6 @@
 #include "bi_big_int.h"
 /*@ #include "lists.gh" @*/
+/*@ #include <arrays.gh> @*/
 
 #if 1
 #define ALREADY_PROVEN() {}
@@ -27,10 +28,15 @@ void reverse_1<t>(list<t> l)
 
 big_int* big_int_from_hex(const char* s)
     /*@ requires [?f]string(s,?cs)
-            &*&  base_n(hex_chars(),reverse(cs),_,?val)
-            ; @*/
-    /*@ ensures  [ f]string(s, cs)
-            &*&  bi_big_int(result, CARRY_BITS, val); @*/
+            &*&  (safe_head(cs) == some('-')
+            ?    base_n(hex_chars(),reverse(tail(cs)),_,?val)
+            &*& ensures [ f]string(s, cs)
+                   &*&  bi_big_int(result, CARRY_BITS, false, -val)
+            :    base_n(hex_chars(),reverse(cs),_,?val)
+            &*& ensures [ f]string(s, cs)
+                   &*&  bi_big_int(result, CARRY_BITS, false,  val)
+            ); @*/
+    /*@ ensures  true; @*/
     /*@ terminates; @*/
 {
     /*@ ALREADY_PROVEN() @*/
@@ -41,12 +47,19 @@ big_int* big_int_from_hex(const char* s)
     if(!ret) { abort(); }
 
     ret->is_pos = true;
+    /*@ string_limits(s); @*/
+    /*@ open string(s,_); @*/
+    /*@ assert [f]*s |-> ?c0; @*/
+    if(*s == '-') {
+        ++s;
+        ret->is_pos = false;
+    }
     ret->last = new_block();
     ret->first = ret->last;
 
-    /*@ close exists<list<uint32_t> >(nil); @*/
-    /*@ close exists<uint32_t>(0); @*/
-    /*@ uint32_t ghost_block_shift = 0; @*/
+    /*@ close exists<list<int32_t> >(nil); @*/
+    /*@ close exists<int32_t>(0); @*/
+    /*@ int32_t ghost_block_shift = 0; @*/
 
     for(s_i = strlen(s),block_i = 0,block_shift = 0; s_i > 0; --s_i)
         /*@ requires [?lf]ret->first |-> ?first
@@ -59,8 +72,8 @@ big_int* big_int_from_hex(const char* s)
 
                 &*&  base_n(hex_chars(),reverse(loop_cs),_,?loop_val)
 
-                &*&  exists<list<uint32_t> >(?pref)
-                &*&  exists<uint32_t>(?blk)
+                &*&  exists<list<int32_t> >(?pref)
+                &*&  exists<int32_t>(?blk)
                 &*&  let(repeat(0,nat_of_int(N_INTS-1-block_i)),?suff)
                 &*&  chunks
                     == append(pref, cons(blk,suff))
@@ -116,9 +129,9 @@ big_int* big_int_from_hex(const char* s)
             assert reverse(loop_cs) == cons(c,reverse(cs_pref));
             assert !!mem(c,hex_chars());
         } @*/
-        /* @ uint32_t *block = &ret->last->chunks[0]; @*/
-        /* @ uints_split(block,block_i); @*/
-        uint32_t nib = nib_of_hex(s[s_i-1]);
+        /* @ int32_t *block = &ret->last->chunks[0]; @*/
+        /* @ ints_split(block,block_i); @*/
+        int32_t nib = nib_of_hex(s[s_i-1]);
         /*@ close [f]chars(s+s_i-1,1,_); @*/
 
         /*@ {
@@ -138,8 +151,8 @@ big_int* big_int_from_hex(const char* s)
             shiftleft_def(nib,nat_of_int(block_shift));
             bitor_no_overlap(nib,blk,nat_of_int(block_shift));
 
-            uints_split_as(&last->chunks[0],pref,cons(blk,suff));
-            uints_limits((&last->chunks[0]) + block_i);
+            ints_split_as(&last->chunks[0],pref,cons(blk,suff));
+            ints_limits2((&last->chunks[0]) + block_i);
             assert (&last->chunks[0])[block_i] |-> blk;
             pow_monotonic(2,nat_of_int(4+block_shift),
                 N32);
@@ -159,7 +172,9 @@ big_int* big_int_from_hex(const char* s)
 
             assert blk < pow_nat(2,nat_of_int(block_shift));
             assert nib < pow_nat(2,nat_of_int(4));
-            assert nib <= pow_nat(2,nat_of_int(4))-1;
+            note( nib <= pow_nat(2,nat_of_int(4))-1);
+            my_mul_mono_l(nib, pow_nat(2,nat_of_int(4))-1,
+                pow_nat(2,nat_of_int(4)));
             assert nib*pow_nat(2,nat_of_int(block_shift))
                 <= pow_nat(2,nat_of_int(block_shift+4))
                 - pow_nat(2,nat_of_int(block_shift));
@@ -183,12 +198,12 @@ big_int* big_int_from_hex(const char* s)
             assert (blk|(nib<<block_shift))
                 == blk+nib*pow_nat(2,nat_of_int(block_shift));
             note( (blk|(nib<<block_shift)) >= 0);
-            close exists<uint32_t>(blk|(nib<<block_shift));
+            close exists<int32_t>(blk|(nib<<block_shift));
         } @*/
 
         *(&ret->last->chunks[0]+block_i) |= (nib<<block_shift);
-        /*@ close uints(&last->chunks[0]+block_i,N_INTS-block_i,_); @*/
-        /*@ uints_join(&last->chunks[0]); @*/
+        /*@ close ints(&last->chunks[0]+block_i,N_INTS-block_i,_); @*/
+        /*@ ints_join(&last->chunks[0]); @*/
         /*@ assert last->chunks[..N_INTS] |-> ?next_chunks; @*/
 
         /*@ {
@@ -198,7 +213,7 @@ big_int* big_int_from_hex(const char* s)
             if(!forall(next_chunks,
                 (bounded)(0,
                         pow_nat(2,nat_of_int(CHUNK_BITS))-1))) {
-                uint32_t cx = not_forall(next_chunks,
+                int32_t cx = not_forall(next_chunks,
                     (bounded)(0,
                             pow_nat(2,nat_of_int(CHUNK_BITS))-1));
                 if(mem(cx,pref) || mem(cx,suff)) {
@@ -313,11 +328,11 @@ big_int* big_int_from_hex(const char* s)
 
         /*@ big_int_block* fresh_block = 0; @*/
         /*@ bool fresh_chunk = false; @*/
-        if(block_shift == (uint32_t)CHUNK_BITS) {
-            /*@ open exists<uint32_t>(?v); @*/
+        if(block_shift == (size_t)CHUNK_BITS) {
+            /*@ open exists<int32_t>(?v); @*/
             /*@ {
                 fresh_chunk = true;
-                close exists<uint32_t>(0);
+                close exists<int32_t>(0);
                 open exists(pref);
             } @*/
             ++block_i;
@@ -332,7 +347,7 @@ big_int* big_int_from_hex(const char* s)
                     assert ret->last |-> ?next;
                     fresh_block = next;
                     close bi_block(next,next,last,_,_,_);
-                    close exists<list<uint32_t> >(nil);
+                    close exists<list<int32_t> >(nil);
                 } @*/
             } else { /*@ {
                 cons_head_tail(suff);
@@ -526,22 +541,28 @@ INLINE char* reverse_and_dup(char* s,size_t len)
 }
 
 char* big_int_to_hex(const big_int* s)
-    /*@ requires [?f]bi_big_int(s, CARRY_BITS, ?val); @*/
-    /*@ ensures  [ f]bi_big_int(s, CARRY_BITS, val)
+    /*@ requires [?f]bi_big_int(s, CARRY_BITS, false, ?val); @*/
+    /*@ ensures  [ f]bi_big_int(s, CARRY_BITS, false,  val)
             &*&  malloced_string(result,?cs)
-            &*&  base_n(hex_chars(),reverse(cs),?cs_seq,val)
-            // minimality
-            &*&  val == 0 ? cs == "0"
-            :    !!minimal(cs_seq); @*/
+            &*&  val == 0
+            ?    cs == "0"
+            &*&  base_n(hex_chars(),cs,_,val)
+            :    val > 0
+            ?    base_n(hex_chars(),reverse(cs),?cs_seq,val)
+            &*&  !!minimal(cs_seq)
+            :    val < 0 &*& safe_head(cs) == some('-')
+            &*&  base_n(hex_chars(),reverse(tail(cs)),?cs_seq,-val)
+            &*&  !!minimal(cs_seq)
+            ; @*/
     /*@ terminates; @*/
 {
-    /*@ ALREADY_PROVEN() @*/
+    /* @ ALREADY_PROVEN() @*/
     size_t cap = (size_t)(N_INTS*(CHUNK_BITS/4)) + (size_t)1;
     size_t len = 0, zeroes = 0;
     big_int_block* b = s->first;
     char* ret = malloc(cap);
     if(!ret) abort();
-    if(!s->is_pos) abort(); // TODO
+    if(s->is_pos) abort();
 
     /*@ {
       assert [f]s->first |-> ?first;
@@ -556,8 +577,8 @@ char* big_int_to_hex(const big_int* s)
                 &*&  ret[..len] |-> ?cs
                 &*&  ret[len..cap] |-> _
                 &*&  [ f]bi_block_opt(b, ?last,?bprev,0,?ptrs,?loop_chunks)
-                &*&  len >= 0 &*& len < cap
-                &*&  len+((uint32_t)N_INTS)*((uint32_t)CHUNK_BITS/4)
+                &*&  len >= 0 &*& len+1 < cap
+                &*&  len+((size_t)N_INTS)*((size_t)CHUNK_BITS/4)+1
                     < 2*cap
                 &*&  !!forall(loop_chunks,(bounded)(0,CHUNK_BASE-1))
                 &*&  zeroes >= 0 &*& zeroes <= len
@@ -567,7 +588,7 @@ char* big_int_to_hex(const big_int* s)
                 &*&  ret[..old_len] |-> cs
                 &*&  ret[old_len..len] |-> ?new_cs
                 &*&  !mem('\0',new_cs)
-                &*&  len < cap
+                &*&  len+1 < cap
                 &*&  ret[len..cap] |-> _
                 &*&  old_len + length(ptrs)*N_INTS*(CHUNK_BITS/4)
                     == len
@@ -590,7 +611,7 @@ char* big_int_to_hex(const big_int* s)
         /*@ int orig_len =len; @*/
         size_t block_i;
         if(cap >= UINT_MAX/2) abort();
-        if(len+((uint32_t)N_INTS)*((uint32_t)CHUNK_BITS/4) >= cap) {
+        if(len+((size_t)N_INTS)*((size_t)CHUNK_BITS/4)+1 >= cap) {
             /*@ assert chars(ret,len,cs); @*/
             /*@ assert chars(ret,cap,?realloc_cs); @*/
             /*@ int prev_cap = cap; @*/
@@ -628,7 +649,7 @@ char* big_int_to_hex(const big_int* s)
                     &*&  [f]b->chunks[block_i..N_INTS] |-> ?chk
                     &*&  block_i >= 0 &*& block_i <= N_INTS
                     &*&  !!forall(chk,(bounded)(0,CHUNK_BASE-1))
-                    &*&  len + (N_INTS-block_i)*(CHUNK_BITS/4) < cap
+                    &*&  len + (N_INTS-block_i)*(CHUNK_BITS/4)+1 < cap
                     &*&  block_i >= 0 &*& block_i <= N_INTS
                     &*&  len >= 0
                     &*&  zeroes >= 0 &*& zeroes <= len
@@ -650,20 +671,21 @@ char* big_int_to_hex(const big_int* s)
               @*/
             /*@ decreases length(chk); @*/
         {
-            /*@ uints_limits((&b->chunks[0])+block_i); @*/
+            /*@ ints_limits2((&b->chunks[0])+block_i); @*/
             /*@ int chunk_chars_left = CHUNK_BITS/4; @*/
             /*@ int prev_len = len; @*/
             /*@ division_unique(CHUNK_BITS,4,CHUNK_BITS/4,0); @*/
-            uint32_t chunk_bits_left = (uint32_t)(int)CHUNK_BITS;
-            uint32_t chunk = *((&b->chunks[0])+block_i);
+            int32_t chunk_bits_left = (int32_t)(int)CHUNK_BITS;
+            int32_t chunk = *((&b->chunks[0])+block_i);
             /*@ int orig_chunk = chunk; @*/
             for(; chunk_bits_left; chunk_bits_left -= 4, chunk >>= 4)
-                /*@ requires chunk
+                /*@ requires chunk >= 0
+                        &*&  chunk
                             < pow_nat(2,nat_of_int(chunk_bits_left))
                         &*&  ret[len..cap] |-> _
                         &*&  chunk_bits_left >= 0
                         &*&  4*chunk_chars_left == chunk_bits_left
-                        &*&  len+chunk_chars_left < cap
+                        &*&  len+chunk_chars_left+1 < cap
                         &*&  chunk_bits_left >= 0
                         &*&  base_n(hex_chars(),nil,nil,0)
                         &*&  zeroes >= 0 &*& zeroes <= len
@@ -864,10 +886,6 @@ char* big_int_to_hex(const big_int* s)
         /*@ recursive_call(); @*/
 
         /*@ {
-            
-        } @*/
-
-        /*@ {
             chars_split(ret,old_len);
             assert ret[..old_len] |-> cs;
             assert ret[old_len..next_len] |-> block_cs;
@@ -978,7 +996,15 @@ char* big_int_to_hex(const big_int* s)
             base_n_trim('0',tail(hex_chars()),final_cs,zeroes);
         } @*/
 
-        return reverse_and_dup(ret,len-zeroes);
+        if(s->is_pos) {
+            return reverse_and_dup(ret,len-zeroes);
+        } else {
+            ret[len-zeroes] = '-';
+            /*@ close chars(ret+len-zeroes,1,{'-'}); @*/
+            /*@ chars_join(ret); @*/
+            /*@ open chars(ret+len-zeroes+1,_,_); @*/
+            return reverse_and_dup(ret,len-zeroes+1);
+        }
     }
 
 }

@@ -1,6 +1,6 @@
 #include "b64.h"
 
-#if 1
+#if 0
 #define ALREADY_PROVEN() {}
 #else
 #define ALREADY_PROVEN() assume(false);
@@ -12,6 +12,7 @@ lemma void in_range1_hex_chars(char c)
     requires (c >= 'a' && c <= 'f');
     ensures  !!mem(c,hex_chars());
 {
+    ALREADY_PROVEN()
          if(c < 'b') {}
     else if(c < 'c') {}
     else if(c < 'd') {}
@@ -57,6 +58,7 @@ bool is_hex(char c)
     /*@ ensures  result == mem(c,hex_chars()); @*/
     /*@ terminates; @*/
 {
+    /*@ ALREADY_PROVEN() @*/
     return (c >= 'a' && c <= 'f') || (c >= '0' && c <= '9');
 }
 
@@ -68,6 +70,7 @@ char hex_of_nib(uint8_t c)
             ; @*/
     /*@ terminates; @*/
 {
+    /*@ ALREADY_PROVEN() @*/
     /*@ nth_of_index_of(c,hex_chars()); @*/
     if(c < 10)      { return (char)('0'+c);      }
     else if(c < 16) { return (char)('a'+(c-10)); }
@@ -82,6 +85,7 @@ uint8_t nib_of_hex(char c)
             ; @*/
     /*@ terminates; @*/
 {
+    /*@ ALREADY_PROVEN() @*/
     if(c >= 'a' && c <= 'f') {
         return (uint8_t)(10 + (c-'a'));
     } else if(c >= '0' && c <= '9') {
@@ -230,6 +234,7 @@ lemma void base_n_dup()
     ensures  [ f]base_n( place_vals, symbs, seq, val)
         &*&      base_n( place_vals, symbs, seq, val);
 {
+    ALREADY_PROVEN()
     switch(symbs) {
     case nil:
     case cons(s,ss):

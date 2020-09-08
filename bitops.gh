@@ -288,6 +288,7 @@ lemma void int_of_bits_of_int(int x, nat n)
             div_rem(x, 2);
             int_of_bits_of_int(x / 2, n0);
             note(bounded(0,1,x%2));
+            bounded_cases(0,1,x%2);
     }
 }
 
@@ -310,6 +311,7 @@ lemma Z Z_of_uintN(int x, nat N)
             Z_of_uintN(x / 2, N0);
             int_of_bits_of_int(x, N);
             note(!!bounded(0,1,x%2));
+            bounded_cases(0,1,x%2);
             return Z_of_bits(Zsign(false), snd(bits_of_int(x, N)));
     }
 }

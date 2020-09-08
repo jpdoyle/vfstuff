@@ -591,9 +591,10 @@ fixpoint bool bounded(int min, int max, int x) {
 fixpoint int max_of(int a,int b) { return a > b ? a : b; }
 fixpoint int min_of(int a,int b) { return a < b ? a : b; }
 
-lemma_auto(bounded(l,h,x)) void bounded_cases(int l, int h, int x);
-    requires bounded(l,h,x) && l <= h;
-    ensures  x == l || bounded(l+1,h,x);
+lemma//_auto(bounded(l,h,x))
+void bounded_cases(int l, int h, int x);
+    requires !!bounded(l,h,x);
+    ensures  (x != l) == bounded(l+1,h,x);
 
 lemma_auto(bounded(l,l,x)) void bounded_base_case(int l, int x)
     requires true;
@@ -752,6 +753,12 @@ lemma void chars_split_as(char *array,
     ensures [f]chars(array, length(pref), pref)
         &*& [f]chars(array + length(pref), length(suff), suff);
 
+lemma void ints_split_as(int *array,
+        list<int> pref,list<int> suff);
+    requires [?f]ints(array, ?N, append(pref,suff));
+    ensures [f]ints(array, length(pref), pref)
+        &*& [f]ints(array + length(pref), length(suff), suff);
+
 lemma void uints_split_as(unsigned *array,
         list<unsigned> pref,list<unsigned> suff);
     requires [?f]uints(array, ?N, append(pref,suff));
@@ -767,6 +774,11 @@ lemma void uints_split(unsigned *array, int offset);
 lemma void uints_join(unsigned *a);
     requires [?f]uints(a, ?M, ?as) &*& [f]uints(a + M, ?N, ?bs);
     ensures [f]uints(a, M + N, append(as, bs));
+
+lemma void ints_limits2(int *array);
+    requires [?f]ints(array, ?n, ?cs) &*& n > 0;
+    ensures [f]ints(array, n, cs) &*& (int *)0 <= array &*&
+        array + n <= (int *)UINTPTR_MAX;
 
 lemma void uints_limits(unsigned *array);
     requires [?f]uints(array, ?n, ?cs) &*& n > 0;
