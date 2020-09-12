@@ -1,6 +1,6 @@
 /*@ #include "poly.gh" @*/
 
-#if 1
+#if 0
 #define ALREADY_PROVEN()
 #else
 #define ALREADY_PROVEN() assume(false);

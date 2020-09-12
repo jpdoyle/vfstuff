@@ -13,6 +13,8 @@
 
 #define SKIP_PROOF() { assume(false); }
 
+fixpoint int abs_of(int x) { return x >= 0 ? x : -x; }
+
 predicate let<t>(t x; t y) = y == x;
 
 fixpoint bool nonneg(int x) { return x >= 0; }
@@ -823,6 +825,16 @@ lemma_auto(pow_nat(x,n))
 void pow_nat_pos(int x, nat n);
     requires x >= 1;
     ensures  pow_nat(x,n) >= 1;
+
+lemma_auto(pow_nat(x,nat_of_int(n)))
+void pow_nat_int_pos(int x, int n);
+    requires x >= 1;
+    ensures  pow_nat(x,nat_of_int(n)) >= 1;
+
+lemma_auto(pow_nat(x,nat_of_int(n)))
+void pow_nat_hard_pos(int x, int n);
+    requires x > 1 && n > 0;
+    ensures  pow_nat(x,nat_of_int(n)) > 1;
 
 lemma_auto(pow_nat(1,n))
 void pow_1(nat n)

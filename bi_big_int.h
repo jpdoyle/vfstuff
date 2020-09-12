@@ -200,10 +200,11 @@ void big_int_reduce(big_int* p);
 void big_int_pluseq(big_int* a,const big_int* b);
     /*@ requires     bi_big_int(a,?a_carry, ?a_under,?av)
             &*&  [?f]bi_big_int(b,?b_carry, ?b_under,?bv)
-            &*&  a_carry > 0 &*& b_carry > 0
+            &*&  a_carry > 1 &*& b_carry > 1
             ; @*/
     /*@ ensures      bi_big_int(a,min_of(a_carry,b_carry)-1,
-                        a_under||b_under||((av<0)!=(bv<0)),
+                        true,
+                        //a_under||b_under||((av<0)!=(bv<0)),
                         av+bv)
             &*&  [ f]bi_big_int(b, b_carry, b_under, bv); @*/
     /*@ terminates; @*/

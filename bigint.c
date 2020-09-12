@@ -101,11 +101,22 @@ char* read_hex_string()
     /*@ requires true; @*/
     /*@ ensures  result == 0 ? emp
             :    malloced_string(result,?cs)
-            &*&  base_n(hex_chars(),reverse(cs),_,_)
+            &*&  safe_head(cs) == some('-')
+                ? base_n(hex_chars(),reverse(tail(cs)),_,_)
+                : base_n(hex_chars(),reverse(cs),_,_)
             ; @*/
 {
     char* ret = read_line();
-    if(is_hex_string(ret)) return ret;
+    /*@ assert string(ret,?cs); @*/
+    /*@ TRIVIAL_LIST(cs) @*/
+    if(is_hex_string(ret)) {
+        /*@ if(safe_head(cs) == some('-')) {
+          forall_elim(reverse(cs),(flip)(mem,hex_chars()),'-');
+          assert false;
+        } @*/
+        return ret;
+    }
+    if(*ret == '-' && is_hex_string(ret+1)) return ret;
     free(ret);
     return NULL;
 }
@@ -118,7 +129,26 @@ int test1(void)
     /*@ close base_n(hex_chars(),"f",_,15); @*/
     /*@ close base_n(hex_chars(),"ff",_,255); @*/
     big_int* p = big_int_from_hex(s);
-    /*@ assert bi_big_int(p,_,255); @*/
+    /*@ assert bi_big_int(p,_,_,255); @*/
+    char* s2 = big_int_to_hex(p);
+    printf("%s\n",s);
+    printf("%s\n",s2);
+    free_big_int_inner(p);
+    free(s2);
+    /*@ leak base_n(_,_,_,_); @*/
+
+    return 0;
+}
+
+int test2(void)
+    /*@ requires true; @*/
+    /*@ ensures  result == 0; @*/
+{
+    const char* s = "-ff";
+    /*@ close base_n(hex_chars(),"f",_,15); @*/
+    /*@ close base_n(hex_chars(),"ff",_,255); @*/
+    big_int* p = big_int_from_hex(s);
+    /*@ assert bi_big_int(p,_,_,-255); @*/
     char* s2 = big_int_to_hex(p);
     printf("%s\n",s);
     printf("%s\n",s2);
@@ -130,7 +160,7 @@ int test1(void)
 }
 
 #ifndef __FILE__
-int test2(void)
+int test_main(void)
 #else
 int main(void)
 #endif
@@ -143,25 +173,25 @@ int main(void)
     big_int* y = NULL;
     /*@ int xv; @*/
     /*@ int yv; @*/
-    
+
     if(sizeof(big_int_block) > (size_t)INT_MAX) abort();
 
     printf("%d\n",(int)sizeof(big_int_block));
 
     while(true)
         /*@ requires true; @*/
-        /*@ ensures  bi_big_int(x,CARRY_BITS,xv); @*/
+        /*@ ensures  bi_big_int(x,CARRY_BITS,false,xv); @*/
     {
-        printf("x? "); 
+        printf("x? ");
         char* s = read_hex_string();
         if(s) {
             x = big_int_from_hex(s);
             free(s);
-            /*@ assert bi_big_int(x,_,?x_v); @*/
+            /*@ assert bi_big_int(x,_,_,?x_v); @*/
             /*@ xv = x_v; @*/
             break;
         }
-        printf("Please enter a hex string\n"); 
+        printf("Please enter a hex string\n");
     }
 
     do
@@ -178,14 +208,14 @@ int main(void)
 
     while(true)
         /*@ requires true; @*/
-        /*@ ensures  bi_big_int(y,CARRY_BITS,yv); @*/
+        /*@ ensures  bi_big_int(y,CARRY_BITS,false,yv); @*/
     {
         printf("y? "); 
         char* s = read_hex_string();
         if(s) {
             y = big_int_from_hex(s);
             free(s);
-            /*@ assert bi_big_int(y,_,?y_v); @*/
+            /*@ assert bi_big_int(y,_,_,?y_v); @*/
             /*@ yv = y_v; @*/
             break;
         }
@@ -193,13 +223,13 @@ int main(void)
     }
 
     for(;n > 0; --n)
-        /*@ requires     bi_big_int(x,CARRY_BITS,?loop_xv)
-                &*&  [?f]bi_big_int(y,CARRY_BITS,yv)
+        /*@ requires     bi_big_int(x,CARRY_BITS,false,?loop_xv)
+                &*&  [?f]bi_big_int(y,CARRY_BITS,false,yv)
                 &*&  n |-> ?n_v
-                &*&  loop_xv >= 0 &*& n_v >= 0
+                &*& n_v >= 0
                 ; @*/
-        /*@ ensures      bi_big_int(x,CARRY_BITS,loop_xv+n_v*yv)
-                &*&  [ f]bi_big_int(y,CARRY_BITS,yv)
+        /*@ ensures      bi_big_int(x,CARRY_BITS,false,loop_xv+n_v*yv)
+                &*&  [ f]bi_big_int(y,CARRY_BITS,false,yv)
                 &*&  n |-> 0
                 ; @*/
         /*@ decreases n_v; @*/
@@ -211,12 +241,18 @@ int main(void)
     {
         char* x_hex = big_int_to_hex(x);;
          /*@ assert string(x_hex,?cs)
-                &*& base_n(hex_chars(),reverse(cs),_,xv+orig_n*yv); @*/
+                &*& let(xv+orig_n*yv,?res)
+                &*& res >= 0
+                ?   base_n(hex_chars(),reverse(cs),_,res)
+                :   cs == cons('-',tail(cs))
+                &*& base_n(hex_chars(),reverse(tail(cs)),_,-res); @*/
         printf("x+n*y=\n%s\n",x_hex);
         free(x_hex);
     }
 
+    /*@ open bi_big_int(x,?car,?und,_); @*/
     printf("%p\n",(void*)x->first);
+    /*@ close bi_big_int(x,car,und,_); @*/
 
     free_big_int_inner(x);
     free_big_int_inner(y);
