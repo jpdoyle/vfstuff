@@ -28,6 +28,22 @@ lemma void uints_split_as(unsigned *array,
     }
 }
 
+lemma void ints_split_as(int *array,
+        list<int> pref,list<int> suff)
+    requires [?f]ints(array, ?N, append(pref,suff));
+    ensures [f]ints(array, length(pref), pref)
+        &*& [f]ints(array + length(pref), length(suff), suff);
+{
+    switch(pref) {
+    case nil:
+        close [f]ints(array, length(pref), pref);
+    case cons(x,xs):
+        open [f]ints(array, _,_);
+        ints_split_as(array+1,xs,suff);
+        close [f]ints(array, length(pref), pref);
+    }
+}
+
 lemma void uints_split(unsigned *array, int offset)
     requires [?f]uints(array, ?N, ?as) &*& 0 <= offset &*& offset <= N;
     ensures [f]uints(array, offset, take(offset, as))
@@ -65,6 +81,19 @@ lemma void uints_limits(unsigned *array)
             uints_limits(array+1);
         }
         u_integer_limits(array);
+        assert false;
+    }
+}
+
+lemma void ints_limits2(int *array)
+    requires [?f]ints(array, ?n, ?cs) &*& n > 0;
+    ensures [f]ints(array, n, cs) &*& (int *)0 <= array &*&
+        array + n <= (int *)UINTPTR_MAX;
+{
+    if(array < (int *)0 || array + n > (int *)UINTPTR_MAX) {
+        open ints(array,_,_);
+        if(n > 1) ints_limits2(array+1);
+        integer_limits(array);
         assert false;
     }
 }
@@ -848,6 +877,15 @@ lemma_auto void euclid_div_auto()
     }
 }
 
+lemma void euclid_div_unique_intro(int D, int d, int q, int r)
+    requires d > 0 &*& r >= 0 &*& r < d &*& D == q*d + r;
+    ensures  euclid_div_sol(D,d,q,r);
+{
+    euclid_div_intro(D,d);
+    assert euclid_div_sol(D,d,?q1,?r1);
+    euclid_div_unique(D,d,q,r,q1,r1);
+}
+
 
 lemma_auto(bounded(l,h,x)) void bounded_cases(int l, int h, int x)
     requires bounded(l,h,x) && l <= h;
@@ -968,6 +1006,22 @@ void pow_nat_pos(int x, nat n)
         pow_nat_pos(x,n0);
         my_mul_mono_l(1,x,pow_nat(x,n0));
     }
+}
+
+lemma_auto(pow_nat(x,nat_of_int(n)))
+void pow_nat_int_pos(int x, int n)
+    requires x >= 1;
+    ensures  pow_nat(x,nat_of_int(n)) >= 1;
+{ pow_nat_pos(x,nat_of_int(n)); }
+
+lemma_auto(pow_nat(x,nat_of_int(n)))
+void pow_nat_hard_pos(int x, int n)
+    requires x > 1 && n > 0;
+    ensures  pow_nat(x,nat_of_int(n)) > 1;
+{
+    pow_nat_pos(x,nat_of_int(n-1));
+    assert nat_of_int(n) == succ(nat_of_int(n-1));
+    my_mul_strict_mono_l(1,x,pow_nat(x,nat_of_int(n-1)));
 }
 
 lemma void pow_plus(int x,nat y,int z)

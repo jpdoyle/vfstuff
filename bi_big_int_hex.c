@@ -66,9 +66,9 @@ big_int* big_int_from_hex(const char* s)
                 &*&  [f]s[..s_i] |-> ?loop_cs
                 &*&  ret->last |-> ?last
                 &*&  bi_block(last,last,?l_prev,0,_,?chunks)
-                &*&  !!forall(chunks,
-                        (bounded)(0,
-                            pow_nat(2,nat_of_int(CHUNK_BITS))-1))
+                &*&  let(pow_nat(2,nat_of_int(CHUNK_BITS))-1, ?upper)
+                &*&  !!forall(chunks, (bounded)(0,upper))
+                &*&  !!forall(chunks, (bounded)(-upper,upper))
 
                 &*&  base_n(hex_chars(),reverse(loop_cs),_,?loop_val)
 
@@ -88,9 +88,8 @@ big_int* big_int_from_hex(const char* s)
                 &*&  ret->last |-> ?new_last
                 &*&  bi_block(last,new_last,l_prev,0,_,
                         ?new_chunks)
-                &*&  !!forall(new_chunks,
-                        (bounded)(0,
-                            pow_nat(2,nat_of_int(CHUNK_BITS))-1))
+                &*&  !!forall(new_chunks, (bounded)(0,upper))
+                &*&  !!forall(new_chunks, (bounded)(-upper,upper))
                 &*&  poly_eval(new_chunks,
                         CHUNK_BASE)
                     == poly_eval(chunks,
@@ -211,24 +210,27 @@ big_int* big_int_from_hex(const char* s)
                 == append(pref,cons(blk|(nib<<block_shift),suff));
 
             if(!forall(next_chunks,
-                (bounded)(0,
-                        pow_nat(2,nat_of_int(CHUNK_BITS))-1))) {
+                (bounded)(0, upper))) {
                 int32_t cx = not_forall(next_chunks,
-                    (bounded)(0,
-                            pow_nat(2,nat_of_int(CHUNK_BITS))-1));
+                    (bounded)(0,upper));
                 if(mem(cx,pref) || mem(cx,suff)) {
                     forall_elim(chunks,
-                        (bounded)(0,
-                            pow_nat(2,nat_of_int(CHUNK_BITS))-1),
+                        (bounded)(0,upper),
                         cx);
                 } else {
                     assert cx == blk+nib*pow_nat(2,nat_of_int(block_shift));
                 }
                 assert false;
             }
-            assert !!forall(next_chunks,
-                (bounded)(0,
-                        pow_nat(2,nat_of_int(CHUNK_BITS))-1));
+            assert !!forall(next_chunks, (bounded)(0,upper));
+            if(!forall(next_chunks, (bounded)(-upper, upper))) {
+                int32_t cx = not_forall(next_chunks,
+                    (bounded)(-upper,upper));
+                forall_elim(next_chunks,
+                        (bounded)(0,upper),
+                        cx);
+                assert false;
+            }
 
             assert poly_eval(next_chunks,CHUNK_BASE)
                 == poly_eval(pref,CHUNK_BASE)
@@ -377,14 +379,13 @@ big_int* big_int_from_hex(const char* s)
                 assert bi_block(fresh_block,_,last,0,_,
                     ?rest_chunks);
                 assert !!forall(next_chunks,
-                    (bounded)(0,
-                            pow_nat(2,nat_of_int(CHUNK_BITS))-1));
+                    (bounded)(0,upper));
                 assert !!forall(rest_chunks,
-                    (bounded)(0,
-                            pow_nat(2,nat_of_int(CHUNK_BITS))-1));
+                    (bounded)(0,upper));
                 forall_append(next_chunks,rest_chunks,
-                    (bounded)(0,
-                            pow_nat(2,nat_of_int(CHUNK_BITS))-1));
+                    (bounded)(0,upper));
+                forall_append(next_chunks,rest_chunks,
+                    (bounded)(-upper,upper));
                 bi_block_extend(last);
             } else {
                 assert ret->last |-> ?new_last;
@@ -562,7 +563,6 @@ char* big_int_to_hex(const big_int* s)
     big_int_block* b = s->first;
     char* ret = malloc(cap);
     if(!ret) abort();
-    if(s->is_pos) abort();
 
     /*@ {
       assert [f]s->first |-> ?first;

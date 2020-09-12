@@ -2,7 +2,7 @@ VF=verifast -target Linux64 -shared -emit_vfmanifest
 
 .PHONY: all clean
 
-all: nats.vfmanifest util.vfmanifest lists.vfmanifest bitops.vfmanifest termination.vfmanifest isort.vfmanifest slowsort.vfmanifest poly.vfmanifest numtheo.vfmanifest bigint.vfmanifest bin/calc
+all: nats.vfmanifest util.vfmanifest lists.vfmanifest bitops.vfmanifest termination.vfmanifest isort.vfmanifest slowsort.vfmanifest poly.vfmanifest numtheo.vfmanifest bigint.vfmanifest bin/calc bin/calc-dbg
 
 clean:
 	rm *.vfmanifest
@@ -52,4 +52,8 @@ bigint.vfmanifest: bigint.c bigint.h util.vfmanifest nats.vfmanifest axioms/prel
 bin/calc: bigint.vfmanifest bi_big_int.vfmanifest bi_big_int_plus.vfmanifest bi_big_int_hex.vfmanifest
 	mkdir -p bin
 	${CC} -Wall -Werror -Wextra -pedantic -O3 -march=native -flto -o bin/calc b64.c bi_big_int.c bi_big_int_plus.c bi_big_int_hex.c bigint.c
+
+bin/calc-dbg: bigint.vfmanifest bi_big_int.vfmanifest bi_big_int_plus.vfmanifest bi_big_int_hex.vfmanifest
+	mkdir -p bin
+	${CC} -Wall -Werror -Wextra -pedantic -O1 -g -o bin/calc-dbg b64.c bi_big_int.c bi_big_int_plus.c bi_big_int_hex.c bigint.c
 

@@ -176,13 +176,13 @@ int main(void)
 
     if(sizeof(big_int_block) > (size_t)INT_MAX) abort();
 
-    printf("%d\n",(int)sizeof(big_int_block));
+    /* printf("%d\n",(int)sizeof(big_int_block)); */
 
     while(true)
         /*@ requires true; @*/
         /*@ ensures  bi_big_int(x,CARRY_BITS,false,xv); @*/
     {
-        printf("x? ");
+        printf("x?\n"); fflush(stdout);
         char* s = read_hex_string();
         if(s) {
             x = big_int_from_hex(s);
@@ -199,9 +199,10 @@ int main(void)
         /*@ ensures  n |-> ?n_v &*& n_v >= 0; @*/
     {
         int n_read;
-        printf("n? ");
-        n_read = scanf("%d\n",&n);
+        printf("n? "); fflush(stdout);
+        n_read = scanf("%d",&n);
         if(n_read < 1) n = -1;
+        getchar(); // \n
     } while(n < 0);
 
     /*@ orig_n = n; @*/
@@ -210,7 +211,7 @@ int main(void)
         /*@ requires true; @*/
         /*@ ensures  bi_big_int(y,CARRY_BITS,false,yv); @*/
     {
-        printf("y? "); 
+        printf("y?\n"); fflush(stdout);
         char* s = read_hex_string();
         if(s) {
             y = big_int_from_hex(s);
@@ -250,9 +251,9 @@ int main(void)
         free(x_hex);
     }
 
-    /*@ open bi_big_int(x,?car,?und,_); @*/
-    printf("%p\n",(void*)x->first);
-    /*@ close bi_big_int(x,car,und,_); @*/
+    ///*@ open bi_big_int(x,?car,?und,_); @*/
+    //printf("%p\n",(void*)x->first);
+    ///*@ close bi_big_int(x,car,und,_); @*/
 
     free_big_int_inner(x);
     free_big_int_inner(y);
