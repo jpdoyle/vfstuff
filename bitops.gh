@@ -103,6 +103,11 @@ lemma void bitand_def(int x1, Z z1, int x2, Z z2);
     requires x1 == int_of_Z(z1) &*& x2 == int_of_Z(z2);
     ensures (x1 & x2) == int_of_Z(Z_and(z1, z2));
 
+lemma_auto(int_of_Z(Z_and(x,y)))
+void Z_and_commutes(Z x, Z y);
+    requires true;
+    ensures  int_of_Z(Z_and(x,y)) == int_of_Z(Z_and(y,x));
+
 fixpoint Z Z_not(Z z) {
     switch (z) {
         case Zsign(b): return Zsign(!(b));
@@ -395,8 +400,18 @@ lemma void bitand_pow_2_inner(int x, Z x_Z, Z y_Z, nat n);
     ensures  (x & (pow_nat(2,n)-1)) == x%pow_nat(2,n);
 
 lemma void bitand_pow_2(int x, nat n);
-    requires x >= 0 &*& n != zero;
+    requires x >= 0;
     ensures  (x & (pow_nat(2,n)-1)) == x%pow_nat(2,n);
+
+lemma void bitand_flag(int x, nat n);
+    requires x >= 0;
+    ensures  (x & (pow_nat(2,n))) + x%pow_nat(2,n)
+        ==   x%pow_nat(2,succ(n));
+
+lemma void bitand_cases(int x, nat n);
+    requires x >= 0;
+    ensures  (x & (pow_nat(2,n))) == 0
+        ||   (x & (pow_nat(2,n))) == pow_nat(2,n);
 
 lemma void shiftright_div_inner(Z x_Z, nat n);
     requires int_of_Z(x_Z) >= 0;

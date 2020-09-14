@@ -251,6 +251,18 @@ lemma_auto(mem(x,repeat(v,n))) void mem_repeat<t>(t x, t v, nat n);
     requires !!mem(x,repeat(v,n));
     ensures  x == v;
 
+lemma_auto(append(repeat(v,n),repeat(v,m)))
+void append_repeat<t>(t v, nat n, nat m);
+    requires true;
+    ensures  append(repeat(v,n),repeat(v,m))
+        ==   repeat(v,nat_of_int(int_of_nat(n)+int_of_nat(m)));
+
+lemma_auto(forall(repeat(v,n),(bounded)(lo,hi)))
+void repeat_bounded(int v, nat n, int lo, int hi);
+    requires true;
+    ensures  forall(repeat(v,n),(bounded)(lo,hi))
+        == (n == zero || bounded(lo,hi,v));
+
 fixpoint list<int> indices_of_inner<t>(t v, list<t> l, int base) {
     switch(l) {
     case nil: return {};

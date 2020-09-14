@@ -223,11 +223,15 @@ int main(void)
         printf("Please enter a hex string\n"); 
     }
 
+    /*@ if(x == y) {
+      bi_big_int_unique(x,y);
+      assert false;
+    } @*/
+
     for(;n > 0; --n)
         /*@ requires     bi_big_int(x,CARRY_BITS,false,?loop_xv)
                 &*&  [?f]bi_big_int(y,CARRY_BITS,false,yv)
-                &*&  n |-> ?n_v
-                &*& n_v >= 0
+                &*&  x != y &*& n |-> ?n_v &*& n_v >= 0
                 ; @*/
         /*@ ensures      bi_big_int(x,CARRY_BITS,false,loop_xv+n_v*yv)
                 &*&  [ f]bi_big_int(y,CARRY_BITS,false,yv)
@@ -238,7 +242,7 @@ int main(void)
         big_int_pluseq(x,y);
         big_int_reduce(x);
     }
-    
+
     {
         char* x_hex = big_int_to_hex(x);;
          /*@ assert string(x_hex,?cs)

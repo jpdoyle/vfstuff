@@ -594,20 +594,24 @@ void big_int_reduce(big_int* p)
 }
 
 void big_int_pluseq(big_int* a,const big_int* b)
-    /*@ requires     bi_big_int(a,?a_carry, ?a_under,?av)
-            &*&  [?f]bi_big_int(b,?b_carry, ?b_under,?bv)
+    /*@ requires [?af]bi_big_int(a,?a_carry, ?a_under,?av)
+            &*&  [?bf]bi_big_int(b,?b_carry, ?b_under,?bv)
             &*&  a_carry > 1 &*& b_carry > 1
+            &*&  a != b
+            ?    af == 1 &*& bf > 0
+            :    af + bf == 1 &*& af > 0 &*& bf > 0
             ; @*/
     /*@ ensures      bi_big_int(a,min_of(a_carry,b_carry)-1,
-                        true,
-                        //a_under||b_under|| ((av<0)&&(bv>0))||((av>0)&&(bv<0)),
-                        av+bv)
-            &*&  [ f]bi_big_int(b, b_carry, b_under, bv); @*/
+                        true, av+bv)
+            &*&  a == b ? emp
+            :    [ bf]bi_big_int(b, b_carry, b_under, bv); @*/
     /*@ terminates; @*/
 {
     /* @ ALREADY_PROVEN() @*/
-    /*@ open bi_big_int(a,_,_,av); @*/
-    /*@ open bi_big_int(b,_,_,bv); @*/
+    /*@ bool doubling = (a == b); @*/
+
+    /*@ open [bf]bi_big_int(b,_,_,bv); @*/
+    /*@ open [af]bi_big_int(a,_,_,av); @*/
     big_int_block* a_i    = a->first;
     big_int_block* a_last = a->last;
     big_int_block* b_i    = b->first;
@@ -621,8 +625,8 @@ void big_int_pluseq(big_int* a,const big_int* b)
                 &*&  let(-b_upper,?b_lower)
             ; @*/
 
-    /*@ { assert      bi_block(a_i,a_last,?a_prev,0,_,?a_chunks)
-              &*&  [f]bi_block(b_i,b_last,?b_prev,0,?bptrs,?b_chunks)
+    /*@ { assert   [af]bi_block(a_i,a_last,?a_prev,0,_,?a_chunks)
+              &*&  [bf]bi_block(b_i,b_last,?b_prev,0,?bptrs,?b_chunks)
               ;
         pow_monotonic(2,N2,nat_of_int(31-a_carry));
         pow_monotonic(2,N2,nat_of_int(31-b_carry));
@@ -654,8 +658,9 @@ void big_int_pluseq(big_int* a,const big_int* b)
     } @*/
 
     while(true)
-        /*@ requires    bi_block(a_i,a_last,?a_prev,0,_,?a_chunks)
-                &*&  [f]bi_block(b_i,b_last,?b_prev,0,?bptrs,?b_chunks)
+        /*@ requires [af]bi_block(a_i,a_last,?a_prev,0,_,?a_chunks)
+                &*&  [bf]bi_block(b_i,b_last,?b_prev,0,?bptrs,?b_chunks)
+                &*&  !doubling || (a_i == b_i)
 
                 &*&  !!forall(a_chunks, (bounded)(-a_upper,a_upper))
                 &*&  !!forall(a_chunks, (bounded)(a_lower,a_upper))
@@ -670,7 +675,8 @@ void big_int_pluseq(big_int* a,const big_int* b)
                 &*&  upper > b_upper
                 ; @*/
         /*@ ensures     bi_block(old_a_i,a_last, a_prev,0,_,?new_chunks)
-                &*&  [f]bi_block(old_b_i,b_last,b_prev,0,bptrs,b_chunks)
+                &*&  (doubling ? emp
+                    : [bf]bi_block(old_b_i,b_last,b_prev,0,bptrs,b_chunks))
 
                 &*&  !!forall(new_chunks, (bounded)(-upper,upper))
                 &*&  !!forall(new_chunks,
@@ -687,15 +693,15 @@ void big_int_pluseq(big_int* a,const big_int* b)
     {
         size_t chunk_i;
 
-        /*@ open bi_block(a_i,_,_,_,_,_); @*/
-        /*@ open bi_block(b_i,_,_,_,_,_); @*/
-        /*@ assert  a_i->chunks[..N_INTS] |-> ?a_i_chunks
-                &*& a_i->next |-> ?a_i_next; @*/
-        /*@ assert  [f]b_i->chunks[..N_INTS] |-> ?b_i_chunks
-                &*& [f]b_i->next |-> ?b_i_next; @*/
+        /*@ open [bf]bi_block(b_i,_,_,_,_,_); @*/
+        /*@ open [af]bi_block(a_i,_,_,_,_,_); @*/
+        /*@ assert  [af]a_i->chunks[..N_INTS] |-> ?a_i_chunks
+                &*& [af]a_i->next |-> ?a_i_next; @*/
+        /*@ assert  [bf]b_i->chunks[..N_INTS] |-> ?b_i_chunks
+                &*& [bf]b_i->next |-> ?b_i_next; @*/
         /*@ {
             if(a_i != a_last) {
-                assert bi_block(a_i_next,a_last,_,_,_,?rest_chunks);
+                assert [af]bi_block(a_i_next,a_last,_,_,_,?rest_chunks);
                 forall_append(a_i_chunks, rest_chunks,
                     (bounded)(-a_upper,a_upper));
                 forall_append(a_i_chunks, rest_chunks,
@@ -706,7 +712,7 @@ void big_int_pluseq(big_int* a,const big_int* b)
                     (bounded)(-pow_nat(2,N30)+1, pow_nat(2,N30)-1));
             }
             if(b_i != b_last) {
-                assert [f]bi_block(b_i_next,b_last,_,_,_,?rest_chunks);
+                assert [bf]bi_block(b_i_next,b_last,_,_,_,?rest_chunks);
 
                 forall_append(b_i_chunks, rest_chunks,
                 (bounded)(-b_upper,b_upper));
@@ -716,9 +722,9 @@ void big_int_pluseq(big_int* a,const big_int* b)
         } @*/
 
         for(chunk_i=0;chunk_i < N_INTS; ++chunk_i)
-            /*@ requires    a_i->chunks[chunk_i..N_INTS]
+            /*@ requires [af]a_i->chunks[chunk_i..N_INTS]
                                 |-> ?a_i_loop_chunks
-                    &*&  [f]b_i->chunks[chunk_i..N_INTS]
+                    &*&  [bf]b_i->chunks[chunk_i..N_INTS]
                                 |-> ?b_i_loop_chunks
                     &*&  !!forall(a_i_loop_chunks, (bounded)(-a_upper,a_upper))
                     &*&  !!forall(a_i_loop_chunks, (bounded)(a_lower,a_upper))
@@ -729,8 +735,9 @@ void big_int_pluseq(big_int* a,const big_int* b)
                     ; @*/
             /*@ ensures     a_i->chunks[old_chunk_i..N_INTS]
                                 |-> ?new_chunks
-                    &*&  [f]b_i->chunks[old_chunk_i..N_INTS]
-                                |->  b_i_loop_chunks
+                    &*&  (doubling ? emp
+                         : [bf]b_i->chunks[old_chunk_i..N_INTS]
+                                |->  b_i_loop_chunks)
                     &*&  !!forall(new_chunks, (bounded)(-upper,upper))
                     &*&  !!forall(new_chunks,
                             (bounded)(-pow_nat(2,N30)+1, pow_nat(2,N30)-1))
@@ -745,11 +752,12 @@ void big_int_pluseq(big_int* a,const big_int* b)
             /*@ decreases length(b_i_loop_chunks); @*/
         {
             /*@ {
-                open ints(&a_i->chunks[0]+chunk_i,_,_);
+                open [bf]ints(&b_i->chunks[0]+chunk_i,_,_);
+                open [af]ints(&a_i->chunks[0]+chunk_i,_,_);
                 integer_limits(&a_i->chunks[0]+chunk_i);
-                open [f]ints(&b_i->chunks[0]+chunk_i,_,_);
-                assert *(&a_i->chunks[0]+chunk_i) |-> ?a_chunk;
-                assert [f]*(&b_i->chunks[0]+chunk_i) |-> ?b_chunk;
+
+                assert [af]*(&a_i->chunks[0]+chunk_i) |-> ?a_chunk;
+                assert [bf]*(&b_i->chunks[0]+chunk_i) |-> ?b_chunk;
                 pow_soft_monotonic(2,
                     nat_of_int(31-a_carry),
                     nat_of_int(31-(result_carries+1)));
@@ -854,18 +862,18 @@ void big_int_pluseq(big_int* a,const big_int* b)
         a_i = a_i->next;
         b_i = b_i->next;
 
-        /*@ big_int_block* next_a_i = a_i; @*/ 
-        /*@ big_int_block* next_b_i = b_i; @*/ 
+        /*@ big_int_block* next_a_i = a_i; @*/
+        /*@ big_int_block* next_b_i = b_i; @*/
         /*@ list<int> rest_a_chunks = nil; @*/
         /*@ list<int> rest_b_chunks = nil; @*/
 
         /*@ {
             if(a_i) {
-                assert bi_block(a_i,_,_,_,_,?a_rest);
+                assert [af]bi_block(a_i,_,_,_,_,?a_rest);
                 rest_a_chunks = a_rest;
             }
             if(b_i) {
-                assert [f]bi_block(b_i,_,_,_,_,?b_rest);
+                assert [bf]bi_block(b_i,_,_,_,_,?b_rest);
                 rest_b_chunks = b_rest;
             }
         } @*/
@@ -873,10 +881,10 @@ void big_int_pluseq(big_int* a,const big_int* b)
         /*@ recursive_call(); @*/
 
         /*@ {
-            assert old_a_i->chunks[..N_INTS] |-> ?old_a_i_chunks;
-            assert bi_block(next_a_i,_,_,_,?next_a_ptrs,?next_a_chunks);
+            assert [af]old_a_i->chunks[..N_INTS] |-> ?old_a_i_chunks;
+            assert [af]bi_block(next_a_i,_,_,_,?next_a_ptrs,?next_a_chunks);
             if(mem(old_a_i,next_a_ptrs)) {
-                close bi_block(old_a_i,old_a_i,_,_,{old_a_i},_);
+                close [af]bi_block(old_a_i,old_a_i,_,_,{old_a_i},_);
                 bi_block_disjoint(old_a_i,next_a_i);
                 assert false;
             }

@@ -277,6 +277,28 @@ lemma_auto(mem(x,repeat(v,n))) void mem_repeat<t>(t x, t v, nat n)
     }
 }
 
+lemma_auto(append(repeat(v,n),repeat(v,m)))
+void append_repeat<t>(t v, nat n, nat m)
+    requires true;
+    ensures  append(repeat(v,n),repeat(v,m))
+        ==   repeat(v,nat_of_int(int_of_nat(n)+int_of_nat(m)));
+{
+    switch(n) {
+    case zero:
+    case succ(n0):
+        append_repeat(v,n0,m);
+        assert nat_of_int(int_of_nat(n)+int_of_nat(m))
+            == succ(nat_of_int(int_of_nat(n0)+int_of_nat(m)));
+    }
+}
+
+lemma_auto(forall(repeat(v,n),(bounded)(lo,hi)))
+void repeat_bounded(int v, nat n, int lo, int hi)
+    requires true;
+    ensures  forall(repeat(v,n),(bounded)(lo,hi))
+        == (n == zero || bounded(lo,hi,v));
+{ NAT_INDUCTION(n,n0,repeat_bounded(v,n0,lo,hi)) }
+
 lemma
 void indices_of_inner_correct<t>(t v, list<t> l, int b, int i)
     requires true;

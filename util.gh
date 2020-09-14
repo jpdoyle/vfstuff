@@ -796,6 +796,9 @@ lemma void uints_limits(unsigned *array);
 //lemma void uints_unique(unsigned *p);
 //    requires [?f]uints(p, ?v);
 //    ensures [f]uints(p, v) &*& f <= 1;
+//lemma void ints_unique(int *p,int n);
+//    requires [?f1]ints(p, ?n, ?v);
+//    ensures [f]uints(p, v) &*& f <= 1;
 
 lemma void ullongs_split(unsigned long long *array, int offset);
     requires [?f]ullongs(array, ?N, ?as) &*& 0 <= offset &*& offset <= N;
@@ -868,3 +871,4 @@ lemma void pow_monotonic(int x,nat y,nat z);
 
 #endif
 
+		

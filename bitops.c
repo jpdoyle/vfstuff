@@ -1,6 +1,12 @@
 /*@ #include "bitops.gh" @*/
 #include "bitops.h"
 
+#if 1
+#define ALREADY_PROVEN()
+#else
+#define ALREADY_PROVEN() assume(false);
+#endif
+
 /*@
 
 lemma_auto(Z_size(z))
@@ -8,6 +14,7 @@ void Z_size_nonneg(Z z)
     requires true;
     ensures  Z_size(z) >= 0;
 {
+    ALREADY_PROVEN()
     switch(z) {
     case Zsign(b):
     case Zdigit(z0,b0): Z_size_nonneg(z0);
@@ -19,6 +26,7 @@ void Z_neg_auto(Z z)
     requires true;
     ensures  Z_is_neg(z) == (int_of_Z(z) < 0);
 {
+    ALREADY_PROVEN()
     switch(z) {
     case Zsign(b):
     case Zdigit(z0,b0): Z_neg_auto(z0);
@@ -30,6 +38,7 @@ void Z_size_bound_pos(Z z)
     requires !Z_is_neg(z);
     ensures  int_of_Z(z) < pow_nat(2,nat_of_int(Z_size(z)));
 {
+    ALREADY_PROVEN()
     switch(z) {
     case Zsign(b):
     case Zdigit(z0,b0):
@@ -43,6 +52,7 @@ void Z_size_bound_neg(Z z)
     requires !!Z_is_neg(z);
     ensures  -int_of_Z(z) <= pow_nat(2,nat_of_int(Z_size(z)));
 {
+    ALREADY_PROVEN()
     switch(z) {
     case Zsign(b):
     case Zdigit(z0,b0):
@@ -56,6 +66,7 @@ void Z_or_commutes(Z x_Z, Z y_Z)
     requires true;
     ensures  Z_or(x_Z,y_Z) == Z_or(y_Z,x_Z);
 {
+    ALREADY_PROVEN()
     switch(y_Z) {
     case Zsign(sy):
         switch(x_Z) {
@@ -77,6 +88,7 @@ lemma void Z_or_zero(Z x_Z, Z y_Z)
     requires int_of_Z(y_Z) == 0;
     ensures  int_of_Z(Z_or(x_Z,y_Z)) == int_of_Z(x_Z);
 {
+        ALREADY_PROVEN()
     switch(y_Z) {
     case Zsign(sy):
         switch(x_Z) {
@@ -100,6 +112,7 @@ lemma void bitor_no_overlap_inner(int x, Z x_Z, int y, Z y_Z, nat n)
         ;
     ensures  (x*pow_nat(2,n) | y) == x*pow_nat(2,n) + y;
 {
+        ALREADY_PROVEN()
     switch(n) {
     case zero:
         bitor_def(x*pow_nat(2,n), x_Z, y, y_Z);
@@ -178,6 +191,7 @@ void log_nat_prop_inner(int x, nat n)
     requires abs(x) <= int_of_nat(n);
     ensures  pow_nat(2,log_nat_inner(x,n)) > abs(x);
 {
+        ALREADY_PROVEN()
     switch(n) {
     case zero:
     case succ(n0):
@@ -203,6 +217,7 @@ void bitor_commutes(int x, int y)
     requires x >= 0 && y >= 0;
     ensures  (x | y) == (y|x);
 {
+        ALREADY_PROVEN()
     Z x_Z = Z_of_uintN(x,log_nat(x));
     Z y_Z = Z_of_uintN(y,log_nat(y));
     bitor_def(x,x_Z,y,y_Z);
@@ -215,6 +230,7 @@ lemma void bitor_no_overlap(int x, int y, nat n)
     requires x >= 0 &*& y >= 0 &*& y < pow_nat(2,n);
     ensures  (x*pow_nat(2,n) | y) == x*pow_nat(2,n) + y;
 {
+        ALREADY_PROVEN()
     nat lgY = log_nat(y);
     my_mul_mono_l(0,x,pow_nat(2,n));
     Z x_Z = Z_of_uintN(x*pow_nat(2,n),log_nat(x*pow_nat(2,n)));
@@ -227,6 +243,7 @@ lemma void Z_and_zero(Z x_Z, Z y_Z)
     requires int_of_Z(y_Z) == 0;
     ensures  int_of_Z(Z_and(x_Z,y_Z)) == 0;
 {
+        ALREADY_PROVEN()
     switch(y_Z) {
     case Zsign(sy):
         switch(x_Z) {
@@ -243,15 +260,37 @@ lemma void Z_and_zero(Z x_Z, Z y_Z)
     }
 }
 
+lemma_auto(int_of_Z(Z_and(x_Z,y_Z)))
+void Z_and_commutes(Z x_Z, Z y_Z)
+    requires true;
+    ensures  int_of_Z(Z_and(x_Z,y_Z)) == int_of_Z(Z_and(y_Z,x_Z));
+{
+    switch(y_Z) {
+    case Zsign(sy):
+        switch(x_Z) {
+        case Zsign(sx):
+        case Zdigit(x_z0,xb):
+        }
+    case Zdigit(y_z0,yb):
+        switch(x_Z) {
+        case Zsign(sx):
+        case Zdigit(x_z0,xb):
+            Z_and_commutes(x_z0,y_z0);
+        }
+    }
+}
 
 lemma void bitand_pow_2_inner(int x, Z x_Z, Z y_Z, nat n)
     requires x >= 0 &*& int_of_Z(x_Z) == x
-        &*& int_of_Z(y_Z) == pow_nat(2,n)-1
-        &*& n != zero;
+        &*& int_of_Z(y_Z) == pow_nat(2,n)-1;
     ensures  (x & (pow_nat(2,n)-1)) == x%pow_nat(2,n);
 {
+        ALREADY_PROVEN()
     switch(n) {
     case zero:
+        bitand_def(x,x_Z,pow_nat(2,n)-1,y_Z);
+        Z_and_zero(x_Z,y_Z);
+        division_unique(x,pow_nat(2,n),x,0);
     case succ(n0):
         bitand_def(x,x_Z,pow_nat(2,n)-1,y_Z);
         if(n0 != zero) {
@@ -326,10 +365,171 @@ lemma void bitand_pow_2_inner(int x, Z x_Z, Z y_Z, nat n)
 
 
 lemma void bitand_pow_2(int x, nat n)
-    requires x >= 0 &*& n != zero;
+    requires x >= 0;
     ensures  (x & (pow_nat(2,n)-1)) == x%pow_nat(2,n);
 { bitand_pow_2_inner(x,Z_of_uintN(x,log_nat(x)),
                      Z_of_uintN(pow_nat(2,n)-1,n),n); }
+
+lemma void bitand_flag_inner(int x, Z x_Z, Z y_Z, nat n)
+    requires x >= 0 &*& x == int_of_Z(x_Z)
+        &*&  int_of_Z(y_Z) == pow_nat(2,n);
+    ensures  (x & (pow_nat(2,n)))
+        ==   x%pow_nat(2,succ(n)) - x%(pow_nat(2,n));
+{
+    ALREADY_PROVEN()
+    switch(n) {
+    case zero:
+        switch(y_Z) {
+        case Zsign(sy): assert false;
+        case Zdigit(y_z0,yb):
+            division_unique(1,2,0,1);
+            division_unique(1,2,int_of_Z(y_z0),yb?1:0);
+            assert !!yb;
+            switch(x_Z) {
+            case Zsign(sx):
+                division_zero_unique(pow_nat(2,succ(n)),0,0);
+                division_zero_unique(pow_nat(2,n),0,0);
+                Z_and_zero(y_Z,x_Z);
+                bitand_def(x,x_Z,pow_nat(2,n),y_Z);
+                assert (x&pow_nat(2,n)) == 0;
+                assert x%pow_nat(2,n) == 0;
+                assert x%pow_nat(2,succ(n)) == 0;
+            case Zdigit(x_z0,xb):
+                bitand_def(x,x_Z,pow_nat(2,n),y_Z);
+                bitand_def(int_of_Z(x_z0),x_z0,0,y_z0);
+                Z_and_zero(x_z0,y_z0);
+                int xv = (xb ? 1 : 0);
+                assert (x&pow_nat(2,n)) == xv;
+                assert x == 2*int_of_Z(x_z0) + xv;
+                assert pow_nat(2,succ(n)) == 2;
+                assert x >= 2*int_of_Z(x_z0);
+                assert abs(x) >= 0;
+                if(2*int_of_Z(x_z0) < 0) {
+                    my_inv_mul_strict_mono_r(2,int_of_Z(x_z0), 0);
+                    assert false;
+                }
+                division_unique(x,pow_nat(2,succ(n)),
+                        int_of_Z(x_z0), xv);
+                division_unique(x,pow_nat(2,n),
+                        x, 0);
+            }
+        }
+    case succ(n0):
+        bitand_def(x,x_Z,pow_nat(2,n),y_Z);
+        switch(y_Z) {
+        case Zsign(sy):
+        case Zdigit(y_z0,yb):
+            division_unique(pow_nat(2,n),2,pow_nat(2,n0),0);
+            division_unique(pow_nat(2,n),2,int_of_Z(y_z0),yb?1:0);
+            assert !yb;
+            switch(x_Z) {
+            case Zsign(sx):
+                assert !sx;
+                assert int_of_Z(Z_and(x_Z,y_Z)) == 0;
+                division_zero_unique(pow_nat(2,succ(n)),0,0);
+                division_zero_unique(pow_nat(2,n),0,0);
+            case Zdigit(x_z0,xb):
+                div_rem(x,2);
+                div_rem(x/2,pow_nat(2,n0));
+                assert x/2 >= 0;
+
+                if(int_of_Z(x_z0) < 0) { assert false; }
+
+                division_unique(x,2,int_of_Z(x_z0),xb?1:0);
+                bitand_flag_inner(x/2,x_z0,y_z0,n0);
+                bitand_def(x/2,x_z0,pow_nat(2,n0),y_z0);
+                assert (x/2 & pow_nat(2,n0))
+                    == (x/2)%pow_nat(2,n) - (x/2)%pow_nat(2,n0);
+                assert (x & pow_nat(2,n))
+                    == 2*((x/2)%pow_nat(2,n) -
+                            (x/2)%pow_nat(2,n0));
+                div_rem(x/2,pow_nat(2,n));
+
+                my_mul_mono_r(2,(x/2)%pow_nat(2,n),
+                        pow_nat(2,n));
+                my_mul_mono_r(2,(x/2)%pow_nat(2,n0),pow_nat(2,n0));
+
+                my_mul_mono_r(2,pow_nat(2,n)*((x/2)/pow_nat(2,n)),
+                        x/2);
+                mul_3var(2,pow_nat(2,n),((x/2)/pow_nat(2,n)));
+                my_mul_mono_r(2,pow_nat(2,n0)*((x/2)/pow_nat(2,n0)),
+                        x/2);
+                mul_3var(2,pow_nat(2,n0),((x/2)/pow_nat(2,n0)));
+
+                division_unique(x,pow_nat(2,succ(n)),
+                    (x/2)/pow_nat(2,n),
+                    2*((x/2)%pow_nat(2,n)) + (xb?1:0));
+                division_unique(x,pow_nat(2,n),
+                    (x/2)/pow_nat(2,n0),
+                    2*((x/2)%pow_nat(2,n0)) + (xb?1:0));
+            }
+        }
+    }
+}
+
+lemma void bitand_flag(int x, nat n)
+    requires x >= 0;
+    ensures  (x & (pow_nat(2,n))) + x%pow_nat(2,n)
+        ==   x%pow_nat(2,succ(n));
+{
+    nat lgX = log_nat(x);
+    my_mul_mono_l(0,x,pow_nat(2,n));
+    Z x_Z = Z_of_uintN(x,succ(lgX));
+    Z y_Z = Z_of_uintN(pow_nat(2,n),succ(n));
+    bitand_flag_inner(x,x_Z,y_Z,n);
+}
+
+lemma void bitand_cases_inner(int x, Z x_Z, Z y_Z, nat n)
+    requires x >= 0 &*& x == int_of_Z(x_Z)
+        &*&  int_of_Z(y_Z) == pow_nat(2,n);
+    ensures  (x & (pow_nat(2,n))) == 0
+        ||   (x & (pow_nat(2,n))) == pow_nat(2,n);
+{
+    switch(n) {
+    case zero:
+        switch(y_Z) {
+        case Zsign(sy): assert false;
+        case Zdigit(y_z0,yb):
+            division_unique(1,2,0,1);
+            division_unique(1,2,int_of_Z(y_z0),yb?1:0);
+            assert !!yb;
+            switch(x_Z) {
+            case Zsign(sx):
+                bitand_def(x,x_Z,pow_nat(2,n),y_Z);
+            case Zdigit(x_z0,xb):
+                bitand_def(x,x_Z,pow_nat(2,n),y_Z);
+                Z_and_zero(x_z0,y_z0);
+            }
+        }
+    case succ(n0):
+        bitand_def(x,x_Z,pow_nat(2,n),y_Z);
+        switch(y_Z) {
+        case Zsign(sy):
+        case Zdigit(y_z0,yb):
+            division_unique(pow_nat(2,n),2,pow_nat(2,n0),0);
+            division_unique(pow_nat(2,n),2,int_of_Z(y_z0),yb?1:0);
+            assert !yb;
+            switch(x_Z) {
+            case Zsign(sx):
+            case Zdigit(x_z0,xb):
+                bitand_cases_inner(int_of_Z(x_z0),x_z0,y_z0,n0);
+                bitand_def(int_of_Z(x_z0),x_z0,pow_nat(2,n0),y_z0);
+            }
+        }
+    }
+}
+
+lemma void bitand_cases(int x, nat n)
+    requires x >= 0;
+    ensures  (x & (pow_nat(2,n))) == 0
+        ||   (x & (pow_nat(2,n))) == pow_nat(2,n);
+{
+    nat lgX = log_nat(x);
+    my_mul_mono_l(0,x,pow_nat(2,n));
+    Z x_Z = Z_of_uintN(x,succ(lgX));
+    Z y_Z = Z_of_uintN(pow_nat(2,n),succ(n));
+    bitand_cases_inner(x,x_Z,y_Z,n);
+}
 
 
 lemma void shiftright_div_inner(Z x_Z, nat n)
@@ -337,6 +537,7 @@ lemma void shiftright_div_inner(Z x_Z, nat n)
     ensures  int_of_Z(Z_shiftright(x_Z,n))
         ==   int_of_Z(x_Z)/pow_nat(2,n);
 {
+        ALREADY_PROVEN()
     switch(n) {
     case zero:
         division_unique(int_of_Z(x_Z),1,int_of_Z(x_Z),0);
@@ -371,6 +572,7 @@ lemma void shiftright_div(int x, nat n)
     requires x >= 0;
     ensures  x>>int_of_nat(n) == x/pow_nat(2,n);
 {
+        ALREADY_PROVEN()
     Z x_Z = Z_of_uintN(x,log_nat(x));
     shiftright_def(x,x_Z,n);
     shiftright_div_inner(x_Z,n);
@@ -380,6 +582,7 @@ lemma void ashr_euclid(int x,nat n)
     requires true;
     ensures  euclid_div_sol(x,pow_nat(2,n),ASHR(x,int_of_nat(n)),_);
 {
+        ALREADY_PROVEN()
     if(x >= 0) {
         shiftright_div(x,n);
         div_rem(x,pow_nat(2,n));
