@@ -11,7 +11,7 @@
 // fill out a 64-byte cache line
 //#define N_INTS ((CACHE_LINE-2*sizeof(void*))/(sizeof(uint32_t)))
 //#define N_INTS 12
-#define N_INTS 28
+#define N_INTS 44
 // number of bits to reserve for carries
 //#define CARRY_BITS 3
 #define CARRY_BITS 7
@@ -168,6 +168,15 @@ lemma void bi_block_extend(big_int_block* b);
     ensures  [ f]bi_block(b,  last,  fprev,  lnext2,
             append(ptrs1,ptrs2), append(chunks,chunks2));
 
+lemma void bi_block_rend(big_int_block* b, big_int_block* i);
+    requires [?f]bi_block(b, ?last, ?fprev, ?lnext, ?ptrs, ?chunks)
+        &*&  !!mem(i,ptrs);
+    ensures  [ f]bi_block(b,?last1,  fprev, i, ?ptrs1,?chunks1)
+        &*&  [ f]bi_block(i,last,last1,lnext,?ptrs2,?chunks2)
+        &*&  !!disjoint(ptrs1,ptrs2)
+        &*&  chunks == append(chunks1,chunks2)
+        &*&  ptrs == append(ptrs1,ptrs2);
+
 @*/
 
 big_int_block* new_block();
@@ -270,7 +279,8 @@ big_int* big_int_mul(const big_int* x,const big_int* y);
             &*&  [?yf]bi_big_int(y,CARRY_BITS,false,?yv); @*/
     /*@ ensures  [ xf]bi_big_int(x,CARRY_BITS,false, xv)
             &*&  [ yf]bi_big_int(y,CARRY_BITS,false, yv)
-            &*&  bi_big_int(result,CARRY_BITS,false,xv*yv); @*/
+            &*&  bi_big_int(result,CARRY_BITS,false,xv*yv)
+            &*&  result != x &*& result != y; @*/
     /*@ terminates; @*/
 
 

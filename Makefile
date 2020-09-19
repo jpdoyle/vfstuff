@@ -2,7 +2,7 @@ VF=time verifast -target Linux64 -shared -emit_vfmanifest
 
 .PHONY: all clean
 
-all: nats.vfmanifest util.vfmanifest lists.vfmanifest bitops.vfmanifest termination.vfmanifest isort.vfmanifest slowsort.vfmanifest poly.vfmanifest numtheo.vfmanifest bigint.vfmanifest bin/calc bin/calc-dbg bin/fibber
+all: nats.vfmanifest util.vfmanifest lists.vfmanifest bitops.vfmanifest termination.vfmanifest isort.vfmanifest slowsort.vfmanifest poly.vfmanifest numtheo.vfmanifest bigint.vfmanifest bi_big_int_mul.vfmanifest bin/calc bin/calc-dbg bin/fibber
 
 clean:
 	rm *.vfmanifest
