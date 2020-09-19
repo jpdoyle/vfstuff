@@ -357,27 +357,27 @@ lemma void bitor_no_overlap_inner(int x, Z x_Z, int y, Z y_Z, nat n);
         ;
     ensures  (x*pow_nat(2,n) | y) == x*pow_nat(2,n) + y;
 
-fixpoint nat log_nat_inner(int x,nat n) {
+fixpoint nat npow2_inner(int x,nat n) {
     switch(n) {
     case zero: return zero;
     case succ(n0):
-        return (x == 0 ? zero : succ(log_nat_inner(x/2,n0)));
+        return (x == 0 ? zero : succ(npow2_inner(x/2,n0)));
     }
 }
 
-fixpoint nat log_nat(int x) {
-    return log_nat_inner(x,nat_of_int(abs(x)));
+fixpoint nat npow2(int x) {
+    return npow2_inner(x,nat_of_int(abs(x)));
 }
 
-lemma_auto(log_nat_inner(x,n))
-void log_nat_prop_inner(int x, nat n);
+lemma_auto(npow2_inner(x,n))
+void npow2_prop_inner(int x, nat n);
     requires abs(x) <= int_of_nat(n);
-    ensures  pow_nat(2,log_nat_inner(x,n)) > abs(x);
+    ensures  pow_nat(2,npow2_inner(x,n)) > abs(x);
 
-lemma_auto(log_nat(x))
-void log_nat_prop(int x);
+lemma_auto(npow2(x))
+void npow2_prop(int x);
     requires true;
-    ensures  pow_nat(2,log_nat(x)) > abs(x);
+    ensures  pow_nat(2,npow2(x)) > abs(x);
 
 
 lemma_auto(x|y)

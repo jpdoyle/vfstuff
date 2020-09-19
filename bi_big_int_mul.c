@@ -14,7 +14,7 @@
 void big_int_tiny_mul(int32_t s, big_int* x)
     /*@ requires bi_big_int(x,?carry,?und,?v)
             &*&  exists<nat>(?lg2)
-            &*&  abs(s) < pow_nat(2,lg2)
+            &*&  abs(s) <= pow_nat(2,lg2)
             &*&  carry >= int_of_nat(lg2); @*/
     /*@ ensures  bi_big_int(x,carry-int_of_nat(lg2), und||(s<0), s*v);
       @*/
@@ -82,10 +82,10 @@ void big_int_tiny_mul(int32_t s, big_int* x)
                 if(s*i_v > upper2) {
                     if(s < 0) {
                         my_mul_mono_r(-s,-i_v,upper);
-                        my_mul_mono_l(-s,pow_nat(2,lg2)-1,upper);
+                        my_mul_mono_l(-s,pow_nat(2,lg2),upper);
                     } else {
                         my_mul_mono_r(s,i_v,upper);
-                        my_mul_mono_l(s,pow_nat(2,lg2)-1,upper);
+                        my_mul_mono_l(s,pow_nat(2,lg2),upper);
                     }
 
                     assert false;
@@ -100,10 +100,10 @@ void big_int_tiny_mul(int32_t s, big_int* x)
                     assert lower2 == -upper2;
                     if(s >= 0) {
                         my_mul_mono_r(s,-upper,i_v);
-                        my_mul_mono_l((-pow_nat(2,lg2)+1),-s,upper);
+                        my_mul_mono_l((-pow_nat(2,lg2)),-s,upper);
                     } else {
                         my_mul_mono_r(-s,-upper,-i_v);
-                        my_mul_mono_l(-pow_nat(2,lg2)+1,s,upper);
+                        my_mul_mono_l(-pow_nat(2,lg2),s,upper);
                     }
 
                     assert false;

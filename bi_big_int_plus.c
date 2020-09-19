@@ -46,7 +46,7 @@ bi_block_reduce(big_int_block* first, big_int_block* last,
     big_int_block* i = first;
     int32_t carry = 0;
 
-    /*@ nat len_bits = log_nat(length(chunks)); @*/
+    /*@ nat len_bits = npow2(length(chunks)); @*/
     /*@ int extra_blocks = 1; @*/
 
     do

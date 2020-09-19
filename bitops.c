@@ -186,10 +186,10 @@ lemma void bitor_no_overlap_inner(int x, Z x_Z, int y, Z y_Z, nat n)
 }
 
 
-lemma_auto(log_nat_inner(x,n))
-void log_nat_prop_inner(int x, nat n)
+lemma_auto(npow2_inner(x,n))
+void npow2_prop_inner(int x, nat n)
     requires abs(x) <= int_of_nat(n);
-    ensures  pow_nat(2,log_nat_inner(x,n)) > abs(x);
+    ensures  pow_nat(2,npow2_inner(x,n)) > abs(x);
 {
         ALREADY_PROVEN()
     switch(n) {
@@ -197,20 +197,41 @@ void log_nat_prop_inner(int x, nat n)
     case succ(n0):
         if(x != 0) {
             div_rem(x,2);
-            log_nat_prop_inner(x/2,n0);
-            assert abs(x/2) < pow_nat(2,log_nat_inner(x,n));
-            my_mul_mono_r(2,abs(x/2)+1,pow_nat(2,log_nat_inner(x,n)));
+            npow2_prop_inner(x/2,n0);
+            assert abs(x/2) < pow_nat(2,npow2_inner(x,n));
+            my_mul_mono_r(2,abs(x/2)+1,pow_nat(2,npow2_inner(x,n)));
         }
     }
 }
 
 
-lemma_auto(log_nat(x))
-void log_nat_prop(int x)
+lemma_auto(npow2(x))
+void npow2_prop(int x)
     requires true;
-    ensures  pow_nat(2,log_nat(x)) > abs(x);
-{ log_nat_prop_inner(x,nat_of_int(abs(x))); }
+    ensures  pow_nat(2,npow2(x)) > abs(x);
+{ npow2_prop_inner(x,nat_of_int(abs(x))); }
 
+lemma void npow2_minimal_inner(int x,nat n, nat m)
+    requires pow_nat(2,n) > abs(x);
+    ensures  int_of_nat(n) >= int_of_nat(npow2_inner(x,m));
+{
+    switch(m) {
+    case zero:
+    case succ(m0):
+        switch(n) {
+        case zero:
+        case succ(n0):
+            div_rem(x,2);
+            my_inv_mul_strict_mono_r(2,abs(x/2),pow_nat(2,n0));
+            npow2_minimal_inner(x/2,n0,m0);
+        }
+    }
+}
+
+lemma void npow2_minimal(int x,nat n)
+    requires pow_nat(2,n) > abs(x);
+    ensures  int_of_nat(n) >= int_of_nat(npow2(x));
+{ npow2_minimal_inner(x,n,nat_of_int(abs(x))); }
 
 lemma_auto(x|y)
 void bitor_commutes(int x, int y)
@@ -218,8 +239,8 @@ void bitor_commutes(int x, int y)
     ensures  (x | y) == (y|x);
 {
         ALREADY_PROVEN()
-    Z x_Z = Z_of_uintN(x,log_nat(x));
-    Z y_Z = Z_of_uintN(y,log_nat(y));
+    Z x_Z = Z_of_uintN(x,npow2(x));
+    Z y_Z = Z_of_uintN(y,npow2(y));
     bitor_def(x,x_Z,y,y_Z);
     bitor_def(y,y_Z,x,x_Z);
     Z_or_commutes(x_Z,y_Z);
@@ -231,9 +252,9 @@ lemma void bitor_no_overlap(int x, int y, nat n)
     ensures  (x*pow_nat(2,n) | y) == x*pow_nat(2,n) + y;
 {
         ALREADY_PROVEN()
-    nat lgY = log_nat(y);
+    nat lgY = npow2(y);
     my_mul_mono_l(0,x,pow_nat(2,n));
-    Z x_Z = Z_of_uintN(x*pow_nat(2,n),log_nat(x*pow_nat(2,n)));
+    Z x_Z = Z_of_uintN(x*pow_nat(2,n),npow2(x*pow_nat(2,n)));
     Z y_Z = Z_of_uintN(y,lgY);
     bitor_no_overlap_inner(x, x_Z, y, y_Z, n);
 }
@@ -367,7 +388,7 @@ lemma void bitand_pow_2_inner(int x, Z x_Z, Z y_Z, nat n)
 lemma void bitand_pow_2(int x, nat n)
     requires x >= 0;
     ensures  (x & (pow_nat(2,n)-1)) == x%pow_nat(2,n);
-{ bitand_pow_2_inner(x,Z_of_uintN(x,log_nat(x)),
+{ bitand_pow_2_inner(x,Z_of_uintN(x,npow2(x)),
                      Z_of_uintN(pow_nat(2,n)-1,n),n); }
 
 lemma void bitand_flag_inner(int x, Z x_Z, Z y_Z, nat n)
@@ -472,7 +493,7 @@ lemma void bitand_flag(int x, nat n)
     ensures  (x & (pow_nat(2,n))) + x%pow_nat(2,n)
         ==   x%pow_nat(2,succ(n));
 {
-    nat lgX = log_nat(x);
+    nat lgX = npow2(x);
     my_mul_mono_l(0,x,pow_nat(2,n));
     Z x_Z = Z_of_uintN(x,succ(lgX));
     Z y_Z = Z_of_uintN(pow_nat(2,n),succ(n));
@@ -524,7 +545,7 @@ lemma void bitand_cases(int x, nat n)
     ensures  (x & (pow_nat(2,n))) == 0
         ||   (x & (pow_nat(2,n))) == pow_nat(2,n);
 {
-    nat lgX = log_nat(x);
+    nat lgX = npow2(x);
     my_mul_mono_l(0,x,pow_nat(2,n));
     Z x_Z = Z_of_uintN(x,succ(lgX));
     Z y_Z = Z_of_uintN(pow_nat(2,n),succ(n));
@@ -573,7 +594,7 @@ lemma void shiftright_div(int x, nat n)
     ensures  x>>int_of_nat(n) == x/pow_nat(2,n);
 {
         ALREADY_PROVEN()
-    Z x_Z = Z_of_uintN(x,log_nat(x));
+    Z x_Z = Z_of_uintN(x,npow2(x));
     shiftright_def(x,x_Z,n);
     shiftright_div_inner(x_Z,n);
 }
