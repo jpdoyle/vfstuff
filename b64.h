@@ -21,11 +21,13 @@
 #endif
 #endif
 
+/*@
 #if 1
 #define ALREADY_PROVEN() {}
 #else
 #define ALREADY_PROVEN() assume(false);
 #endif
+@*/
 
 /*@
 

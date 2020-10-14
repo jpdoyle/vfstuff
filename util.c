@@ -828,6 +828,39 @@ lemma void mod_plus(int x, int y, int d)
 
 }
 
+lemma void max_of_correct(int a, int b, int c)
+    requires true;
+    ensures  max_of(a,b) >= a &*& max_of(a,b) >= b
+        &*&  (c >= a && c >= b) == (c >= max_of(a,b));
+{
+    if(a >= b) {} else {}
+    if(c >= a) {} else {}
+    if(c >= b) {} else {}
+}
+
+lemma_auto(max_of(a,b))
+void max_of_auto1(int a, int b)
+    requires true;
+    ensures  max_of(a,b) >= a;
+{}
+
+lemma_auto(max_of(a,b))
+void max_of_auto2(int a, int b)
+    requires true;
+    ensures  max_of(a,b) == max_of(b,a);
+{}
+
+lemma void min_of_correct(int a, int b, int c)
+    requires true;
+    ensures  min_of(a,b) <= a &*& min_of(a,b) <= b
+        &*&  (c <= a && c <= b) == (c <= min_of(a,b));
+{
+    if(a <= b) {} else {}
+    if(c <= a) {} else {}
+    if(c <= b) {} else {}
+}
+
+
 lemma void euclid_div_zero(int d, int q, int r)
     requires d > 0 &*& r >= 0 &*& r < d &*& 0 == q*d + r;
     ensures  q == 0 &*& r == 0;

@@ -65,15 +65,58 @@ lemma_auto void bi_block_opt_inv()
         &*&  !!forall(chunks, (bounded)(-pow_nat(2,N31),pow_nat(2,N31)-1))
         &*&  length(ptrs)*N_INTS == length(chunks)
         &*&  (length(chunks) == 0) == (b == 0)
+        &*&  (length(ptrs) == 0) == (b == 0)
+        &*&  (length(ptrs) <= 1) == (b == last)
+        &*&  (b == 0) == (last == 0)
         ;
 {
         ALREADY_PROVEN()
     if(!(true
             &&  !!forall(chunks, (bounded)(-pow_nat(2,N31),pow_nat(2,N31)-1))
             &&  length(ptrs)*N_INTS == length(chunks)
-            &&  (length(chunks) == 0) == (b == 0))) {
+            &&  (length(chunks) == 0) == (b == 0)
+            &&  (length(ptrs) == 0) == (b == 0)
+            &&  (length(ptrs) <= 1) == (b == last)
+            &&  (b == 0) == (last == 0)
+            )) {
         open bi_block_opt(_,_,_,_,_,_);
-        if(b) bi_block_inv();
+        if(length(ptrs) < 1 && b) assert false;
+        if(b) {
+            bi_block_inv();
+            if(last == 0) assert false;
+            note( last != 0);
+            if(b == last) {
+                assert length(ptrs) == 1;
+                if(length(ptrs) > 1) assert false;
+                note_weird(!(length(ptrs) <= 1));
+                true_fact(length(ptrs) <= 1);
+                true_fact(b == last);
+                equal_facts((length(ptrs) <= 1), (b == last));
+            } else {
+                assert length(ptrs) > 1;
+                note_weird((length(ptrs) <= 1));
+                note( !(b == last));
+                if((b == last) != (length(ptrs) <= 1))
+                    nonequal_facts((length(ptrs) <= 1), (b == last));
+            }
+        } else {
+            if(last != 0) assert false;
+            note_eq(b,last);
+            note_eq(ptrs,nil);
+            note_eq(length(ptrs),0);
+            TRIVIAL_LIST(ptrs)
+            if(length(ptrs) > 1) assert false;
+            if(!(length(ptrs) <= 1)) assert false;
+            if(0 > 1) assert false;
+            if(0 <= 1) {} else { assert false; }
+            if((0 <= 1) == true) {
+            } else {
+                note_weird(length(ptrs) <= 1);
+                assert false;
+            }
+            note(0 <= 1);
+            note(length(ptrs) <= 1);
+        }
         assert false;
     }
 }
@@ -206,6 +249,38 @@ lemma void bi_block_extend(big_int_block* b)
             append(chunks,chunks2));
 }
 
+lemma void bi_block_rend(big_int_block* b, big_int_block* i)
+    requires [?f]bi_block(b, ?last, ?fprev, ?lnext, ?ptrs, ?chunks)
+        &*&  !!mem(i,ptrs) &*& b != i;
+    ensures  [ f]bi_block(b,?last1,  fprev, i, ?ptrs1,?chunks1)
+        &*&  [ f]bi_block(i,last,last1,lnext,?ptrs2,?chunks2)
+        &*&  !!disjoint(ptrs1,ptrs2)
+        &*&  chunks == append(chunks1,chunks2)
+        &*&  ptrs == append(ptrs1,ptrs2);
+{
+    open bi_block(b,_,_,_,_,_);
+    assert [f]b->next |-> ?next;
+    if(i == next) {
+        close [f]bi_block(b,b,fprev,i,_,_);
+    } else {
+        assert [f]b->chunks[..N_INTS] |-> ?bchunks;
+        assert [f]bi_block(next,_,_,_,_,?rest);
+        assert chunks == append(bchunks,rest);
+
+        bi_block_rend(next,i);
+
+        assert  [ f]bi_block(next,?nlast, b, i, ?ptrs1,?chunks1)
+            &*& [ f]bi_block(i,last,nlast,lnext,?ptrs2,?chunks2);
+
+        assert tail(ptrs) == append(ptrs1,ptrs2);
+        assert rest == append(chunks1,chunks2);
+        append_assoc(bchunks,chunks1,chunks2);
+        assert append(bchunks,rest) == append(append(bchunks,chunks1),chunks2);
+
+        close [f]bi_block(b,nlast,fprev,i,cons(b,ptrs1),append(bchunks,chunks1));
+    }
+}
+
   @*/
 
 big_int_block* new_block()
@@ -251,6 +326,7 @@ void big_int_set(big_int* x,int32_t v)
     /*@ ensures  bi_big_int(x, CARRY_BITS, false, v); @*/
     /*@ terminates; @*/
 {
+    /*@ ALREADY_PROVEN() @*/
     uint64_t abs_v = v < 0 ? (uint64_t)-(int64_t)v : (uint64_t)(int64_t)v;
     /*@ {
         shiftleft_def(1,nat_of_int(CHUNK_BITS));
@@ -351,15 +427,138 @@ big_int* new_big_int_from(int32_t v)
     return ret;
 }
 
+big_int* big_int_clone_into(big_int* ret,const big_int* x)
+    /*@ requires [?f]bi_big_int(x,?carry,?under,?v)
+            &*&  bi_big_int(ret,_,_,_); @*/
+    /*@ ensures  [ f]bi_big_int(x, carry, under, v)
+            &*&  bi_big_int(result,carry, under, v)
+            &*&  result == ret; @*/
+    /*@ terminates; @*/
+{
+    /*@ open bi_big_int(x,_,_,_); @*/
+    big_int_block* i = ret->first;
+    big_int_block* x_i = x->first;
+    ret->is_pos = x->is_pos;
+    /*@ close [f]bi_block_opt(x_i,?xlast,?prev,0,?xptrs,
+                                ?chunks); @*/
+    /*@ assert let(pow_nat(2,nat_of_int(31-carry))-1,?upper); @*/
+    /*@ assert let(under ? -upper : 0, ?lower); @*/
+
+    do
+        /*@ requires bi_block(i,?ilast,?iprev,0,?iptrs,_)
+                &*&  [f]bi_block_opt(x_i,?loop_xlast,?xprev,0,?loop_xptrs,
+                                ?loop_chunks)
+                &*&  !!forall(loop_chunks,(bounded)(-upper,upper))
+                &*&  !!forall(loop_chunks,(bounded)(lower,upper))
+                &*&  ret->last |-> ilast
+                ; @*/
+        /*@ ensures  bi_block(old_i,?new_ilast,iprev,0,_,?ichunks)
+                &*&  [f]bi_block_opt(old_x_i,loop_xlast,xprev,0,loop_xptrs,
+                                loop_chunks)
+                &*&  poly_eval(ichunks,CHUNK_BASE)
+                    == poly_eval(loop_chunks,CHUNK_BASE)
+                &*&  !!forall(ichunks,(bounded)(-upper,upper))
+                &*&  !!forall(ichunks,(bounded)(lower,upper))
+                &*&  ret->last |-> new_ilast
+                ; @*/
+        /*@ decreases max_of(length(iptrs),length(loop_xptrs)); @*/
+    {
+        size_t block_i;
+        if(x_i) {
+            for(block_i = 0; block_i < N_INTS; ++block_i)
+                /*@ requires block_i >= 0 &*& block_i <= N_INTS
+                        &*&  i->chunks[block_i..N_INTS] |-> _
+                        &*&  [f]x_i->chunks[block_i..N_INTS] |-> ?block
+                        ; @*/
+                /*@ ensures  i->chunks[old_block_i..N_INTS] |-> block
+                        &*&  [f]x_i->chunks[old_block_i..N_INTS] |-> block
+                        ; @*/
+                /*@ decreases N_INTS-block_i; @*/
+            {
+                /*@ ints_limits2(&x_i->chunks[block_i]); @*/
+                i->chunks[block_i] = *(&x_i->chunks[0]+block_i);
+            }
+        } else {
+            for(block_i = 0; block_i < N_INTS; ++block_i)
+                /*@ requires block_i >= 0 &*& block_i <= N_INTS
+                        &*&  i->chunks[block_i..N_INTS] |-> _
+                        ; @*/
+                /*@ ensures  i->chunks[old_block_i..N_INTS] |-> ?block
+                        &*&  !!all_eq(block,0)
+                        &*&  !!forall(block,(bounded)(-upper,upper))
+                        &*&  !!forall(block,(bounded)(lower,upper))
+                        ; @*/
+                /*@ decreases N_INTS-block_i; @*/
+            {
+                i->chunks[block_i] = 0;
+            }
+        }
+        /*@ assert let(x_i,?orig_x_i); @*/
+        if(x_i) x_i = x_i->next;
+
+        /*@ if(!x_i) {
+          close [f]bi_block_opt(x_i,x_i,0,0,nil, _);
+        } else {
+            assert [f]orig_x_i->chunks[..N_INTS] |-> ?this_chunk;
+            assert [f]bi_block(x_i,loop_xlast,_,_,_,?rest);
+            assert loop_chunks == append(this_chunk,rest);
+            forall_append(this_chunk,rest,(bounded)(-upper,upper));
+            forall_append(this_chunk,rest,(bounded)(lower,upper));
+
+            close [f]bi_block_opt(x_i,loop_xlast,_,_,_, _);
+        }@*/
+
+        if(x_i && !i->next) {
+            big_int_block* last = new_block();
+            i->next = last;
+            last->prev = i;
+            ret->last = last;
+            /*@ note(last != 0); @*/
+            /*@ note(last != i); @*/
+            /*@ assert last->next |-> 0; @*/
+            /*@ close bi_block(last,last,i,0,_,_); @*/
+        }
+        /*@ assert let(i,?orig_i); @*/
+        i = i->next;
+        /*@ assert let(x_i,?next_x_i); @*/
+        /*@ assert let(i,?next_i); @*/
+
+        /*@ if(!i && !x_i) {
+          close bi_block(orig_i,orig_i,iprev,0,_,_);
+        } @*/
+
+        /*@ recursive_call(); @*/
+
+        /*@ {
+            assert  ret->last |-> ?final_ilast;
+            assert old_i->chunks[..N_INTS] |-> ?old_i_chunks;
+            assert bi_block(next_i,final_ilast,_,_,?ptrs,?rest);
+            forall_append(old_i_chunks,rest,(bounded)(-upper,upper));
+            forall_append(old_i_chunks,rest,(bounded)(lower,upper));
+            if(mem(old_i,ptrs)) {
+                close bi_block(old_i,old_i,_,_,_,_);
+                bi_block_disjoint(old_i,next_i);
+                assert false;
+            }
+
+
+            close bi_block(old_i,final_ilast,_,_,cons(old_i,ptrs),_);
+
+        } @*/
+    } while(i || x_i);
+
+    return ret;
+}
+
 big_int* big_int_clone(const big_int* x)
     /*@ requires [?f]bi_big_int(x,?carry,?under,?v); @*/
     /*@ ensures  [ f]bi_big_int(x, carry, under, v)
             &*&  bi_big_int(result,carry, under, v); @*/
     /*@ terminates; @*/
 {
+    /*@ ALREADY_PROVEN() @*/
     big_int* ret = malloc(sizeof(big_int));
     if(!ret) { abort(); }
-    ret->is_pos = true;
     ret->first = new_block();
     ret->last  = ret->first;
     /*@ open bi_big_int(x,_,_,_); @*/

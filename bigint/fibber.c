@@ -13,6 +13,16 @@
 #endif
 @*/
 
+#if 0
+#ifdef __FILE__
+#define FIB_LINEAR_MAIN
+#endif
+#else
+#ifdef __FILE__
+#define FIB_LOG_MAIN
+#endif
+#endif
+
 /*@
 
 fixpoint int fib(nat n) {
@@ -117,7 +127,11 @@ lemma void fib_fast(nat n)
 
   @*/
 
+#ifndef FIB_LINEAR_MAIN
 int fib_linear(void)
+#else
+int main(void)
+#endif
     /*@ requires true; @*/
     /*@ ensures  result == 0; @*/
 {
@@ -129,6 +143,9 @@ int fib_linear(void)
       bi_big_int_unique(f_n,f_n_1);
       assert false;
     } @*/
+
+    if(sizeof(big_int_block) > INT_MAX) abort();
+    printf("%d\n",(int)sizeof(big_int_block));
 
     do
         /*@ requires n |-> _; @*/
@@ -182,23 +199,22 @@ int fib_linear(void)
     big_int_reduce(f_n_1);
 
     {
-        big_int* res = big_int_mul(f_n,f_n_1);
+        /* big_int* res = big_int_mul(f_n,f_n_1); */
         //char* x_hex = big_int_to_hex(f_n);
         // /*@ assert string(x_hex,?cs)
         //    &*& base_n(hex_chars(),reverse(cs),_,fib(nat_of_int(orig_n))); @*/
 
 
-    /*@ my_mul_mono_r(fib(nat_of_int(orig_n))
+    /* @ my_mul_mono_r(fib(nat_of_int(orig_n))
                     ,0,fib(nat_of_int(orig_n+1))); @*/
-        char* x_hex = big_int_to_hex(res);
+        char* x_hex = big_int_to_hex(f_n);
          /*@ assert string(x_hex,?cs)
             &*& base_n(hex_chars(),reverse(cs),_,
-                    fib(nat_of_int(orig_n))
-                    *fib(nat_of_int(orig_n+1))); @*/
+                    fib(nat_of_int(orig_n))); @*/
         printf("%s\n",x_hex);
         free(x_hex);
         /*@ leak base_n(_,_,_,_); @*/
-        free_big_int_inner(res);
+        //free_big_int_inner(res);
     }
 
     ///*@ open bi_big_int(x,?car,?und,_); @*/
@@ -211,7 +227,7 @@ int fib_linear(void)
     return 0;
 }
 
-#ifndef __FILE__
+#ifndef FIB_LOG_MAIN
 int fib_log(void)
 #else
 int main(void)
@@ -301,7 +317,7 @@ int main(void)
         /*@ assert succ(nat_of_int(2*sofar+1)) == nat_of_int(2*sofar+2); @*/
 
         // -2*fib(n+1)
-        big_int* f_2n_r = big_int_small_mul(NULL, -2, f_n_1);
+        big_int* f_2n_r = big_int_small_mul(NULL,NULL,-2, f_n_1);
         // -2*fib(n+1) + fib(n)
         /*@ bi_big_int_unique(f_2n_r,f_n); @*/
         big_int_pluseq(f_2n_r,f_n);

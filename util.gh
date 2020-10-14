@@ -169,6 +169,32 @@ lemma void note(bool x)
     ensures  x == true;
 {}
 
+lemma void note_weird(bool x)
+    requires x != true;
+    ensures  x == false;
+{}
+
+lemma void equal_facts(bool x, bool y)
+    requires (!!x && !!y) || (!x && !y);
+    ensures  x == y;
+{}
+
+lemma void nonequal_facts(bool x, bool y)
+    requires x != y;
+    ensures x ? !y : !!y;
+{}
+
+lemma void true_fact(bool x)
+    requires !!x;
+    ensures  x == true;
+{}
+
+lemma void false_fact(bool x)
+    requires !x;
+    ensures  x == false;
+{}
+
+
 lemma void note_eq<t>(t x, t y)
     requires x == y;
     ensures  x == y;
@@ -592,6 +618,26 @@ fixpoint bool bounded(int min, int max, int x) {
 
 fixpoint int max_of(int a,int b) { return a > b ? a : b; }
 fixpoint int min_of(int a,int b) { return a < b ? a : b; }
+
+lemma void max_of_correct(int a, int b, int c);
+    requires true;
+    ensures  max_of(a,b) >= a &*& max_of(a,b) >= b
+        &*&  (c >= a && c >= b) == (c >= max_of(a,b));
+
+lemma void min_of_correct(int a, int b, int c);
+    requires true;
+    ensures  min_of(a,b) <= a &*& min_of(a,b) <= b
+        &*&  (c <= a && c <= b) == (c <= min_of(a,b));
+
+lemma_auto(max_of(a,b))
+void max_of_auto1(int a, int b);
+    requires true;
+    ensures  max_of(a,b) >= a;
+
+lemma_auto(max_of(a,b))
+void max_of_auto2(int a, int b);
+    requires true;
+    ensures  max_of(a,b) == max_of(b,a);
 
 lemma//_auto(bounded(l,h,x))
 void bounded_cases(int l, int h, int x);

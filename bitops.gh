@@ -379,6 +379,32 @@ void npow2_prop(int x);
     requires true;
     ensures  pow_nat(2,npow2(x)) > abs(x);
 
+lemma void npow2_minimal(int x,nat n);
+    requires pow_nat(2,n) > abs(x);
+    ensures  int_of_nat(n) >= int_of_nat(npow2(x));
+
+
+fixpoint nat log_ceil_inner(int x,nat n,nat sofar) {
+    switch(n) {
+    case zero: return sofar;
+    case succ(n0):
+        return ((x >= -pow_nat(2,sofar) && x <= pow_nat(2,sofar))
+            ? sofar : log_ceil_inner(x,n0,succ(sofar)));
+    }
+}
+
+fixpoint nat log_ceil(int x) {
+    return log_ceil_inner(x,nat_of_int(abs(x)),zero);
+}
+
+lemma_auto(log_ceil(x))
+void log_ceil_prop(int x);
+    requires true;
+    ensures  pow_nat(2,log_ceil(x)) >= abs(x);
+
+lemma void log_ceil_minimal(int x,nat n);
+    requires pow_nat(2,n) >= abs(x);
+    ensures  int_of_nat(n) >= int_of_nat(log_ceil(x));
 
 lemma_auto(x|y)
 void bitor_commutes(int x, int y);
@@ -421,6 +447,11 @@ lemma void shiftright_div_inner(Z x_Z, nat n);
 lemma void shiftright_div(int x, nat n);
     requires x >= 0;
     ensures  x>>int_of_nat(n) == x/pow_nat(2,n);
+
+//lemma void shiftright_div_rem(int x, nat n);
+//    requires x >= 0;
+//    ensures  x>>int_of_nat(n) == x/pow_nat(2,n)
+//        &*&  (x&((1<<int_of_nat(n))-1)) == x%pow_nat(2,n);
 
 #endif
 

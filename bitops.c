@@ -233,6 +233,51 @@ lemma void npow2_minimal(int x,nat n)
     ensures  int_of_nat(n) >= int_of_nat(npow2(x));
 { npow2_minimal_inner(x,n,nat_of_int(abs(x))); }
 
+
+
+lemma
+void log_ceil_prop_inner(int x, nat n, nat sofar)
+    requires abs(x)-pow_nat(2,sofar) <= int_of_nat(n);
+    ensures  pow_nat(2,log_ceil_inner(x,n,sofar)) >= abs(x);
+{
+    switch(n) {
+    case zero:
+    case succ(n0):
+        if(!(x >= -pow_nat(2,sofar) && x <= pow_nat(2,sofar))) {
+            log_ceil_prop_inner(x,n0,succ(sofar));
+        }
+    }
+}
+
+
+lemma_auto(log_ceil(x))
+void log_ceil_prop(int x)
+    requires true;
+    ensures  pow_nat(2,log_ceil(x)) >= abs(x);
+{ log_ceil_prop_inner(x,nat_of_int(abs(x)),zero); }
+
+lemma void log_ceil_minimal_inner(int x,nat n, nat m, nat sofar)
+    requires pow_nat(2,n)*pow_nat(2,sofar) >= abs(x);
+    ensures  int_of_nat(n) + int_of_nat(sofar)
+        >= int_of_nat(log_ceil_inner(x,m,sofar));
+{
+    switch(m) {
+    case zero:
+    case succ(m0):
+        switch(n) {
+        case zero:
+        case succ(n0):
+            mul_3var(pow_nat(2,n0),2,pow_nat(2,sofar));
+            log_ceil_minimal_inner(x,n0,m0,succ(sofar));
+        }
+    }
+}
+
+lemma void log_ceil_minimal(int x,nat n)
+    requires pow_nat(2,n) >= abs(x);
+    ensures  int_of_nat(n) >= int_of_nat(log_ceil(x));
+{ log_ceil_minimal_inner(x,n,nat_of_int(abs(x)),zero); }
+
 lemma_auto(x|y)
 void bitor_commutes(int x, int y)
     requires x >= 0 && y >= 0;

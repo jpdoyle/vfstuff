@@ -1,4 +1,5 @@
 .*.sw*
 Session.vim
 *.vfmanifest
+*.vfmanifest.done
 bin/

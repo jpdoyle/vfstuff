@@ -88,6 +88,9 @@ lemma_auto void bi_block_opt_inv();
         &*&  !!forall(chunks, (bounded)(-pow_nat(2,N31),pow_nat(2,N31)-1))
         &*&  length(ptrs)*N_INTS == length(chunks)
         &*&  (length(chunks) == 0) == (b == 0)
+        &*&  (length(ptrs) == 0) == (b == 0)
+        &*&  (length(ptrs) <= 1) == (b == last)
+        &*&  (b == 0) == (last == 0)
         ;
 
 //fixpoint int signed_center(nat bits,int thresh,int x) {
@@ -170,7 +173,7 @@ lemma void bi_block_extend(big_int_block* b);
 
 lemma void bi_block_rend(big_int_block* b, big_int_block* i);
     requires [?f]bi_block(b, ?last, ?fprev, ?lnext, ?ptrs, ?chunks)
-        &*&  !!mem(i,ptrs);
+        &*&  !!mem(i,ptrs) &*& b != i;
     ensures  [ f]bi_block(b,?last1,  fprev, i, ?ptrs1,?chunks1)
         &*&  [ f]bi_block(i,last,last1,lnext,?ptrs2,?chunks2)
         &*&  !!disjoint(ptrs1,ptrs2)
@@ -210,6 +213,14 @@ big_int* big_int_clone(const big_int* x);
     /*@ requires [?f]bi_big_int(x,?carry,?under,?v); @*/
     /*@ ensures  [ f]bi_big_int(x, carry, under, v)
             &*&  bi_big_int(result,carry, under, v); @*/
+    /*@ terminates; @*/
+
+big_int* big_int_clone_into(big_int* ret,const big_int* x);
+    /*@ requires [?f]bi_big_int(x,?carry,?under,?v)
+            &*&  bi_big_int(ret,_,_,_); @*/
+    /*@ ensures  [ f]bi_big_int(x, carry, under, v)
+            &*&  bi_big_int(result,carry, under, v)
+            &*&  result == ret; @*/
     /*@ terminates; @*/
 
 big_int* big_int_from_hex(const char* s);
@@ -266,13 +277,23 @@ void big_int_pluseq(big_int* a,const big_int* b);
             :    [ bf]bi_big_int(b, b_carry, b_under, bv); @*/
     /*@ terminates; @*/
 
-big_int* big_int_small_mul(big_int* dst,int32_t s,const big_int* x);
+big_int* big_int_small_mul(big_int* dst,big_int* scratch,int32_t s,
+                           const big_int* x);
     /*@ requires [?f]bi_big_int(x,CARRY_BITS,false,?v)
-            &*&  dst == 0 ? emp
-            :    bi_big_int(dst,CARRY_BITS,false,0); @*/
+            &*&  (dst != 0 ? bi_big_int(dst,CARRY_BITS,false,0) : emp)
+            &*&  (scratch != 0 ? bi_big_int(scratch,_,_,_) : emp)
+            ; @*/
     /*@ ensures  [ f]bi_big_int(x,CARRY_BITS,false, v)
-            &*&  bi_big_int(result,CARRY_BITS,false,s*v); @*/
+            &*&  bi_big_int(result,CARRY_BITS,false,s*v)
+            &*&  (scratch != 0 ? bi_big_int(scratch,_,_,_) : emp)
+            ; @*/
     /*@ terminates; @*/
+
+//big_int* big_int_small_mul(/*big_int* dst,*/int32_t s,const big_int* x);
+//    /*@ requires [?f]bi_big_int(x,CARRY_BITS,false,?v); @*/
+//    /*@ ensures  [ f]bi_big_int(x,CARRY_BITS,false, v)
+//            &*&  bi_big_int(result,CARRY_BITS,false,s*v); @*/
+//    /*@ terminates; @*/
 
 big_int* big_int_mul(const big_int* x,const big_int* y);
     /*@ requires [?xf]bi_big_int(x,CARRY_BITS,false,?xv)
@@ -285,4 +306,4 @@ big_int* big_int_mul(const big_int* x,const big_int* y);
 
 
 #endif
-	
+

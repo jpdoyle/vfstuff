@@ -4,11 +4,13 @@
 /*@ #define N30 (nat_predecessor(N31))
   @*/
 
+/*@
 #if 1
 #define ALREADY_PROVEN() {}
 #else
 #define ALREADY_PROVEN() assume(false);
 #endif
+@*/
 
 INLINE big_int_block*
 bi_block_reduce(big_int_block* first, big_int_block* last,
