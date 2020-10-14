@@ -1,5 +1,5 @@
 #include "bi_big_int.h"
-/*@ #include "lists.gh" @*/
+/*@ #include "../lists.gh" @*/
 /*@ #include <arrays.gh> @*/
 
 #if 1

@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <limits.h>
-#include "bi_big_int.h"
+#include "lorg/bi_big_int.h"
 /*@ #include "util.gh" @*/
 /*@ #include "poly.gh" @*/
 

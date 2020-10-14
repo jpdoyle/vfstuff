@@ -584,6 +584,27 @@ uint8_t* bytes_of_hex(size_t len, char* s, size_t* outlen)
     return ret;
 }
 
+char b64_of_byte(uint8_t n)
+    /*@ requires 0 <= n &*& n < 64; @*/
+    /*@ ensures  some(result) == nth_of(n,b64_chars()); @*/
+    /*@ terminates; @*/
+
+{
+    /*@  ALREADY_PROVEN() @*/
+    /*@ b64_cases(n); @*/
+    uint8_t thresh0 = (uint8_t)('Z'-'A');
+    uint8_t thresh1 = (uint8_t)('z'-'a' + thresh0 + 1);
+    uint8_t thresh2 = (uint8_t)('9'-'0' + thresh1 + 1);
+
+    if(n >= 64)             { /*@ assert false; @*/ abort();      }
+    else if(n <= thresh0)   { return (char)('A' + n);             }
+    else if(n <= thresh1)   { return (char)('a' + (n-thresh0-1)); }
+    else if(n <= thresh2)   { return (char)('0' + (n-thresh1-1)); }
+    else if(n <= thresh2+1) { return (char)('+');                 }
+    else if(n <= thresh2+2) { return (char)('/');                 }
+    else                    { /*@ assert false; @*/ abort();      }
+}
+
 
 char* hex_of_bytes(size_t len, uint8_t* b)
     /*@ requires [?f]b[..len] |-> ?bytes

@@ -1,5 +1,5 @@
 #include "bi_big_int.h"
-#include "bitops.h"
+#include "../bitops.h"
 
 /*@ #define N30 (nat_predecessor(N31))
   @*/

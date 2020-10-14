@@ -3,9 +3,9 @@
 
 #include <string.h>
 #include <limits.h>
-#include "b64.h"
-/*@ #include "util.gh" @*/
-/*@ #include "poly.gh" @*/
+#include "../b64.h"
+/*@ #include "../util.gh" @*/
+/*@ #include "../poly.gh" @*/
 
 #define CACHE_LINE 64
 // fill out a 64-byte cache line
