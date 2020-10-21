@@ -167,8 +167,8 @@ lemma void shiftright_def(int x, Z z, nat n);
 
 lemma void truncate_unsigned_def(int x, nat n);
     requires true;
-    ensures euclid_div_sol(x,pow_nat(2,n),
-        _,truncate_unsigned(x, int_of_nat(n)));
+    ensures  euclid_mod(x,pow_nat(2,n))
+        ==   truncate_unsigned(x, int_of_nat(n));
 
 lemma_auto(truncate_unsigned(x,nb)) void truncate_unsigned_def_auto(int x, int nb)
     requires nb >= 0;
@@ -176,27 +176,6 @@ lemma_auto(truncate_unsigned(x,nb)) void truncate_unsigned_def_auto(int x, int n
         == (x % pow_nat(2, nat_of_int(nb)) + pow_nat(2,nat_of_int(nb))) % pow_nat(2, nat_of_int(nb));
 {
     truncate_unsigned_def(x,nat_of_int(nb));
-    open euclid_div_sol(x,pow_nat(2,nat_of_int(nb)),?q,
-        truncate_unsigned(x, nb));
-    div_rem(x,pow_nat(2,nat_of_int(nb)));
-    if(x%pow_nat(2,nat_of_int(nb)) >= 0) {
-        euclid_div_unique(x,pow_nat(2,nat_of_int(nb)),
-            q, truncate_unsigned(x, nb),
-            x/pow_nat(2,nat_of_int(nb)), x%pow_nat(2,nat_of_int(nb)));
-        division_unique(
-            x%pow_nat(2,nat_of_int(nb)) + pow_nat(2,nat_of_int(nb)),
-            pow_nat(2,nat_of_int(nb)),
-            1, x%pow_nat(2,nat_of_int(nb)));
-    } else {
-        euclid_div_unique(x,pow_nat(2,nat_of_int(nb)),
-            q, truncate_unsigned(x, nb),
-            x/pow_nat(2,nat_of_int(nb))-1,
-            x%pow_nat(2,nat_of_int(nb)) + pow_nat(2,nat_of_int(nb)));
-        division_unique(
-            x%pow_nat(2,nat_of_int(nb)) + pow_nat(2,nat_of_int(nb)),
-            pow_nat(2,nat_of_int(nb)),
-            0, x%pow_nat(2,nat_of_int(nb)) + pow_nat(2,nat_of_int(nb)));
-    }
     int_of_nat_of_int(nb);
 }
 

@@ -1028,6 +1028,63 @@ lemma void div_shrinks(int x, int d)
     }
 }
 
+lemma void div_twice(int x, int y, int z)
+    requires y != 0 &*& z != 0;
+    ensures  (x/y)/z == x/(y*z);
+
+{
+    if(y*z == 0) mul_to_zero(y,z);
+    div_rem(x,y);
+    div_rem(x/y,z);
+    div_rem(x%y,z);
+    div_rem(x,y*z);
+    mul_3var(y,z,(x/y)/z);
+
+    assert x == y*(x/y) + x%y;
+    assert x/y == z*((x/y)/z) + (x/y)%z;
+    note_eq( x ,  y*(z*((x/y)/z) + (x/y)%z) + x%y);
+    assert x == y*(z*((x/y)/z)) + y*((x/y)%z) + x%y;
+    assert x == (y*z)*((x/y)/z) + y*((x/y)%z) + x%y;
+    assert x == (y*z)*((x/y)/z) + y*((x/y)%z) + z*((x%y)/z) + (x%y)%z;
+
+    if(abs_of((y*z)*((x/y)/z)) > abs(x)) {
+        assert abs_of(z*((x/y)/z)) <= abs_of(x/y);
+        mul_abs_commute(y,x/y);
+        assert abs_of(y*(x/y)) <= abs_of(x);
+        assert abs_of(y)*abs_of(x/y) <= abs_of(x);
+        my_mul_mono_r(abs_of(y),abs_of(z*((x/y)/z)),abs_of(x/y));
+        assert abs_of(y)*abs_of(z*((x/y)/z)) <= abs_of(x);
+        mul_abs_commute(z,(x/y)/z);
+        assert abs_of(y)*(abs_of(z)*abs_of((x/y)/z)) <= abs_of(x);
+        mul_assoc(abs_of(y),abs_of(z),abs_of((x/y)/z));
+        assert (abs_of(y)*abs_of(z))*abs_of((x/y)/z) <= abs_of(x);
+        mul_abs_commute(y,z);
+        assert abs_of(y*z)*abs_of((x/y)/z) <= abs_of(x);
+        mul_abs_commute(y*z,(x/y)/z);
+        assert false;
+    }
+
+    if(abs_of(y*((x/y)%z) + x%y) >= abs_of(y*z)) {
+        assert abs((x/y)%z) <= abs(z)-1;
+        my_mul_mono_r(abs_of(y),abs_of((x/y)%z),abs_of(z)-1);
+        mul_abs_commute(y,(x/y)%z);
+        mul_abs_commute(y,z);
+        assert abs(y*(x/y)%z) <= abs(y*z)-abs(y);
+        assert abs(x%y) <= abs(y)-1;
+        assert abs_of(y*((x/y)%z) + x%y)
+            <= abs_of(y*((x/y)%z)) + abs_of(x%y);
+        assert abs_of(y*((x/y)%z) + x%y)
+            <= abs_of(y*z) - abs(y) + abs_of(y) - 1;
+        assert abs_of(y*((x/y)%z) + x%y)
+            <= abs_of(y*z) - 1;
+        assert false;
+        assert false;
+    }
+
+    division_unique(x,y*z,(x/y)/z,y*((x/y)%z) + x%y);
+}
+
+
 lemma_auto(pow_nat(x,n))
 void pow_nat_pos(int x, nat n)
     requires x >= 1;

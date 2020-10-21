@@ -531,6 +531,10 @@ lemma void my_inv_mul_strict_mono_r(int a, int b1, int b2);
     requires 0 < a &*& a*b1 < a*b2;
     ensures b1 < b2;
 
+lemma void mul_to_zero(int x, int y);
+    requires x*y == 0;
+    ensures  x == 0 || y == 0;
+
 fixpoint int mul_abstract(int a,int b) { return a*b; }
 lemma void mul_abstract_def(int a,int b)
     requires true;
@@ -592,6 +596,14 @@ lemma void div_shrinks(int x, int d);
     requires d > 0 &*& x >= 0;
     ensures  x/d <= x;
 
+lemma void div_twice(int x, int y, int z);
+    requires y != 0 &*& z != 0;
+    ensures  (x/y)/z == x/(y*z);
+
+lemma void mod_shrinks(int x, int d);
+    requires d != 0;
+    ensures  abs(x%d) <= abs(x);
+
 lemma void into_numerator(int x, int y, int d);
     requires d > 0 &*& x >= 0 &*& y >= 0;
     ensures  x + (y/d) == (d*x + y)/d;
@@ -608,9 +620,25 @@ lemma void div_sign(int x, int d);
     requires d > 0;
     ensures  x >= 0 ? x/d >= 0 : x/d <= 0;
 
+lemma void div_nudge(int x, int y, int d);
+    requires d > 0 &*& x >= 0 &*& y >= 0 &*& y < d;
+    ensures  (x*d + y)/d == x;
+
 lemma void mod_plus(int x, int y, int d);
     requires d > 0 &*& x >= 0 &*& y >= 0;
     ensures  (x%d + y)%d == (x+y)%d;
+
+lemma void mod_times(int x, int y, int d);
+    requires d > 0 &*& x >= 0 &*& y >= 0;
+    ensures  (x%d * y)%d == (x*y)%d;
+
+lemma void mod_times_d(int x, int y, int d);
+    requires d > 0 &*& x >= 0 &*& y >= 0;
+    ensures  (x + y*d)%d == x%d;
+
+lemma void mod_twice(int x, int d1, int d2);
+    requires d1 > 0 &*& x >= 0 &*& d2 > 0 &*& d1%d2 == 0;
+    ensures  (x%d1)%d2 == x%d2;
 
 fixpoint bool bounded(int min, int max, int x) {
     return x >= min && x <= max;
@@ -734,17 +762,42 @@ lemma void euclid_div_unique(int D, int d, int q1, int r1,
 
 lemma void euclid_div_unique_intro(int D, int d, int q, int r);
     requires d > 0 &*& r >= 0 &*& r < d &*& D == q*d + r;
-    ensures  euclid_div_sol(D,d,q,r);
+    ensures  [_]euclid_div_sol(D,d,q,r);
 
 lemma void euclid_div_intro(int D, int d);
     requires d > 0;
-    ensures  euclid_div_sol(D,d,_,_);
+    ensures  [_]euclid_div_sol(D,d,_,_);
 
 lemma_auto void euclid_div_auto();
     requires [?f]euclid_div_sol(?D,?d,?q,?r);
     ensures  [ f]euclid_div_sol( D, d, q, r)
         &*&  r >= 0 &*& r < d &*& d > 0 &*& D == q*d + r;
 
+fixpoint int euclid_mod(int D, int d) {
+    return snd(euclid_div(D,d));
+}
+
+lemma void euclid_mod_correct(int D, int d);
+    requires d > 0;
+    ensures  [_]euclid_div_sol(D,d,_,euclid_mod(D,d));
+
+lemma_auto(euclid_mod(D,d))
+void euclid_mod_auto(int D, int d)
+    requires d > 0;
+    ensures euclid_mod(D, d) == (D % d + d) % d;
+{
+    euclid_mod_correct(D,d);
+    open [_]euclid_div_sol(D,d,?q, euclid_mod(D, d));
+    div_rem(D,d);
+    if(D%d >= 0) {
+        euclid_div_unique(D,d, q, euclid_mod(D,d), D/d, D%d);
+        division_unique( D%d + d, d, 1, D%d);
+    } else {
+        euclid_div_unique(D, d, q, euclid_mod(D, d), D/d-1,
+                D%d + d);
+        division_unique(D%d + d, d, 0, D%d + d);
+    }
+}
 
 predicate malloced_string(char* s; list<char> cs) =
         string(s,cs) &*& malloc_block_chars(s,?numbytes)
@@ -914,6 +967,11 @@ lemma void pow_monotonic(int x,nat y,nat z);
     requires x > 1 &*& int_of_nat(y) < int_of_nat(z);
     ensures  pow_nat(x,y) < pow_nat(x,z);
 
+lemma_auto(int_of_nat(nat_minus(n,m)))
+void nat_minus_int(nat n, nat m);
+    requires true;
+    ensures  int_of_nat(nat_minus(n,m))
+        ==   max_of(0,int_of_nat(n)-int_of_nat(m));
 
 #endif
 
