@@ -144,10 +144,35 @@ typedef enum LambdaTag {
     LambApp
 } LambdaTag;
 
+struct LambdaTerm;
+
+typedef struct LambdaSymbol {
+    intptr_t val;
+} LambdaSymbol;
+
+typedef struct LambdaVar {
+    uintptr_t var_ix;
+} LambdaVar;
+
+typedef struct LambdaFn {
+    struct LambdaTerm* body;
+} LambdaFn;
+
+typedef struct LambdaApp {
+    struct LambdaTerm* fn;
+    struct LambdaTerm* param;
+} LambdaApp;
+
+union UntaggedLambdaTerm {
+    LambdaSymbol symb;
+    LambdaVar    var;
+    LambdaFn     fn;
+    LambdaApp    app;
+};
+
 typedef struct LambdaTerm {
     LambdaTag tag;
-    void* ptr1;
-    void* ptr2;
+    union UntaggedLambdaTerm term;
 } LambdaTerm;
 
 /*@
@@ -168,28 +193,44 @@ predicate valid_LambdaTerm(LambdaTerm* term, nat depth;
     =   malloc_block_LambdaTerm(term)
     &*& term != 0
     &*& term->tag  |-> ?tag &*& !!valid_LambdaTag(tag)
-    &*& term->ptr1 |-> ?v1  &*& term->ptr2 |-> ?v2
     &*& (  (tag == LambSymbol)
-            ? (     abstractVal == lamb_symbol((intptr_t)v1)
-                &*& v2 == 0
+            ? (     term->term.symb.val |-> ?val
+                &*& struct_LambdaSymbol_padding(&term->term.symb)
+                &*& chars((void*)&term->term + sizeof(LambdaSymbol),
+                        sizeof(union UntaggedLambdaTerm)\
+                            - sizeof(LambdaSymbol),_)
+                &*& abstractVal == lamb_symbol(val)
               )
          : (tag == LambVar)
-            ? (     (uintptr_t)v1 >= 0
-                &*& (uintptr_t)v1 < int_of_nat(depth)
-                &*& abstractVal == lamb_var(nat_of_int((uintptr_t)v1))
-                &*& v2 == 0
+            ? (     term->term.var.var_ix |-> ?var_ix
+                &*& struct_LambdaVar_padding(&term->term.var)
+                &*& chars((void*)&term->term + sizeof(LambdaVar),
+                        sizeof(union UntaggedLambdaTerm)
+                            - sizeof(LambdaVar),_)
+                &*& var_ix < int_of_nat(depth)
+                &*& abstractVal == lamb_var(nat_of_int(var_ix))
               )
          : (tag == LambFn)
-            ? (     valid_LambdaTerm((LambdaTerm*)v1, succ(depth),
-                                     ?innerVal)
+            ? (     term->term.fn.body |-> ?body
+                &*& struct_LambdaFn_padding(&term->term.fn)
+                &*& chars((void*)&term->term
+                            + sizeof(LambdaFn),
+                        sizeof(union UntaggedLambdaTerm)
+                            - sizeof(LambdaFn),
+                        _)
+                &*& valid_LambdaTerm(body, succ(depth), ?innerVal)
                 &*& abstractVal == lamb_fn(innerVal)
-                &*& v2 == 0
               )
          : (tag == LambApp) &*&
-              (     valid_LambdaTerm((LambdaTerm*)v1, depth,
-                                     ?E1)
-                &*& valid_LambdaTerm((LambdaTerm*)v2, depth,
-                                     ?E2)
+              (     term->term.app.fn |-> ?fn
+                &*& term->term.app.param |-> ?param
+                &*& struct_LambdaApp_padding(&term->term.app)
+                &*& chars((void*)&term->term + sizeof(LambdaApp),
+                        sizeof(union UntaggedLambdaTerm)
+                            - sizeof(LambdaApp),
+                        _)
+                &*& valid_LambdaTerm(fn, depth, ?E1)
+                &*& valid_LambdaTerm(param, depth, ?E2)
                 &*& abstractVal == lamb_app(E1,E2)
               )
         )
@@ -218,14 +259,15 @@ void valid_LambdaTerm_auto_inner(LambdaTerm* term)
     }
     if(!valid_lambda(val,depth) || term == 0) {
         open valid_LambdaTerm(_,_,_);
-        assert [f]term->ptr1 |-> ?v1;
-        assert [f]term->ptr2 |-> ?v2;
         assert [f]term->tag  |-> ?tag;
         if(tag == LambFn) {
-            valid_LambdaTerm_auto_inner((LambdaTerm*)v1);
+            assert [f]term->term.fn.body |-> ?body;
+            valid_LambdaTerm_auto_inner(body);
         } else if(tag == LambApp) {
-            valid_LambdaTerm_auto_inner((LambdaTerm*)v1);
-            valid_LambdaTerm_auto_inner((LambdaTerm*)v2);
+            assert [f]term->term.app.fn |-> ?fn;
+            assert [f]term->term.app.param |-> ?param;
+            valid_LambdaTerm_auto_inner(fn);
+            valid_LambdaTerm_auto_inner(param);
         }
         assert false;
     }
@@ -251,13 +293,14 @@ lemma void raiseLambdaTermDepth(LambdaTerm* t, nat depth)
     open valid_LambdaTerm(t,_,_);
 
     assert [f]t->tag |-> ?tag;
-    assert [f]t->ptr1 |-> ?v1;
-    assert [f]t->ptr2 |-> ?v2;
     if(tag == LambFn) {
-        raiseLambdaTermDepth(v1,succ(depth));
+        assert [f]t->term.fn.body |-> ?body;
+        raiseLambdaTermDepth(body,succ(depth));
     } else if(tag == LambApp) {
-        raiseLambdaTermDepth(v1,depth);
-        raiseLambdaTermDepth(v2,depth);
+        assert [f]t->term.app.fn |-> ?fn;
+        assert [f]t->term.app.param |-> ?param;
+        raiseLambdaTermDepth(fn,depth);
+        raiseLambdaTermDepth(param,depth);
     }
 
     close  [ f]valid_LambdaTerm(t,depth,val);
@@ -311,8 +354,8 @@ LambdaTerm* newLambdaTerm()
     LambdaTerm* ret = malloc(sizeof(LambdaTerm));
     if(!ret) { abort(); }
     ret->tag  = LambSymbol;
-    ret->ptr1 = 0;
-    ret->ptr2 = 0;
+    /*@ close_struct(&ret->term.symb); @*/
+    ret->term.symb.val = 0;
     return ret;
 }
 
@@ -350,19 +393,27 @@ LambdaTerm* cloneLambdaTerm_inner(const LambdaTerm* term)
     LambdaTerm* ret = newLambdaTerm();
 
     ret->tag = term->tag;
+    /*@ open_struct(&ret->term.symb); @*/
+    /*@ chars_join((void*)&ret->term.symb); @*/
 
     switch(term->tag) {
     case LambSymbol:
+        /*@ close_struct(&ret->term.symb); @*/
+        ret->term.symb.val = term->term.symb.val;
+        /*@ leak [2]call_perm_level(currentThread,_,_); @*/
+        break;
+
     case LambVar:
-        ret->ptr1 = term->ptr1;
-        ret->ptr2 = term->ptr2;
+        /*@ close_struct(&ret->term.var); @*/
+        ret->term.var.var_ix = term->term.var.var_ix;
         /*@ leak [2]call_perm_level(currentThread,_,_); @*/
         break;
 
     case LambFn:
+        /*@ close_struct(&ret->term.fn); @*/
         /*@ {
-            assert [f]term->ptr1 |-> ?v1;
-            assert [f]valid_LambdaTerm((LambdaTerm*)v1,_,?innerVal);
+            assert [f]term->term.fn.body |-> ?body;
+            assert [f]valid_LambdaTerm(body,_,?innerVal);
             assert lambda_depth(val) == 1 + lambda_depth(innerVal);
             assert !!lt(lambda_depth(innerVal),lambda_depth(val));
             call_perm_level_weaken(2,lt,lambda_depth(val),
@@ -370,18 +421,18 @@ LambdaTerm* cloneLambdaTerm_inner(const LambdaTerm* term)
             consume_call_perm_level_for(cloneLambdaTerm_inner);
         } @*/
         {
-            LambdaTerm* E = rec(term->ptr1);
-            ret->ptr1 = E;
-            ret->ptr2 = 0;
+            LambdaTerm* E = rec(term->term.fn.body);
+            ret->term.fn.body = E;
         }
         break;
 
     case LambApp:
+        /*@ close_struct(&ret->term.app); @*/
         /*@ {
-            assert [f]term->ptr1 |-> ?v1;
-            assert [f]term->ptr2 |-> ?v2;
-            assert [f]valid_LambdaTerm((LambdaTerm*)v1,_,?innerE1);
-            assert [f]valid_LambdaTerm((LambdaTerm*)v2,_,?innerE2);
+            assert [f]term->term.app.fn |-> ?fn;
+            assert [f]term->term.app.param |-> ?param;
+            assert [f]valid_LambdaTerm(fn,_,?innerE1);
+            assert [f]valid_LambdaTerm(param,_,?innerE2);
             call_perm_level_weaken(1,lt,lambda_depth(val),
                 {cloneLambdaTerm_inner}, 3,lambda_depth(innerE1));
             consume_call_perm_level_for(cloneLambdaTerm_inner);
@@ -390,10 +441,10 @@ LambdaTerm* cloneLambdaTerm_inner(const LambdaTerm* term)
             consume_call_perm_level_for(cloneLambdaTerm_inner);
         } @*/
         {
-            LambdaTerm* E1 = rec(term->ptr1);
-            LambdaTerm* E2 = rec(term->ptr2);
-            ret->ptr1 = E1;
-            ret->ptr2 = E2;
+            LambdaTerm* E1 = rec(term->term.app.fn);
+            LambdaTerm* E2 = rec(term->term.app.param);
+            ret->term.app.fn = E1;
+            ret->term.app.param = E2;
         }
         break;
     default:
@@ -473,15 +524,18 @@ LambdaTerm* lambdaSubst_inner(const LambdaTerm* term, uintptr_t ind,
     LambdaTerm* ret = newLambdaTerm();
 
     ret->tag = term->tag;
+    /*@ open_struct(&ret->term.symb); @*/
+    /*@ chars_join((void*)&ret->term.symb); @*/
 
     switch(term->tag) {
     case LambSymbol:
-        ret->ptr1 = term->ptr1;
-        ret->ptr2 = term->ptr2;
+        /*@ close_struct(&ret->term.symb); @*/
+        ret->term.symb.val = term->term.symb.val;
         /*@ leak [2]call_perm_level(_,_,_); @*/
         break;
+
     case LambVar:
-        if((uintptr_t)term->ptr1 == ind) {
+        if(term->term.var.var_ix == ind) {
             /*@ {
                 assert t_val == lamb_var(nat_of_int(ind));
                 assert lambda_subst(t_val,nat_of_int(ind),v_val)
@@ -491,33 +545,34 @@ LambdaTerm* lambdaSubst_inner(const LambdaTerm* term, uintptr_t ind,
             ret = cloneLambdaTerm(v);
             /*@ raiseLambdaTermDepth(ret,depth); @*/
         } else {
-            ret->ptr1 = term->ptr1;
-            ret->ptr2 = 0;
+            /*@ close_struct(&ret->term.var); @*/
+            ret->term.var.var_ix = term->term.var.var_ix;
         }
         /*@ leak [2]call_perm_level(_,_,_); @*/
         break;
 
     case LambFn:
+        /*@ close_struct(&ret->term.fn); @*/
         /*@ {
-            assert [tf]term->ptr1 |-> ?v1;
-            assert [tf]valid_LambdaTerm((LambdaTerm*)v1,_,?innerVal);
+            assert [tf]term->term.fn.body |-> ?body;
+            assert [tf]valid_LambdaTerm(body,_,?innerVal);
             call_perm_level_weaken(2,lt,lambda_depth(t_val),
                 {lambdaSubst_inner}, 3,lambda_depth(innerVal));
             consume_call_perm_level_for(lambdaSubst_inner);
         } @*/
         {
-            LambdaTerm* E = rec(term->ptr1,ind+1,v);
-            ret->ptr1 = E;
-            ret->ptr2 = 0;
+            LambdaTerm* E = rec(term->term.fn.body,ind+1,v);
+            ret->term.fn.body = E;
         }
         break;
 
     case LambApp:
+        /*@ close_struct(&ret->term.app); @*/
         /*@ {
-            assert [tf]term->ptr1 |-> ?v1;
-            assert [tf]term->ptr2 |-> ?v2;
-            assert [tf]valid_LambdaTerm((LambdaTerm*)v1,_,?innerE1);
-            assert [tf]valid_LambdaTerm((LambdaTerm*)v2,_,?innerE2);
+            assert [tf]term->term.app.fn |-> ?fn;
+            assert [tf]term->term.app.param |-> ?param;
+            assert [tf]valid_LambdaTerm(fn,_,?innerE1);
+            assert [tf]valid_LambdaTerm(param,_,?innerE2);
             call_perm_level_weaken(1,lt,lambda_depth(t_val),
                 {lambdaSubst_inner}, 3,lambda_depth(innerE1));
             consume_call_perm_level_for(lambdaSubst_inner);
@@ -526,10 +581,10 @@ LambdaTerm* lambdaSubst_inner(const LambdaTerm* term, uintptr_t ind,
             consume_call_perm_level_for(lambdaSubst_inner);
         } @*/
         {
-            LambdaTerm* E1 = rec(term->ptr1,ind,v);
-            LambdaTerm* E2 = rec(term->ptr2,ind,v);
-            ret->ptr1 = E1;
-            ret->ptr2 = E2;
+            LambdaTerm* E1 = rec(term->term.app.fn,ind,v);
+            LambdaTerm* E2 = rec(term->term.app.param,ind,v);
+            ret->term.app.fn = E1;
+            ret->term.app.param = E2;
         }
         break;
     default:

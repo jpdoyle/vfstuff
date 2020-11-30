@@ -962,4 +962,4 @@ void nat_minus_int(nat n, nat m);
 
 #endif
 
-				
+
