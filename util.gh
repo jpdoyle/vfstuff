@@ -782,22 +782,9 @@ lemma void euclid_mod_correct(int D, int d);
     ensures  [_]euclid_div_sol(D,d,_,euclid_mod(D,d));
 
 lemma_auto(euclid_mod(D,d))
-void euclid_mod_auto(int D, int d)
+void euclid_mod_auto(int D, int d);
     requires d > 0;
     ensures euclid_mod(D, d) == (D % d + d) % d;
-{
-    euclid_mod_correct(D,d);
-    open [_]euclid_div_sol(D,d,?q, euclid_mod(D, d));
-    div_rem(D,d);
-    if(D%d >= 0) {
-        euclid_div_unique(D,d, q, euclid_mod(D,d), D/d, D%d);
-        division_unique( D%d + d, d, 1, D%d);
-    } else {
-        euclid_div_unique(D, d, q, euclid_mod(D, d), D/d-1,
-                D%d + d);
-        division_unique(D%d + d, d, 0, D%d + d);
-    }
-}
 
 predicate malloced_string(char* s; list<char> cs) =
         string(s,cs) &*& malloc_block_chars(s,?numbytes)

@@ -646,7 +646,7 @@ lemma void shiftright_div(int x, nat n)
 
 lemma void ashr_euclid(int x,nat n)
     requires true;
-    ensures  euclid_div_sol(x,pow_nat(2,n),ASHR(x,int_of_nat(n)),_);
+    ensures  [_]euclid_div_sol(x,pow_nat(2,n),ASHR(x,int_of_nat(n)),_);
 {
         ALREADY_PROVEN()
     if(x >= 0) {

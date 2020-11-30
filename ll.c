@@ -32,7 +32,7 @@ void append_reverse_cons<t>(list<t> a, t x, list<t> b)
 
 int list_length(List* head)
     /*@ requires [?f]linked_list(head,?vals)
-            &*&  length(vals) <= INT_MAX;
+            &*&  length(vals) <= INT_MAX; 
       @*/
     /*@ ensures  [ f]linked_list(head, vals)
             &*&  result == length(vals);
@@ -51,7 +51,8 @@ int list_length(List* head)
         /*@ decreases length(loop_vals); @*/
     {
         head = head->next;
-        ++ret;
+        ++ret;--ret;
+        
     }
 
     return ret;

@@ -1,6 +1,20 @@
 /*@ #include "nats.gh" @*/
 
 /*@
+
+lemma_auto(nat_minus(zero,n))
+void nat_zero_minus(nat n)
+    requires true;
+    ensures  nat_minus(zero,n) == zero;
+{ switch(n) { case zero: case succ(n0): } }
+
+lemma_auto(nat_minus(n,zero))
+void nat_minus_zero(nat n)
+    requires true;
+    ensures  nat_minus(n,zero) == n;
+{ switch(n) { case zero: case succ(n0): } }
+
+
 lemma void nat_plus_deconstruct(nat n, nat m)
     requires true;
     ensures  nat_plus(succ(n),m) == succ(nat_plus(n,m))

@@ -2,6 +2,23 @@
 
 /*@
 
+lemma_auto(int_of_nat(nat_minus(n,m)))
+void nat_minus_int(nat n, nat m)
+    requires true;
+    ensures  int_of_nat(nat_minus(n,m))
+        ==   max_of(0,int_of_nat(n)-int_of_nat(m));
+{
+    switch(n) {
+    case zero:
+    case succ(n0):
+        switch(m) {
+        case zero:
+        case succ(m0):
+            nat_minus_int(n0,m0);
+        }
+    }
+}
+
 lemma void chars_split_as(char *array,
         list<char> pref,list<char> suff)
     requires [?f]chars(array, ?N, append(pref,suff));
@@ -893,10 +910,11 @@ lemma void euclid_div_unique(int D, int d, int q1, int r1,
 
 lemma void euclid_div_intro(int D, int d)
     requires d > 0;
-    ensures  euclid_div_sol(D,d,_,_);
+    ensures  [_]euclid_div_sol(D,d,_,_);
 {
     euclid_div_correct(nat_of_int(abs(D)),D,d,0);
     close euclid_div_sol(D,d,_,_);
+    leak euclid_div_sol(D,d,_,_);
 }
 
 lemma_auto void euclid_div_auto()
@@ -912,11 +930,42 @@ lemma_auto void euclid_div_auto()
 
 lemma void euclid_div_unique_intro(int D, int d, int q, int r)
     requires d > 0 &*& r >= 0 &*& r < d &*& D == q*d + r;
-    ensures  euclid_div_sol(D,d,q,r);
+    ensures  [_]euclid_div_sol(D,d,q,r);
 {
     euclid_div_intro(D,d);
-    assert euclid_div_sol(D,d,?q1,?r1);
+    assert [_]euclid_div_sol(D,d,?q1,?r1);
     euclid_div_unique(D,d,q,r,q1,r1);
+}
+
+lemma void euclid_mod_correct(int D, int d)
+    requires d > 0;
+    ensures  [_]euclid_div_sol(D,d,_,euclid_mod(D,d));
+{
+    int_of_nat_of_int(abs_of(D));
+    euclid_div_correct(nat_of_int(abs_of(D)),D,d,0);
+    switch(euclid_div(D,d)) {
+    case pair(q,r):
+        euclid_div_unique_intro(D,d,q,r);
+    }
+}
+
+lemma_auto(euclid_mod(D,d))
+void euclid_mod_auto(int D, int d)
+    requires d > 0;
+    ensures euclid_mod(D, d) == (D % d + d) % d;
+
+{
+    euclid_mod_correct(D,d);
+    open [_]euclid_div_sol(D,d,?q, euclid_mod(D, d));
+    div_rem(D,d);
+    if(D%d >= 0) {
+        euclid_div_unique(D,d, q, euclid_mod(D,d), D/d, D%d);
+        division_unique( D%d + d, d, 1, D%d);
+    } else {
+        euclid_div_unique(D, d, q, euclid_mod(D, d), D/d-1,
+                D%d + d);
+        division_unique(D%d + d, d, 0, D%d + d);
+    }
 }
 
 
@@ -1024,6 +1073,21 @@ lemma void div_shrinks(int x, int d)
         assert d*x < d*(x/d);
         assert x < d*(x/d);
 
+        assert false;
+    }
+}
+
+lemma void mul_to_zero(int x, int y)
+    requires x*y == 0;
+    ensures  x == 0 || y == 0;
+{
+    assert abs_of(x*y) == 0;
+    mul_abs_commute(x,y);
+    note_eq(abs_of(x)*abs_of(y),0);
+    if(abs_of(x) > 0 && abs_of(y) > 0) {
+        my_mul_mono_l(1,abs_of(x),abs_of(y));
+        assert abs_of(x)*abs_of(y) >= 1;
+        assert 0 >= 1;
         assert false;
     }
 }

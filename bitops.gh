@@ -176,6 +176,7 @@ lemma_auto(truncate_unsigned(x,nb)) void truncate_unsigned_def_auto(int x, int n
         == (x % pow_nat(2, nat_of_int(nb)) + pow_nat(2,nat_of_int(nb))) % pow_nat(2, nat_of_int(nb));
 {
     truncate_unsigned_def(x,nat_of_int(nb));
+    euclid_mod_auto(x, pow_nat(2, nat_of_int(nb)));
     int_of_nat_of_int(nb);
 }
 
