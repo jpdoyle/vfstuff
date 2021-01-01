@@ -51,7 +51,7 @@ int list_length(List* head)
         /*@ decreases length(loop_vals); @*/
     {
         head = head->next;
-        ++ret;--ret;
+        ++ret;
         
     }
 

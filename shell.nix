@@ -6,6 +6,8 @@
 
 with nixpkgs;
 let
+  ocamlPackages = ocaml-ng.ocamlPackages_4_08;
+  ocaml = ocamlPackages.ocaml;
   z3WithOcaml = stdenv.mkDerivation rec {
       name = "z3-${version}";
       version = "4.8.5";

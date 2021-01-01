@@ -459,5 +459,51 @@ void all_eq_map<s,t>(list<s> l, s v, fixpoint(s,t) f)
     ensures  !!all_eq(map(f,l),f(v));
 { LIST_INDUCTION(l,xs,all_eq_map(xs,v,f)) }
 
+fixpoint list<t> ndrop<t>(nat n,list<t> l) {
+    switch(n) {
+    case zero: return l;
+    case succ(n0):
+        return switch(l) {
+        case nil: return nil;
+        case cons(x,xs): return ndrop(n0,xs);
+        };
+    }
+}
+
+fixpoint list<t> ntake<t>(nat n,list<t> l) {
+    switch(n) {
+    case zero: return nil;
+    case succ(n0):
+        return switch(l) {
+        case nil: return nil;
+        case cons(x,xs): return cons(x,ntake(n0,xs));
+        };
+    }
+}
+
+#define NAT_LIST_INDUCTION(n,n0,l,xs,body) \
+    switch(n) { case zero: case succ(n0): \
+        switch(l) { case nil: case cons(l##x,xs): body; } }
+
+lemma_auto(ndrop(n,l))
+void ndrop_nil<t>(nat n,list<t> l)
+    requires true;
+    ensures  (ndrop(n,l) == nil) == (int_of_nat(n) >= length(l));
+{ NAT_LIST_INDUCTION(n,n0,l,xs,ndrop_nil(n0,xs)) }
+
+lemma_auto(ndrop(n,l))
+void ntake_l<t>(nat n,list<t> l)
+    requires true;
+    ensures  (ntake(n,l) == l) == (int_of_nat(n) >= length(l));
+{ NAT_LIST_INDUCTION(n,n0,l,xs,ntake_l(n0,xs)) }
+
+lemma_auto(append(ntake(n,l),ndrop(n,l)))
+void append_ntake_ndrop<t>(nat n,list<t> l)
+    requires true;
+    ensures  append(ntake(n,l),ndrop(n,l)) == l;
+{ NAT_LIST_INDUCTION(n,n0,l,xs,
+        append_ntake_ndrop(n0,xs)) }
+
+
 #endif
 

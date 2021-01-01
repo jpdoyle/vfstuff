@@ -11,71 +11,71 @@ clean:
 
 nats.vfmanifest.done: nats.c nats.gh axioms/prelude.vfmanifest
 	${VF} axioms/prelude.vfmanifest nats.c
-	cp nats.vfmanifest nats.vfmanifest.done
+	touch nats.vfmanifest.done
 
 util.vfmanifest.done: util.c util.gh nats.vfmanifest.done axioms/prelude.vfmanifest
 	${VF} axioms/prelude.vfmanifest nats.vfmanifest util.c
-	cp util.vfmanifest util.vfmanifest.done
+	touch util.vfmanifest.done
 
 lists.vfmanifest.done: lists.c lists.gh util.vfmanifest.done nats.vfmanifest.done axioms/prelude.vfmanifest
 	${VF} axioms/prelude.vfmanifest nats.vfmanifest util.vfmanifest lists.c
-	cp lists.vfmanifest lists.vfmanifest.done
+	touch lists.vfmanifest.done
 
 bitops.vfmanifest.done: bitops.c bitops.gh util.vfmanifest.done nats.vfmanifest.done axioms/prelude.vfmanifest axioms/bitops_axioms.vfmanifest
 	${VF} axioms/prelude.vfmanifest nats.vfmanifest util.vfmanifest axioms/bitops_axioms.vfmanifest bitops.c
-	cp bitops.vfmanifest bitops.vfmanifest.done
+	touch bitops.vfmanifest.done
 
 termination.vfmanifest.done: termination.c termination.gh util.vfmanifest.done nats.vfmanifest.done axioms/prelude.vfmanifest axioms/call_perms.vfmanifest call_perms.gh
 	${VF} axioms/prelude.vfmanifest nats.vfmanifest util.vfmanifest axioms/call_perms.vfmanifest termination.c
-	cp termination.vfmanifest termination.vfmanifest.done
+	touch termination.vfmanifest.done
 
 numtheo.vfmanifest.done: numtheo.c numtheo.h numtheo.gh util.vfmanifest.done nats.vfmanifest.done axioms/prelude.vfmanifest lists.vfmanifest.done
 	${VF} axioms/prelude.vfmanifest nats.vfmanifest util.vfmanifest lists.vfmanifest numtheo.c
-	cp numtheo.vfmanifest numtheo.vfmanifest.done
+	touch numtheo.vfmanifest.done
 
 isort.vfmanifest.done: isort.c sorting.h sorting.gh util.vfmanifest.done nats.vfmanifest.done axioms/prelude.vfmanifest lists.vfmanifest.done
 	${VF} axioms/prelude.vfmanifest nats.vfmanifest util.vfmanifest lists.vfmanifest isort.c
-	cp isort.vfmanifest isort.vfmanifest.done
+	touch isort.vfmanifest.done
 
 poly.vfmanifest.done: poly.c poly.gh util.vfmanifest.done nats.vfmanifest.done axioms/prelude.vfmanifest lists.vfmanifest.done
 	${VF} axioms/prelude.vfmanifest nats.vfmanifest util.vfmanifest lists.vfmanifest poly.c
-	cp poly.vfmanifest poly.vfmanifest.done
+	touch poly.vfmanifest.done
 
 b64.vfmanifest.done: b64.c b64.h util.vfmanifest.done nats.vfmanifest.done axioms/prelude.vfmanifest lists.vfmanifest.done poly.vfmanifest.done axioms/bitops_axioms.vfmanifest bitops.vfmanifest.done 
 	${VF} axioms/prelude.vfmanifest nats.vfmanifest util.vfmanifest lists.vfmanifest poly.vfmanifest axioms/bitops_axioms.vfmanifest bitops.vfmanifest b64.c
-	cp b64.vfmanifest b64.vfmanifest.done
+	touch b64.vfmanifest.done
 
 slowsort.vfmanifest.done: slowsort.c sorting.h sorting.gh util.vfmanifest.done nats.vfmanifest.done axioms/prelude.vfmanifest lists.vfmanifest.done termination.vfmanifest.done axioms/call_perms.vfmanifest
 	${VF} axioms/prelude.vfmanifest nats.vfmanifest util.vfmanifest lists.vfmanifest axioms/call_perms.vfmanifest termination.vfmanifest slowsort.c
-	cp slowsort.vfmanifest slowsort.vfmanifest.done
+	touch slowsort.vfmanifest.done
 
 lorg/bi_big_int.vfmanifest.done: lorg/bi_big_int.c bigint.h lorg/bi_big_int.h b64.h util.vfmanifest.done nats.vfmanifest.done axioms/prelude.vfmanifest lists.vfmanifest.done axioms/bitops_axioms.vfmanifest bitops.vfmanifest.done poly.vfmanifest.done b64.vfmanifest.done
 	${VF} axioms/prelude.vfmanifest nats.vfmanifest util.vfmanifest lists.vfmanifest axioms/bitops_axioms.vfmanifest bitops.vfmanifest poly.vfmanifest b64.vfmanifest lorg/bi_big_int.c
-	cp lorg/bi_big_int.vfmanifest lorg/bi_big_int.vfmanifest.done
+	touch lorg/bi_big_int.vfmanifest.done
 
 lorg/bi_big_int_plus.vfmanifest.done: lorg/bi_big_int_plus.c lorg/bi_big_int.h bigint.h b64.h lorg/bi_big_int.vfmanifest.done util.vfmanifest.done nats.vfmanifest.done axioms/prelude.vfmanifest lists.vfmanifest.done axioms/bitops_axioms.vfmanifest bitops.vfmanifest.done poly.vfmanifest.done b64.vfmanifest.done
 	${VF} axioms/prelude.vfmanifest nats.vfmanifest util.vfmanifest lists.vfmanifest axioms/bitops_axioms.vfmanifest bitops.vfmanifest poly.vfmanifest b64.vfmanifest lorg/bi_big_int.vfmanifest lorg/bi_big_int_plus.c
-	cp lorg/bi_big_int_plus.vfmanifest lorg/bi_big_int_plus.vfmanifest.done
+	touch lorg/bi_big_int_plus.vfmanifest.done
 
 lorg/bi_big_int_hex.vfmanifest.done: lorg/bi_big_int_hex.c bigint.h lorg/bi_big_int.h lorg/bi_big_int.vfmanifest.done util.vfmanifest.done nats.vfmanifest.done axioms/prelude.vfmanifest b64.vfmanifest.done lists.vfmanifest.done axioms/bitops_axioms.vfmanifest bitops.vfmanifest.done poly.vfmanifest.done
 	${VF} axioms/prelude.vfmanifest nats.vfmanifest util.vfmanifest lists.vfmanifest axioms/bitops_axioms.vfmanifest bitops.vfmanifest poly.vfmanifest b64.vfmanifest lorg/bi_big_int.vfmanifest lorg/bi_big_int_hex.c
-	cp lorg/bi_big_int_hex.vfmanifest lorg/bi_big_int_hex.vfmanifest.done
+	touch lorg/bi_big_int_hex.vfmanifest.done
 
 lorg/bi_big_int_hex2.vfmanifest.done: lorg/bi_big_int_hex2.c bigint.h lorg/bi_big_int.h lorg/bi_big_int.vfmanifest.done util.vfmanifest.done nats.vfmanifest.done axioms/prelude.vfmanifest b64.vfmanifest.done lists.vfmanifest.done axioms/bitops_axioms.vfmanifest bitops.vfmanifest.done poly.vfmanifest.done
 	${VF} axioms/prelude.vfmanifest nats.vfmanifest util.vfmanifest lists.vfmanifest axioms/bitops_axioms.vfmanifest bitops.vfmanifest poly.vfmanifest b64.vfmanifest lorg/bi_big_int.vfmanifest lorg/bi_big_int_hex2.c
-	cp lorg/bi_big_int_hex2.vfmanifest lorg/bi_big_int_hex2.vfmanifest.done
+	touch lorg/bi_big_int_hex2.vfmanifest.done
 
 bigint.vfmanifest.done: bigint.c bigint.h lorg/bi_big_int.h util.vfmanifest.done nats.vfmanifest.done axioms/prelude.vfmanifest lists.vfmanifest.done b64.vfmanifest.done axioms/bitops_axioms.vfmanifest bitops.vfmanifest.done poly.vfmanifest.done lorg/bi_big_int.vfmanifest.done lorg/bi_big_int_hex.vfmanifest.done lorg/bi_big_int_hex2.vfmanifest.done lorg/bi_big_int_plus.vfmanifest.done
 	${VF} axioms/prelude.vfmanifest nats.vfmanifest util.vfmanifest lists.vfmanifest axioms/bitops_axioms.vfmanifest bitops.vfmanifest poly.vfmanifest b64.vfmanifest lorg/bi_big_int.vfmanifest lorg/bi_big_int_hex.vfmanifest lorg/bi_big_int_hex2.vfmanifest lorg/bi_big_int_plus.vfmanifest bigint.c
-	cp bigint.vfmanifest bigint.vfmanifest.done
+	touch bigint.vfmanifest.done
 
 bigint/fibber.vfmanifest.done: bigint/fibber.c bigint.h util.vfmanifest.done nats.vfmanifest.done axioms/prelude.vfmanifest lists.vfmanifest.done b64.vfmanifest.done axioms/bitops_axioms.vfmanifest bitops.vfmanifest.done poly.vfmanifest.done lorg/bi_big_int.vfmanifest.done lorg/bi_big_int_hex.vfmanifest.done lorg/bi_big_int_hex2.vfmanifest.done lorg/bi_big_int_plus.vfmanifest.done lorg/bi_big_int_mul.vfmanifest.done
 	${VF} axioms/prelude.vfmanifest nats.vfmanifest util.vfmanifest lists.vfmanifest axioms/bitops_axioms.vfmanifest bitops.vfmanifest poly.vfmanifest b64.vfmanifest lorg/bi_big_int.vfmanifest lorg/bi_big_int_hex.vfmanifest lorg/bi_big_int_hex2.vfmanifest lorg/bi_big_int_plus.vfmanifest lorg/bi_big_int_mul.vfmanifest bigint/fibber.c
-	cp bigint/fibber.vfmanifest bigint/fibber.vfmanifest.done
+	touch bigint/fibber.vfmanifest.done
 
 lorg/bi_big_int_mul.vfmanifest.done: lorg/bi_big_int_mul.c bigint.h lorg/bi_big_int.h util.vfmanifest.done nats.vfmanifest.done axioms/prelude.vfmanifest lists.vfmanifest.done b64.vfmanifest.done axioms/bitops_axioms.vfmanifest bitops.vfmanifest.done poly.vfmanifest.done lorg/bi_big_int.vfmanifest.done lorg/bi_big_int_plus.vfmanifest.done
 	${VF} axioms/prelude.vfmanifest nats.vfmanifest util.vfmanifest lists.vfmanifest axioms/bitops_axioms.vfmanifest bitops.vfmanifest poly.vfmanifest b64.vfmanifest lorg/bi_big_int.vfmanifest lorg/bi_big_int_plus.vfmanifest lorg/bi_big_int_mul.c
-	cp lorg/bi_big_int_mul.vfmanifest lorg/bi_big_int_mul.vfmanifest.done
+	touch lorg/bi_big_int_mul.vfmanifest.done
 
 bin/fibber: bigint/fibber.vfmanifest.done lorg/bi_big_int.vfmanifest.done lorg/bi_big_int_plus.vfmanifest.done lorg/bi_big_int_hex.vfmanifest.done lorg/bi_big_int_hex2.vfmanifest.done
 	mkdir -p bin

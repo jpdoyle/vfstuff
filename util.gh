@@ -960,6 +960,8 @@ void nat_minus_int(nat n, nat m);
     ensures  int_of_nat(nat_minus(n,m))
         ==   max_of(0,int_of_nat(n)-int_of_nat(m));
 
+fixpoint int pow2(nat n) { return pow_nat(2,n); }
+
 #endif
 
 
