@@ -56,14 +56,14 @@ let
   verifast =
       stdenv.mkDerivation rec {
 	name    = "verifast-${version}";
-	version = "c11c26dab3acfc965723ba370c4b8637a4ebbfa1";
+	version = "2564c1225881af8471b4d71dcc458c4c6bc57070";
 
 	src = fetchgit {
             url = "https://github.com/jpdoyle/verifast.git";
             #url = /home/joe/verifast.git;
             rev   = "${version}";
             sha256 =
-              "1vipb8z5a8icv5a0c597bda67shsm27l1f9kj9m1pxj7a5q8h8hg";
+              "0q02ixgmyy06pz0an8drpj7zy88mgq22n1kww36g4d92y8dl4331";
 	};
 
 	dontStrip = true;
@@ -99,7 +99,7 @@ let
             cd $(basename $src)
             chmod -R +w .
             cd src
-            make -j2 NUMCPU=2 VERBOSE=1
+            make NUMCPU=2 VERBOSE=1
             mkdir -p $out
             mv ../bin $out/
         '';
