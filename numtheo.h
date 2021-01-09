@@ -3,9 +3,10 @@
 
 /*@ #include "numtheo.gh" @*/
 #include <stddef.h>
+#include <stdint.h>
 
 size_t prime_sieve(size_t* buff, size_t n);
-    /*@ requires buff[..n] |-> _ &*& n > 0 &*& n+n <= ULLONG_MAX; @*/
+    /*@ requires buff[..n] |-> _ &*& n > 0 &*& n+n <= SIZE_MAX; @*/
     /*@ ensures  u_llong_buffer(buff, result, n,
                     reverse(primes_below(nat_of_int(n-1))));
       @*/
