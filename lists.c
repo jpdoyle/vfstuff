@@ -234,10 +234,6 @@ void permutation_symm<t>(list<t> a, list<t> b)
             assert remove(x,a) == xs;
             is_perm_remove(b,a,x);
             is_perm_mem(b,a,x);
-            assert !!is_permutation(remove(x,b),remove(x,a));
-            assert !!is_permutation(remove(x,b),xs);
-            assert !!is_permutation(xs,remove(x,b));
-            assert !!is_permutation(a,b);
             assert false;
         }
     }

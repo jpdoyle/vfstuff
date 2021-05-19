@@ -321,7 +321,7 @@ char* big_int_to_hex(const big_int* s)
                             assert nth_of(zeroes,reverse(cons(c,rest_cs)))
                                 == some(c);
                         }
-                        //take_of_append_r(zeroes,reverse(rest_cs),{c});
+                        take_of_append_r(zeroes,reverse(rest_cs),{c});
                     }
                     assert !!all_eq(
                         take(zeroes, reverse(cons(c,rest_cs))),
@@ -397,10 +397,13 @@ char* big_int_to_hex(const big_int* s)
                         take(next_zeroes,reverse(chk_cs)),
                         '0');
                     assert !!all_eq(reverse(rest_cs), '0');
+                    assert reverse(append(chk_cs,rest_cs))
+                        == append(reverse(rest_cs), reverse(chk_cs));
+                    take_of_append_r(zeroes, reverse(rest_cs),
+                        reverse(chk_cs));
                     assert !!all_eq(
                         take(zeroes,reverse(append(chk_cs,rest_cs))),
                         '0');
-                    //take_of_append_r(zeroes,reverse(rest_cs),{c});
                 }
                 assert !!all_eq(
                     take(zeroes, reverse(append(chk_cs,rest_cs))),
@@ -494,6 +497,8 @@ char* big_int_to_hex(const big_int* s)
                     take(next_zeroes,reverse(block_cs)),
                     '0');
                 assert !!all_eq(reverse(rest_cs), '0');
+                take_of_append_r(zeroes, reverse(rest_cs),
+                    reverse(block_cs));
                 assert !!all_eq(
                     take(zeroes,reverse(append(block_cs,rest_cs))),
                     '0');

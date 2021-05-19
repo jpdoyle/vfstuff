@@ -56,14 +56,14 @@ let
   verifast =
       stdenv.mkDerivation rec {
 	name    = "verifast-${version}";
-	version = "2564c1225881af8471b4d71dcc458c4c6bc57070";
+	version = "b5b48a6f00411a64146de3ee2491f603302cc904";
 
 	src = fetchgit {
             url = "https://github.com/jpdoyle/verifast.git";
             #url = /home/joe/verifast.git;
             rev   = "${version}";
             sha256 =
-              "0q02ixgmyy06pz0an8drpj7zy88mgq22n1kww36g4d92y8dl4331";
+              "1n855rj66cjrzgm5n0gigqfi18kn61hqcxl3mbgs8iif2xs0zfdj";
 	};
 
 	dontStrip = true;

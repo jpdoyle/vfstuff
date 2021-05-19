@@ -486,10 +486,6 @@ lemma_auto(mem(x,reverse(l))) void reverse_mem<t>(list<t> l, t x)
         if(mem(x,l)) {
             assert !!mem(x,reverse(l));
         } else if(mem(x,reverse(l))) {
-            assert mem(x,reverse(vs)) || mem(x,{v});
-            assert mem(x,reverse(vs)) || x == v;
-            assert mem(x,vs) || x == v;
-            assert !!mem(x,l);
             assert false;
         }
 
@@ -692,44 +688,8 @@ lemma void zero_mul_unique(int x, int y)
         mul_abs_commute(x,y);
         assert abs(x*y) == abs(x)*abs(y);
         my_mul_mono_l(1,abs(x),abs(y));
-        assert abs(y) <= abs(x)*abs(y);
-        assert abs(y) <= abs(x*y);
-        assert 1 <= abs(x*y);
+        assert false;
     }
-    
-    //if(x < 0) {
-    //    assert x <= -1;
-    //    mul_mono_l(x,-1,y);
-    //    assert x*y <= -y;
-    //    
-    //} else if(x > 0) {
-
-    //    as_mul(x,x*y);
-
-    //    assert x != 0;
-    //    note(x*y == 0);
-    //    note(x*0 == 0);
-    //    assert x*(x*y) == x*0;
-    //    assert x*(x*y) == 0;
-    //    assert x*y + x*y == 0;
-    //    assert x*(y + y) == 0;
-
-    //    as_mul(x+1,0);
-    //    as_mul(x,y);
-    //    assert x*y == 0;
-    //    assert mul(x+1,0) == 0;
-    //    note(mul(x+1,x*y) == 0);
-    //    as_mul(x+1,x*y);
-
-    //    assert (x+1)*0 == 0;
-    //    assert (x+1)*(x*y) == mul(x+1,x*y);
-    //    assert (x+1)*(x*y) == 0;
-    //    assert x*(x*y) + x*y == 0;
-    //    assert x*(x*y + y) == 0;
-    //    assert x*(x*y+1) == x;
-    //    assert x*(x*y)+x == 0;
-
-    //}
 }
 
 lemma void division_zero_unique(int d, int q, int r)
@@ -746,7 +706,6 @@ lemma void division_zero_unique(int d, int q, int r)
 
     if(r != 0) {
         if(q == 0) {
-            assert d*q == 0;
             assert false;
         }
 
@@ -755,7 +714,6 @@ lemma void division_zero_unique(int d, int q, int r)
         mul_abs_commute(d,q);
         assert abs(r) == abs(d)*abs(q);
         my_mul_mono_r(abs(d),1,abs(q));
-        assert abs(d)*abs(q) >= abs(d);
 
         assert false;
     } else {
@@ -830,8 +788,6 @@ lemma void mod_plus(int x, int y, int d)
         my_mul_mono_l(1, abs(x/d - (x+y)/d + (x%d + y)/d),d);
         assert abs(x/d - (x+y)/d + (x%d + y)/d)*d >= d;
         mul_abs_commute(x/d - (x+y)/d + (x%d + y)/d,d);
-        assert abs(x/d - (x+y)/d + (x%d + y)/d*d) >= d;
-        assert abs((x+y)%d - (x%d+y)%d) >= d;
 
         assert false;
     }
@@ -989,7 +945,6 @@ lemma void div_monotonic_numerator(int x, int y, int d)
 
     if(y/d < x/d) {
         my_mul_mono_r(d,y/d+1,x/d);
-        assert d*(y/d) + d <= d*(x/d);
         assert false;
     }
 }
@@ -1031,7 +986,7 @@ lemma void div_sign(int x, int d)
     div_rem(x,d);
     if(x >= 0 && x/d < 0) {
         mul_mono_l(x/d,-1,d);
-        assert false;;
+        assert false;
     }
 
     if(x < 0 && x/d > 0) {
@@ -1050,10 +1005,6 @@ lemma void div_monotonic_denominator(int D, int x, int y)
     if(D/x < D/y) {
         my_mul_mono_r(x,D/x+1,D/y);
         my_mul_mono_l(x,y,D/y);
-        assert x*(D/x) + x <= x*(D/y);
-        assert x*(D/x) + D%x < x*(D/y);
-        assert x*(D/x) + D%x < x*(D/y)+D%y;
-        assert x*(D/x) + D%x < y*(D/y)+D%y;
 
         assert false;
     }
@@ -1070,8 +1021,6 @@ lemma void div_shrinks(int x, int d)
 
         my_mul_mono_l(1,d,x);
         my_mul_strict_mono_r(d,x,x/d);
-        assert d*x < d*(x/d);
-        assert x < d*(x/d);
 
         assert false;
     }
@@ -1086,8 +1035,6 @@ lemma void mul_to_zero(int x, int y)
     note_eq(abs_of(x)*abs_of(y),0);
     if(abs_of(x) > 0 && abs_of(y) > 0) {
         my_mul_mono_l(1,abs_of(x),abs_of(y));
-        assert abs_of(x)*abs_of(y) >= 1;
-        assert 0 >= 1;
         assert false;
     }
 }
@@ -1133,15 +1080,6 @@ lemma void div_twice(int x, int y, int z)
         my_mul_mono_r(abs_of(y),abs_of((x/y)%z),abs_of(z)-1);
         mul_abs_commute(y,(x/y)%z);
         mul_abs_commute(y,z);
-        assert abs(y*(x/y)%z) <= abs(y*z)-abs(y);
-        assert abs(x%y) <= abs(y)-1;
-        assert abs_of(y*((x/y)%z) + x%y)
-            <= abs_of(y*((x/y)%z)) + abs_of(x%y);
-        assert abs_of(y*((x/y)%z) + x%y)
-            <= abs_of(y*z) - abs(y) + abs_of(y) - 1;
-        assert abs_of(y*((x/y)%z) + x%y)
-            <= abs_of(y*z) - 1;
-        assert false;
         assert false;
     }
 

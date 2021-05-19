@@ -147,8 +147,6 @@ lemma void bitor_no_overlap_inner(int x, Z x_Z, int y, Z y_Z, nat n)
                     assert x >= 0;
                     assert pow_nat(2,n) >= 0;
                     my_mul_mono_l(0,x,pow_nat(2,n));
-                    assert x*pow_nat(2,n) >= 0;
-                    my_mul_mono_r(2,int_of_Z(x_z0),1);
                     assert false;
                 }
 
@@ -362,10 +360,7 @@ lemma void bitand_pow_2_inner(int x, Z x_Z, Z y_Z, nat n)
         if(n0 != zero) {
             switch(y_Z) {
             case Zsign(sy):
-                switch(x_Z) {
-                case Zsign(sx): assert !sx;
-                case Zdigit(x_z0,xb):
-                }
+                assert false;
             case Zdigit(y_z0,yb):
                 division_unique(pow_nat(2,n)-1,2,pow_nat(2,n0)-1,1);
                 division_unique(pow_nat(2,n)-1,2,int_of_Z(y_z0),yb?1:0);

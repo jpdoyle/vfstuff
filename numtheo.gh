@@ -84,7 +84,6 @@ lemma void is_prime_fueled_mono(int x, nat n, nat m)
         assert int_of_nat(n0) + 1 == int_of_nat(n);
         if(int_of_nat(n) == int_of_nat(m)) {
             nat_of_int_of_nat(n);
-            nat_of_int_of_nat(m);
             assert false;
         }
         assert int_of_nat(n) > int_of_nat(m);
@@ -274,14 +273,6 @@ lemma int findFactor(int x)
                 assert succ(nat_of_int(factor-1)) ==
                     nat_of_int(factor);
                 note( !is_prime_fueled(factor,nat_of_int(factor-1)));
-                assert int_of_nat(nat_of_int(factor-1)) == factor-1;
-                assert ((factor-int_of_nat(nat_of_int(factor-1))) <=
-                        1)
-                    || (factor%(factor
-                                -int_of_nat(nat_of_int(factor-1)))
-                            != 0);
-                note_eq(succ(nat_of_int(factor-2)),
-                    nat_of_int(factor-1));
                 assert false;
             }
         }
@@ -317,9 +308,6 @@ lemma void prime_test(int x)
                 (nonfactor)(x));
         forall_elim(primes_below(nat_of_int(x-1)), (bounded)(2,x-1), cx);
         prime_no_factors(x,cx);
-        assert x > 0 && cx > 0;
-        assert x%cx != 0;
-        division_unique(cx,x,0,cx);
         assert false;
     }
     if(!is_prime(x) && forall(primes_below(nat_of_int(x-1)),
@@ -395,7 +383,6 @@ lemma void prime_test_sqrt(int x, nat n)
                 assert false;
             }
             if(x/cx == 1) {
-                assert cx == x;
                 assert false;
             }
 
@@ -619,8 +606,6 @@ lemma pair<int,int> gcd_is_min_lincomb_sol(int a, int b, int x, int y, int n)
         note_eq(b*(-y*(a/n)) + b*(y*(a/n)),b*(y*(a/n)+(-y*(a/n))));
         note_eq(0,y*(a/n)+(-y*(a/n)));
         mul_abs_commute(b,(y*(a/n)+(-y*(a/n))));
-        my_mul_mono_r(abs(b),0,(y*(a/n)+(-y*(a/n))));
-        my_mul_mono_r(abs(b),(y*(a/n)+(-y*(a/n))),0);
         assert false;
     }
     //note_eq(-b*(y*(a/n)),b*(-y*(a/n)));
@@ -668,13 +653,9 @@ lemma pair<int,int> gcd_min_lincomb_sol(int a, int b)
 
     if(n < gcd(a,b)) {
         if(n/gcd(a,b) <= 0) {
-            assert n/gcd(a,b) == 0;
-            assert n == 0;
             assert false;
         }
         my_mul_mono_r(gcd(a,b),1,n/gcd(a,b));
-        assert gcd(a,b) <= gcd(a,b)*(n/gcd(a,b));
-        assert gcd(a,b) <= n;
         assert false;
     }
     assert n >= gcd(a,b);
@@ -784,15 +765,9 @@ lemma void sqrt_search(int n, int x, int y)
         my_mul_mono_r(y,n/y+1,x);
         assert y*(n/y)+y <= y*x;
         my_mul_mono_l(y,n/x,x);
-        assert y*(n/y)+y <= (n/x)*x;
-        mul_commutes(n/x,x);
         assert false;
     }
     if(n/y > n/x) {
-        my_mul_mono_r(x,n/x+1,n/y);
-        assert x*(n/x)+x <= x*(n/y);
-        my_mul_mono_l(x,y,n/y);
-        assert x*(n/x)+x <= y*(n/y);
         assert false;
     }
 }
@@ -807,9 +782,6 @@ lemma void sqrt_search2(int n, int x, int y)
         my_mul_mono_r(y,x+1,n/y);
         assert y*x + y <= y*(n/y);
         my_mul_mono_l(n/x+1,y,x);
-        assert (n/x)*x+x+y <= y*(n/y);
-        mul_commutes(n/x,x);
-        assert x*(n/x)+x+y <= y*(n/y);
         assert false;
     }
 }
@@ -893,7 +865,6 @@ lemma void unique_prime_factorization(
         if(l2_x != x) {
             div_rem(l2_x,x); div_rem(x,l2_x);
             prime_no_factors(l2_x,x);
-            prime_no_factors(x,l2_x);
             assert false;
         }
         product_commutes(x,l2);
@@ -938,8 +909,8 @@ lemma void factor_bound(int a, int b)
     ensures  a >= 1 &*& a <= a*b
         &*&  b >= 1 &*& b <= a*b;
 {
-    if(a < 1) { assert a == 0; assert false; }
-    if(b < 1) { assert b == 0; assert false; }
+    if(a < 1) { assert false; }
+    if(b < 1) { assert false; }
     my_mul_mono_r(a,1,b);
     my_mul_mono_l(1,a,b);
 }
@@ -957,9 +928,6 @@ void primes_below_sorted(nat n)
             if(!sorted(reverse(primes_below(n)))) {
                 pair<int,int> cx = not_sorted_append(reverse(primes_below(n0)),
                             {int_of_nat(n)});
-                switch(cx) { case pair(x,y):
-                    assert false;
-                }
             }
         }
     }

@@ -93,6 +93,8 @@ void slowsort_inner(int* arr, size_t i, size_t j)
 
       append_assoc(append(pref_start,cons(pref_last,nil)),
                 suff_start,cons(last,nil));
+      take_of_append_r(j-1-i,append(pref_start,cons(pref_last,nil)),
+        append(suff_start,cons(last,nil)));
       assert take(j-1-i,chunked)
         == append(append(pref_start,cons(pref_last,nil)), suff_start);
 

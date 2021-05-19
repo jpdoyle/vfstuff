@@ -269,7 +269,7 @@ void scale_minimal(int s, list<int> p)
         assert abs(s*x) == abs(s)*abs(x);
         if(x != 0 && s*x == 0) {
             my_mul_mono_r(abs(s),1,abs(x));
-            assert s*x != 0;
+            assert false;
         }
         scale_minimal(s,xs);
     }
@@ -963,7 +963,7 @@ void degree_poly_mul_bound(list<int> p, list<int> q)
             assert degree(poly_mul(p,q)) ==
                 degree(poly_shift(poly_mul(xs,q)));
         } else if(x == 0) {
-            assert degree(poly_mul(p,q)) == -1;
+            assert false;
         } else {
             assert !!poly_is_zero(xs);
             poly_mul_zero(xs,q);
@@ -1085,11 +1085,7 @@ lemma void leading_coeff_cancel(list<int> p, list<int> q)
 {
     ALREADY_PROVEN()
     switch(p) {
-    case nil:
-        switch(q) {
-        case nil:
-        case cons(y,ys):
-        }
+    case nil: assert false;
     case cons(x,xs):
         switch(q) {
         case nil:
@@ -1234,28 +1230,6 @@ lemma pair<list<int>, list<int> > poly_div(list<int> a, list<int> b)
                                 poly_plus(r,r_diff)));
 
                 poly_plus_assoc(poly_mul(q_diff,b), r_diff,r);
-                assert poly_plus(poly_mul(new_q,b), new_r)
-                    == poly_plus(poly_mul(q,b),
-                            poly_plus(r,poly_plus(poly_mul(q_diff,b),
-                                r_diff)));
-
-                poly_plus_assoc(poly_mul(q,b), r,
-                        poly_plus(poly_mul(q_diff,b), r_diff));
-                assert poly_plus(poly_mul(new_q,b), new_r)
-                    == poly_plus(poly_plus(poly_mul(q,b), r),
-                            poly_plus(poly_mul(q_diff,b),
-                                r_diff));
-                assert poly_plus(poly_mul(new_q,b), new_r)
-                    == poly_plus(poly_plus(poly_mul(q,b), r),
-                            delta);
-                assert minimize(poly_plus(poly_mul(new_q,b), new_r))
-                    == minimize(poly_plus(poly_plus(poly_mul(q,b), r),
-                            delta));
-                assert minimize(poly_plus(poly_mul(new_q,b), new_r))
-                    == poly_plus(minimize(poly_plus(poly_mul(q,b), r)),
-                            minimize(delta));
-                assert minimize(poly_plus(poly_mul(new_q,b), new_r))
-                    == minimize(poly_plus(poly_mul(q,b), r));
                 assert false;
             }
             q = new_q;

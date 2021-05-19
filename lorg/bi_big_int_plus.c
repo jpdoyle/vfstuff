@@ -335,32 +335,6 @@ bi_block_reduce(big_int_block* first, big_int_block* last,
                             <  2*pow_nat(2,nat_of_int(CARRY_BITS));
                         pow_monotonic(2,succ(nat_of_int(CARRY_BITS)),
                             nat_of_int(CHUNK_BITS*N_INTS));
-                    } else {
-                        neg_most_sig(final_chunks,CHUNK_BASE,{carry});
-                        assert carry <= -2;
-
-                        assert poly_eval(append(final_chunks,{carry}),CHUNK_BASE)
-                            <  (carry+1)*pow_nat(CHUNK_BASE,nat_of_int(N_INTS));
-                        my_mul_mono_l(carry+1,-1,
-                            pow_nat(CHUNK_BASE,nat_of_int(N_INTS)));
-                        assert poly_eval(append(final_chunks,{carry}),CHUNK_BASE)
-                            <  -pow_nat(CHUNK_BASE,nat_of_int(N_INTS));
-                        assert poly_eval(append(final_chunks,{carry}),CHUNK_BASE)
-                            == block_carry;
-                        assert block_carry
-                            <  -pow_nat(CHUNK_BASE,nat_of_int(N_INTS));
-                        if(block_carry >= 0) assert false;
-                        assert abs_of(block_carry) == -block_carry;
-                        assert -block_carry
-                            >  pow_nat(CHUNK_BASE,nat_of_int(N_INTS));
-                        assert pow_nat(2,nat_of_int(CARRY_BITS))
-                            >  pow_nat(CHUNK_BASE,nat_of_int(N_INTS));
-
-                        pow_times2(2,nat_of_int(CHUNK_BITS), N_INTS);
-                        assert pow_nat(2, nat_of_int(CHUNK_BITS*N_INTS))
-                            <  pow_nat(2,nat_of_int(CARRY_BITS));
-                        pow_monotonic(2,nat_of_int(CARRY_BITS),
-                            nat_of_int(CHUNK_BITS*N_INTS));
                     }
                     assert false;
                 } @*/
@@ -587,7 +561,6 @@ void big_int_reduce(big_int* p)
                 == poly_eval(append(chunks2,{carry2}), CHUNK_BASE);
             if(carry2 < 0) {
                 neg_most_sig(chunks2,CHUNK_BASE,{carry2});
-                assert -poly_eval(chunks, CHUNK_BASE) < 0;
                 assert false;
             }
             assert carry2 == 0;
@@ -648,8 +621,6 @@ void big_int_pluseq(big_int* a,const big_int* b)
             assert false;
         }
         if(!forall(a_chunks, (bounded)(-upper,upper))) {
-            int cx = not_forall(a_chunks, (bounded)(-upper,upper));
-            forall_elim(a_chunks, (bounded)(a_lower,a_upper),cx);
             assert false;
         }
         if(!forall(a_chunks, (bounded)(-pow_nat(2,N30)+1, pow_nat(2,N30)-1))) {

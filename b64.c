@@ -74,7 +74,7 @@ char hex_of_nib(uint8_t c)
     /*@ nth_of_index_of(c,hex_chars()); @*/
     if(c < 10)      { return (char)('0'+c);      }
     else if(c < 16) { return (char)('a'+(c-10)); }
-    else { /*@ assert false; @*/ abort(); }
+    else { /*@ assert false; @*/ abort(); } //~allow_dead_code
 }
 
 uint8_t nib_of_hex(char c)
@@ -90,7 +90,7 @@ uint8_t nib_of_hex(char c)
         return (uint8_t)(10 + (c-'a'));
     } else if(c >= '0' && c <= '9') {
         return (uint8_t)(c-'0');
-    } else { abort(); }
+    } else { /*@ assert false; @*/ abort(); } //~allow_dead_code
 }
 
 
@@ -107,25 +107,25 @@ lemma void in_range1_b64_chars(char c)
     else if(c < 'e') {}
     else if(c < 'f') {}
     else if(c < 'g') {}
-    else if(c < 'h') {}
-    else if(c < 'i') {}
-    else if(c < 'j') {}
-    else if(c < 'k') {}
-    else if(c < 'l') {}
-    else if(c < 'm') {}
-    else if(c < 'n') {}
-    else if(c < 'o') {}
-    else if(c < 'p') {}
-    else if(c < 'q') {}
-    else if(c < 'r') {}
-    else if(c < 's') {}
-    else if(c < 't') {}
-    else if(c < 'u') {}
-    else if(c < 'v') {}
-    else if(c < 'w') {}
-    else if(c < 'x') {}
-    else if(c < 'y') {}
-    else if(c < 'z') {}
+    // else if(c < 'h') {}
+    // else if(c < 'i') {}
+    // else if(c < 'j') {}
+    // else if(c < 'k') {}
+    // else if(c < 'l') {}
+    // else if(c < 'm') {}
+    // else if(c < 'n') {}
+    // else if(c < 'o') {}
+    // else if(c < 'p') {}
+    // else if(c < 'q') {}
+    // else if(c < 'r') {}
+    // else if(c < 's') {}
+    // else if(c < 't') {}
+    // else if(c < 'u') {}
+    // else if(c < 'v') {}
+    // else if(c < 'w') {}
+    // else if(c < 'x') {}
+    // else if(c < 'y') {}
+    // else if(c < 'z') {}
 }
 
 
@@ -209,19 +209,10 @@ lemma_auto void base_n_inv()
                 assert head(seq) > 0;
                 note(val > 0);
                 if(val == 0) assert false;
-                note( !all_eq(symbs,head(place_vals)));
-                assert all_eq(symbs,head(place_vals)) == (val == 0);
             } else if(all_eq(ss,head(place_vals))) {
-                assert val == 0;
-                assert all_eq(symbs,head(place_vals)) == (val == 0);
             } else {
                 assert val > 0;
                 if(val == 0) assert false;
-                my_inv_mul_strict_mono_l(0,rest_val,length(place_vals));
-                assert rest_val != 0;
-                assert !all_eq(ss,head(place_vals));
-                note( !all_eq(symbs,head(place_vals)));
-                assert all_eq(symbs,head(place_vals)) == (val == 0);
             }
         }
         assert false;
@@ -367,7 +358,6 @@ lemma void base_n_nonzero(char p0, list<char> ps, list<char> symbs,
             assert val == head(seq) + (length(ps)+1)*rest_v;
             my_mul_mono_r(length(ps)+1,0,rest_v);
             if(x == witness) {
-                assert head(seq) > 0;
                 assert false;
             } else {
                 base_n_nonzero(p0,ps,xs,witness);
@@ -596,13 +586,13 @@ char b64_of_byte(uint8_t n)
     uint8_t thresh1 = (uint8_t)('z'-'a' + thresh0 + 1);
     uint8_t thresh2 = (uint8_t)('9'-'0' + thresh1 + 1);
 
-    if(n >= 64)             { /*@ assert false; @*/ abort();      }
+    if(n >= 64)             { /*@ assert false; @*/ abort(); }//~allow_dead_code
     else if(n <= thresh0)   { return (char)('A' + n);             }
     else if(n <= thresh1)   { return (char)('a' + (n-thresh0-1)); }
     else if(n <= thresh2)   { return (char)('0' + (n-thresh1-1)); }
     else if(n <= thresh2+1) { return (char)('+');                 }
     else if(n <= thresh2+2) { return (char)('/');                 }
-    else                    { /*@ assert false; @*/ abort();      }
+    else                    { /*@ assert false; @*/ abort(); }//~allow_dead_code
 }
 
 

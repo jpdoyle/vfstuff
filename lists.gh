@@ -84,12 +84,14 @@ lemma_auto(drop(n,append(p,s))) void drop_of_append<t>(
     requires n == length(p);
     ensures drop(n,append(p,s)) == s;
 
-lemma_auto(take(n,append(p,s))) void take_of_append_exact<t>(
+lemma_auto(take(n,append(p,s)))
+void take_of_append_exact<t>(
         int n, list<t> p, list<t> s);
     requires n == length(p);
     ensures take(n,append(p,s)) == p;
 
-lemma_auto(take(n,append(p,s))) void take_of_append_r<t>(
+lemma //_auto(take(n,append(p,s)))
+void take_of_append_r<t>(
         int n, list<t> p, list<t> s);
     requires n >= length(p);
     ensures take(n,append(p,s)) == append(p,take(n-length(p),s));

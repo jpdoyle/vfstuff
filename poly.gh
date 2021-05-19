@@ -582,7 +582,6 @@ lemma void rat_lt_1_ineq(int a, int b, int c, int d)
         my_mul_mono_l(b,a,c);
         assert a*c >= b*c;
         my_mul_strict_mono_r(b,d,c);
-        assert a*c > b*d;
         assert false;
     }
 }

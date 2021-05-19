@@ -48,7 +48,6 @@ lemma_auto void bi_block_inv()
             leak [f]integer(_,v);
 
         }
-        open ints(_,_,_);
         assert false;
     }
 
@@ -114,8 +113,6 @@ lemma_auto void bi_block_opt_inv()
                 note_weird(length(ptrs) <= 1);
                 assert false;
             }
-            note(0 <= 1);
-            note(length(ptrs) <= 1);
         }
         assert false;
     }
@@ -145,7 +142,6 @@ lemma void bi_big_int_val(big_int* p)
     if(i1 != i2) {
         open [f2]bi_big_int(_,_,_,i2);
         open [f1]bi_big_int(_,_,_,i1);
-        assert [f1+f2]p->first |-> ?p;
         assert false;
     }
 }
@@ -162,7 +158,6 @@ lemma void bi_big_int_unique(big_int* p, big_int* q)
     if(p == q) {
         open [f2]bi_big_int(_,_,_,i2);
         open [f1]bi_big_int(_,_,_,i1);
-        assert [f1+f2]p->first |-> _;
         assert false;
     }
 }

@@ -218,8 +218,6 @@ big_int* big_int_from_hex(const char* s)
                     forall_elim(chunks,
                         (bounded)(0,upper),
                         cx);
-                } else {
-                    assert cx == blk+nib*pow_nat(2,nat_of_int(block_shift));
                 }
                 assert false;
             }
@@ -324,7 +322,7 @@ big_int* big_int_from_hex(const char* s)
             else if(x <= 1) { division_unique(x,4,0,1); }
             else if(x <= 2) { division_unique(x,4,0,2); }
             else if(x <= 3) { division_unique(x,4,0,3); }
-            else if(x <= 4) { assert false; }
+            //else if(x <= 4) { assert false; }
             assert false;
         } @*/
 

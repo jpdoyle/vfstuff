@@ -67,7 +67,7 @@ lemma_auto void sorted_singleton_by_length(list<int> l)
     case nil:
     case cons(x,xs):
         assert length(l) == 1 + length(xs);
-        if(xs != nil) { assert length(xs) != 0; assert false; }
+        if(xs != nil) { assert false; }
     }
 }
 
@@ -274,7 +274,6 @@ void permutation2_cons<t>(t x, list<t> a, list<t> b)
         if(cx != x) {
             assert !!mem(cx,a);
             forall_elim(a,(count_matches)(a,b),cx);
-            assert !!count_matches(cx,cons(x,a),cons(x,b));
             assert false;
         } else {
             assert count_of(cx,cons(x,a)) == 1 + count_of(cx,a);
@@ -286,8 +285,6 @@ void permutation2_cons<t>(t x, list<t> a, list<t> b)
             } else {
                 count_of_mem(x,a);
                 count_of_mem(x,b);
-                assert count_of(x,a) == 0;
-                assert count_of(x,b) == 0;
             }
             assert false;
         }
@@ -298,7 +295,6 @@ void permutation2_cons<t>(t x, list<t> a, list<t> b)
         if(cx != x) {
             assert !!mem(cx,b);
             forall_elim(b,(count_matches)(a,b),cx);
-            assert !!count_matches(cx,cons(x,a),cons(x,b));
             assert false;
         }
     }
@@ -542,10 +538,6 @@ lemma void permutation2_length<t>(list<t> a, list<t> b)
         switch(b) {
         case nil:
         case cons(bx,bxs):
-            forall_elim(b,(count_matches)(a,b),bx);
-            count_of_mem(bx,b);
-            count_of_mem(bx,a);
-            assert !!mem(bx,a);
             assert false;
         }
     case cons(ax,axs):
@@ -574,14 +566,12 @@ lemma void sorted_unique(list<int> a, list<int> b)
             if(!mem(ax,b)) {
                 forall_elim(a,(count_matches)(a,b),ax);
                 count_of_mem(ax,b);
-                count_of_mem(ax,a);
                 assert false;
             }
 
             if(!mem(bx,a)) {
                 forall_elim(b,(count_matches)(a,b),bx);
                 count_of_mem(bx,a);
-                count_of_mem(bx,b);
                 assert false;
             }
 
@@ -751,13 +741,6 @@ void permutation_equiv<t>(list<t> a, list<t> b)
         forall_elim(a,(count_matches)(a,b),cx);
         count_of_mem(cx,b);
         count_of_remove(ax,cx,b);
-        if(cx == ax) {
-          assert count_of(cx,a) == 1 + count_of(cx,axs);
-          assert 1+count_of(cx,new_b) == count_of(cx,b);
-        } else {
-          assert count_of(cx,a) == count_of(cx,axs);
-          assert count_of(cx,new_b) == count_of(cx,b);
-        }
         assert false;
       }
 

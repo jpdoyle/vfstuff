@@ -88,8 +88,6 @@ size_t int_sqrt(size_t n)
             div_rem(b-a,2);
             if(b-a > b)  { assert false; }
             if(a+(b-a)/2 > b)  {
-                assert (b-a)/2 > b-a;
-                mul_mono_l(1,2,b-a);
                 assert false;
             }
 
@@ -108,14 +106,9 @@ size_t int_sqrt(size_t n)
             div_rem(n,a);
             mod_sign(n,a);
             if(b < 1) {
-                div_sign(n,a);
-                assert b == 0;
                 assert false;
             }
             if(b > n) {
-                my_mul_mono_r(a,n+1,b);
-                my_mul_mono_l(1,a,n);
-
                 assert false;
             }
 
@@ -152,7 +145,6 @@ size_t int_sqrt(size_t n)
                         my_mul_mono_r(a,1,a-b);
                         assert false;
                     }
-                    assert a-b == 0;
                     assert false;
                 }
             }
@@ -227,11 +219,6 @@ size_t prime_sieve(size_t* buff, size_t n)
                     assert !forall(primes_below(nat_of_int(2)),
                         (nonfactor)(3));
                     nonfactor_def(3,2);
-                    int cx = not_forall(primes_below(nat_of_int(2)),
-                        (nonfactor)(3));
-                    if(cx == 2) {
-                        assert false;
-                    }
                     assert false;
                 }
                 assert !!is_prime(3);
@@ -361,12 +348,6 @@ size_t prime_sieve(size_t* buff, size_t n)
                         assert nat_of_int(i) == succ(nat_of_int(i-1));
 
                         if(nonfactor(i,cx)) { assert false; }
-                        assert i > 0;
-                        assert cx > 0;
-                        assert cx%i != 0;
-                        assert i%cx != 0;
-                        assert cx-i >= 1;
-                        assert cx-i < n-i;
                         assert false;
                     }
                 }
@@ -469,17 +450,6 @@ size_t prime_sieve(size_t* buff, size_t n)
                                     (prime_up_to)(nat_of_int(i-1)),cx);
                             division_unique(j,i,j/i,0);
                             division_unique(cx,i,j/i,cx-j);
-                            if(!is_prime(i)) { assert false; }
-                            assert !!prime_up_to(nat_of_int(i-1),cx);
-                            assert nat_of_int(i) == succ(nat_of_int(i-1));
-
-                            if(nonfactor(i,cx)) { assert false; }
-                            assert i > 0;
-                            assert cx > 0;
-                            assert cx%i != 0;
-                            assert i%cx != 0;
-                            assert cx-j >= 1;
-                            assert cx-j < n-j;
                             assert false;
                         }
                     }
@@ -499,13 +469,6 @@ size_t prime_sieve(size_t* buff, size_t n)
                     if(!forall(indices_of_inner(1, take(i-1,later),
                                         (old_j-i+1)),
                                 (prime_up_to)(nat_of_int(i)))) {
-                        int cx = not_forall(
-                            indices_of_inner(1, take(i-1,later),
-                                (old_j-i+1)),
-                            (prime_up_to)(nat_of_int(i)));
-                        forall_elim(indices_of_inner(1,later,old_j-i+1),
-                                (prime_up_to)(nat_of_int(i-1)), cx);
-
                         assert false;
                     }
                     indices_of_inner_append(1,{0},next_later,old_j);
@@ -561,11 +524,6 @@ size_t prime_sieve(size_t* buff, size_t n)
                 assert buff[(i+1)..n] |-> ?primes;
                 if(!forall(indices_of_inner(0,primes,i+1),
                         (notf)(is_prime))) {
-                    int cx = not_forall(indices_of_inner(0,primes,i+1),
-                        (notf)(is_prime));
-                    forall_elim(indices_of_inner(1,primes,i+1),
-                            (prime_up_to)(nat_of_int(i)), cx);
-                    prime_test(cx);
                     assert false;
                 }
             } @*/
@@ -575,9 +533,6 @@ size_t prime_sieve(size_t* buff, size_t n)
             if((i+1)*(i+1) > 2*n-1) {
                 note_eq((i+1)*(i+1),i*i+2*i+1);
                 my_mul_mono_l(2,i,i);
-                assert i*i <= n-1;
-                assert 2*i <= n-1;
-                assert i*i+2*i+1 <= (n-1)+(n-1)+1;
                 assert false;
             }
             if((i+1)*(i+1) >= n) {
