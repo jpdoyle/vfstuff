@@ -195,6 +195,30 @@ lemma void nonneg_sum(list<int> l)
     ensures  sum(l) >= 0;
 { LIST_INDUCTION(l,xs,nonneg_sum(xs)) }
 
+lemma void mem_fst_snd<s,t>(s a, t b, list<pair<s,t> > l)
+    requires true;
+    ensures  !mem(pair(a,b),l) || (mem(a,map(fst,l)) &&
+            mem(b,map(snd,l)));
+{ LIST_INDUCTION(l,xs,mem_fst_snd(a,b,xs)) }
+
+lemma s mem_snd_find<s,t>(t b, list<pair<s,t> > l)
+    requires !!mem(b,map(snd,l));
+    ensures  !!mem(pair(result,b),l);
+{
+    switch(l) {
+    case nil: assert false;
+    case cons(x,xs):
+        switch(x) {
+        case pair(y,z):
+            if(z == b) {
+                return y;
+            } else {
+                return mem_snd_find(b,xs);
+            }
+        }
+    }
+}
+
 lemma //_auto(filter((constf)(true),l))
 void filter_id<t>(list<t> l)
     requires true;
@@ -217,6 +241,45 @@ lemma void forall_remove<t>(list<t> l, fixpoint(t,bool) p,
     requires !!forall(l,p);
     ensures  !!forall(remove(x,l),p);
 { LIST_INDUCTION(l,xs,forall_remove(xs,p,x)) }
+
+lemma t pigeonhole<t>(list<t> l1, list<t> l2)
+    requires !!forall(l1,(contains)(l2))
+        &*&  length(l1) > length(l2);
+    ensures  !!mem(result,l1) &*& !!mem(result,remove(result,l1));
+{
+    switch(l2) {
+    case nil:
+        switch(l1) {
+        case nil: assert false;
+        case cons(x,xs): assert false;
+        }
+    case cons(x,xs):
+        if(!mem(x,l1)) {
+            if(!forall(l1,(contains)(xs))) {
+                t y = not_forall(l1,(contains)(xs));
+                forall_elim(l1,(contains)(l2),y);
+                assert false;
+            }
+            return pigeonhole(l1,xs);
+        } else if(mem(x,remove(x,l1))) {
+            return x;
+        } else {
+            if(!forall(remove(x,l1),(contains)(xs))) {
+                t y = not_forall(remove(x,l1),(contains)(xs));
+                forall_elim(l1,(contains)(l2),y);
+                assert false;
+            }
+            assert length(remove(x,l1)) == length(l1)-1;
+            t ret = pigeonhole(remove(x,l1),xs);
+            assert !!mem(ret,remove(x,l1));
+            assert !!mem(ret,l1);
+            assert !!mem(ret,remove(ret,remove(x,l1)));
+            remove_commutes(l1,ret,x);
+            assert !!mem(ret,remove(ret,l1));
+            return ret;
+        }
+    }
+}
 
 lemma t filter_diff<t>(fixpoint(t,bool) f1, fixpoint(t,bool) f2,
         list<t> l);

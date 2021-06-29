@@ -1,0 +1,4 @@
+$ { echo 43000000 | time ./bin/fibber | tee 7mb-fibber.txt; } | wc -c
+./bin/fibber  135504.57s user 5.44s system 99% cpu 37:38:57.64 total
+tee 7mb-fibber.txt  0.00s user 0.01s system 0% cpu 37:38:57.64 total
+7463105

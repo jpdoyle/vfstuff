@@ -1,0 +1,202 @@
+#ifndef VFSTUFF_FINGRP_GH
+#define VFSTUFF_FINGRP_GH
+
+#include "util.gh"
+
+fixpoint list<t> prodmap<r,s,t>(fixpoint(r,s,t) f, list<r> l, list<s> r) {
+    switch(l) {
+    case nil: return nil;
+    case cons(x,xs):
+        return append(map((f)(x),r),prodmap(f,xs,r));
+    }
+}
+
+lemma void map_len<s,t>(fixpoint(s,t) f,list<s> l)
+    requires true;
+    ensures  length(map(f,l)) == length(l);
+{ LIST_INDUCTION(l,xs,map_len(f,xs)) }
+
+lemma void map_forward<s,t>(s x, list<s> l, fixpoint(s,t) f)
+    requires true;
+    ensures  !mem(x,l) || mem(f(x),map(f,l));
+{ LIST_INDUCTION(l,xs,map_forward(x,xs,f)) }
+
+lemma s map_backward<s,t>(t y, fixpoint(s,t) f, list<s> l)
+    requires !!mem(y,map(f,l));
+    ensures  !!mem(result,l) &*& f(result) == y;
+{
+    switch(l) {
+    case nil: assert false;
+    case cons(x,xs):
+        if(f(x) == y) { return x; }
+        return map_backward(y, f, xs);
+    }
+}
+
+lemma void prodmap_len<r,s,t>(fixpoint(r,s,t) f, list<r> l, list<s> r)
+    requires true;
+    ensures  length(prodmap(f,l,r)) == length(l)*length(r);
+{
+    switch(l) {
+    case nil:
+    case cons(x,xs):
+        map_len((f)(x),r);
+        prodmap_len(f,xs,r);
+        assert length(prodmap(f,l,r))
+            == length(map((f)(x),r))
+            +  length(prodmap(f,xs,r));
+        note_eq((length(xs)+1)*length(r),
+                length(r) + length(xs)*length(r));
+    }
+}
+
+lemma void prodmap_forward<r,s,t>(r lv, s rv, list<r> l, list<s> r,
+                                  fixpoint(r,s,t) f)
+    requires true;
+    ensures  !mem(lv,l) || !mem(rv,r) || mem(f(lv,rv),prodmap(f,l,r));
+{
+    switch(l) {
+    case nil:
+    case cons(x,xs):
+        map_forward(rv,r,(f)(lv));
+        prodmap_forward(lv,rv,xs,r,f);
+    }
+}
+
+lemma pair<r,s>
+prodmap_backward<r,s,t>(t y, fixpoint(r,s,t) f, list<r> l, list<s> r)
+    requires !!mem(y,prodmap(f,l,r));
+    ensures  switch(result) {
+    case pair(lv,rv):
+        return !!mem(lv,l) &*& !!mem(rv,r) &*& f(lv,rv) == y;
+    };
+{
+    switch(l) {
+    case nil:
+    case cons(x,xs):
+        if(mem(y,map((f)(x),r))) {
+            s rv = map_backward(y,(f)(x),r);
+            return pair(x,rv);
+        }
+        return prodmap_backward(y,f,xs,r);
+    }
+}
+
+// compose with the diagonal function -- ie, convert f(x,y) into
+// f(g(u),h(u))
+fixpoint t diag<q,r,s,t>(fixpoint(r,s,t) f, fixpoint(q,r) g,
+                         fixpoint(q,s) h, q x) {
+    return f(g(x),h(x));
+}
+
+fixpoint fixpoint(s,t) curry<r,s,t>(fixpoint(r,s,t) f, r x) {
+    return (f)(x);
+}
+
+fixpoint bool checkassoc<t>(fixpoint(t,t,t) op, t a, t b, t c) {
+    return op(a,op(b,c)) == op(op(a,b),c);
+}
+
+fixpoint t onlpair3<q,r,s,t>(fixpoint(q,r,s,t) f, pair<pair<q,r>,s> v)
+{
+    switch(v) {
+    case pair(ab,c):
+        return switch(ab) {
+        case pair(a,b):
+            return f(a,b,c);
+        };
+    }
+}
+
+predicate fingrp<t>(list<t> elems, t u, fixpoint(t,t,t) op,
+                    fixpoint(t,t) inv) =
+    // `elems` is a set
+        !!distinct(elems)
+    // unit in group
+    &*& !!mem(u,elems)
+    // closure of inv -- x in G => inv(x) in G
+    &*& !!forall(elems, (o)((flip)(mem,elems),inv))
+    // closure of op -- x,y in G => x op y in G
+    &*& !!forall(prodmap(op,elems,elems), (flip)(mem,elems))
+    // unit is unit -- x in G => (x op u = x and u op x = x)
+    &*& !!forall(elems, (diag)(equals,id,(op)(u)))
+    &*& !!forall(elems, (diag)(equals,id,(flip)(op,u)))
+    // inverse is inverse:
+    // x in G => (x op inv(x) = u and inv(x) op x = u
+    &*& let((diag)(op,inv,id), ?opinv_l)
+    &*& let((diag)(op,id,inv), ?opinv_r)
+    &*& !!forall(elems, (diag)(equals, (constf)(u), opinv_l))
+    &*& !!forall(elems, (diag)(equals, (constf)(u), opinv_r))
+    // op is associative
+    &*& !!forall(prodmap(pair,prodmap(pair,elems,elems),elems),
+            (onlpair3)((checkassoc)(op)))
+    ;
+
+lemma void fingrp_unit_unique<t>(t x)
+    requires [?f]fingrp(?elems, ?u, ?op, ?inv)
+        &*&  !!mem(x,elems)
+        &*&  (forall(elems, (diag)(equals,id,(op)(x)))
+             || forall(elems, (diag)(equals,id,(flip)(op,x))))
+        ;
+    ensures  [ f]fingrp( elems,  u,  op,  inv)
+        &*&  x == u;
+{
+    if(x != u) {
+        open [f]fingrp(_,_,_,_);
+        if(forall(elems, (diag)(equals,id,(op)(x)))) {
+            forall_elim(elems, (diag)(equals,id,(op)(x)), u);
+            assert op(x,u) == u;
+            forall_elim(elems, (diag)(equals,id,(flip)(op,u)), x);
+            assert false;
+        }
+
+        if(forall(elems, (diag)(equals,id,(flip)(op,u)))) {
+            forall_elim(elems, (diag)(equals,id,(flip)(op,x)), u);
+            assert op(u,x) == u;
+            forall_elim(elems, (diag)(equals,id,(op)(u)), x);
+            assert false;
+        }
+    }
+}
+
+lemma void fingrp_inv_unique<t>(t x, t y)
+    requires [?f]fingrp(?elems, ?u, ?op, ?inv)
+        &*&  !!mem(x,elems) &*& !!mem(y,elems)
+        &*&  op(x,y) == u
+        ;
+    ensures  [ f]fingrp( elems,  u,  op,  inv)
+        &*&  y == inv(x);
+{
+    if(y != inv(x)) {
+        open [f]fingrp(_,_,_,_);
+
+        assert op(inv(x),op(x,y)) == op(inv(x),u);
+
+        forall_elim(elems, (o)((flip)(mem,elems),inv),x);
+        prodmap_forward(inv(x),x,elems,elems,pair);
+        assert !!mem(x,elems);
+        assert !!mem(inv(x),elems);
+        assert !!mem(pair(inv(x),x),prodmap(pair,elems,elems));
+        prodmap_forward(pair(inv(x),x),y,prodmap(pair,elems,elems),elems,pair);
+        forall_elim(prodmap(pair,prodmap(pair,elems,elems),elems),
+                (onlpair3)((checkassoc)(op)),
+                pair(pair(inv(x),x),y));
+        assert op(inv(x),op(x,y)) == op(op(inv(x),x),y);
+
+        forall_elim(elems, (diag)(equals, (constf)(u),
+            (diag)(op,inv,id)),x);
+        assert op(inv(x),op(x,y)) == op(u,y);
+
+        forall_elim(elems, (diag)(equals,id,(op)(u)),y);
+        assert op(u,y) == y;
+
+        forall_elim(elems, (diag)(equals,id,(flip)(op,u)),inv(x));
+        assert op(inv(x),u) == inv(x);
+
+        assert false;
+    }
+}
+
+
+#endif
+

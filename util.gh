@@ -644,6 +644,30 @@ fixpoint bool bounded(int min, int max, int x) {
     return x >= min && x <= max;
 }
 
+fixpoint list<int> range_inner(int min, int max, nat f) {
+    switch(f) {
+    case zero: return nil;
+    case succ(f0): return cons(min,range_inner(min+1,max,f0));
+    }
+}
+
+fixpoint list<int> range(int min, int max) {
+    return range_inner(min,max,nat_of_int(max-min));
+}
+
+lemma void bounded_range(int min, int max, int x)
+    requires min <= max;
+    ensures  bounded(min,max,x) == mem(x,range(min,max+1));
+{
+    for(nat f = zero; max+1 - int_of_nat(f) > min; f = succ(f))
+        invariant max+1 - int_of_nat(f) >= min
+            &*&   bounded(max+1-int_of_nat(f),max,x)
+                == mem(x,range_inner(max+1-int_of_nat(f),max+1,f))
+            ;
+        decreases max+1 - int_of_nat(f) - min;
+    { }
+}
+
 fixpoint int max_of(int a,int b) { return a > b ? a : b; }
 fixpoint int min_of(int a,int b) { return a < b ? a : b; }
 
@@ -785,6 +809,11 @@ lemma_auto(euclid_mod(D,d))
 void euclid_mod_auto(int D, int d);
     requires d > 0;
     ensures euclid_mod(D, d) == (D % d + d) % d;
+
+lemma_auto(euclid_mod(euclid_mod(D,d),d))
+void euclid_mod_mod(int D, int d);
+    requires d > 0;
+    ensures euclid_mod(euclid_mod(D,d), d) == euclid_mod(D,d);
 
 predicate malloced_string(char* s; list<char> cs) =
         string(s,cs) &*& malloc_block_chars(s,?numbytes)
@@ -961,6 +990,13 @@ void nat_minus_int(nat n, nat m);
         ==   max_of(0,int_of_nat(n)-int_of_nat(m));
 
 fixpoint int pow2(nat n) { return pow_nat(2,n); }
+
+fixpoint int factorial(nat n) {
+    switch(n) {
+    case zero: return 1;
+    case succ(n0): return int_of_nat(n)*factorial(n0);
+    }
+}
 
 #endif
 

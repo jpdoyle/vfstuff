@@ -841,6 +841,41 @@ lemma void product_commutes(int x, list<int> l)
     }
 }
 
+lemma void product_permutation(list<int> l1, list<int> l2)
+    requires !!is_permutation(l1,l2);
+    ensures  product(l1) == product(l2);
+{
+    switch(l1) {
+    case nil:
+        switch(l2) {
+        case nil:
+        case cons(x,xs): assert false;
+        }
+    case cons(v,vs):
+        assert !!mem(v,l2);
+        assert remove(v,l1) == vs;
+        assert !!is_permutation(vs,remove(v,l2));
+
+        product_commutes(v,l2);
+        assert product(l2) == v*product(remove(v,l2));
+        assert product(l1) == v*product(vs);
+        product_permutation(vs,remove(v,l2));
+
+    }
+}
+
+lemma void product_append(list<int> l1, list<int> l2)
+    requires true;
+    ensures  product(append(l1,l2)) == product(l1)*product(l2);
+{
+    switch(l1) {
+    case nil:
+    case cons(v,vs):
+        mul_3var(v,product(vs),product(l2));
+        product_append(vs,l2);
+    }
+}
+
 lemma void unique_prime_factorization(
         int n, list<int> l1, list<int> l2)
     requires product(l1) == n &*& product(l2) == n
