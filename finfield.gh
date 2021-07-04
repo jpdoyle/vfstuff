@@ -11,10 +11,20 @@ lemma void Zp_minus(int p, int a, int b);
     ensures  euclid_mod(a-b,p)
         ==   euclid_mod(euclid_mod(a,p)-euclid_mod(b,p),p);
 
+lemma void Zp_diff_zero(int p, int a, int b);
+    requires p > 0;
+    ensures  (euclid_mod(a-b,p) == 0)
+        ==   (euclid_mod(a,p) == euclid_mod(b,p));
+
 lemma void Zp_times(int p, int a, int b);
     requires p > 0;
     ensures  euclid_mod(a*b,p)
         ==   euclid_mod(euclid_mod(a,p)*euclid_mod(b,p),p);
+
+lemma void Zp_prod_zero(int p, int a, int b);
+    requires !!is_prime(p);
+    ensures  (euclid_mod(a*b,p) == 0)
+        ==   (euclid_mod(a,p) == 0 || euclid_mod(b,p) == 0);
 
 lemma void Zp_pow(int p, int a, nat n);
     requires p > 0;
@@ -49,7 +59,7 @@ fixpoint option<nat> order_mod_n_fueled(nat f, int n, int x,
 
 fixpoint option<nat> order_mod_n(int n, int x) {
     return n <= 1 ? none
-        : order_mod_n_fueled(nat_of_int(n), n, x, none);
+        : order_mod_n_fueled(nat_of_int(n-1), n, x, none);
 }
 
 lemma void order_mod_n_bounded(int n, int x, nat o);
@@ -57,45 +67,48 @@ lemma void order_mod_n_bounded(int n, int x, nat o);
     ensures  0 < int_of_nat(o) &*& int_of_nat(o) < n;
 
 lemma void order_mod_n_correct(int n, int x);
-    requires n > 1;
+    requires n > 1 &*& x >= 1;
     ensures  switch(order_mod_n(n,x)) {
-        case none: return gcd(x,n) != 1;
+        case none:
+            //return gcd(x,n) != 1;
+            return euclid_mod(x,n) == 0 || !is_prime(n);
         case some(o):
             return  gcd(x,n) == 1
                 &*& euclid_mod(pow_nat(x,o), n) == 1;
     };
 
-lemma void order_mod_n_minimal(int n, int x, nat o);
-    requires n > 1 &*& euclid_mod(pow_nat(x,o), n) == 1;
-    ensures  switch(order_mod_n(n,x)) {
-        case none: return false;
-        case some(my_o):
-            return  int_of_nat(my_o) >= int_of_nat(o);
-    };
-
-lemma int orders_mod_n_divides(int n, int x, nat o1, nat o2);
-    requires n > 1
-        &*&  euclid_mod(pow_nat(x,o1), n) == 1
-        &*&  euclid_mod(pow_nat(x,o2), n) == 1
-        &*&  int_of_nat(o1) <= int_of_nat(o2);
-    ensures  int_of_nat(o1)*result == int_of_nat(o2);
-
-lemma void pratt_core_lemma(int p, int x);
-    requires p > 1 &*& x > 1
-        &*&  order_mod_n(p,x) == some(nat_of_int(p-1));
-    ensures  !!is_prime(p);
-
-fixpoint bool pratt_pow_thing(int p, int x, int q) {
-    return euclid_mod(pow_nat(x,nat_of_int((p-1)/q)),p)
-        != 1;
-}
-
-lemma void pratt_order_check_lemma(int p, list<int> p_minus_1, int x);
-    requires p > 1 &*& x > 1
-        &*&  !!forall(p_minus_1,is_prime)
-        &*&  product(p_minus_1)+1 == p
-        &*&  euclid_mod(pow_nat(x,nat_of_int(p-1)),p) == 1
-        &*&  !!forall(p_minus_1,(pratt_pow_thing)(p,x))
-        ;
-    ensures  order_mod_n(p,x) == some(nat_of_int(p-1));
+//lemma void order_mod_n_minimal(int n, int x, nat o);
+//    requires n > 1 &*& euclid_mod(pow_nat(x,o), n) == 1;
+//    ensures  switch(order_mod_n(n,x)) {
+//        case none: return false;
+//        case some(my_o):
+//            return  int_of_nat(my_o) >= int_of_nat(o);
+//    };
+//
+//lemma int orders_mod_n_divides(int n, int x, nat o1, nat o2);
+//    requires n > 1
+//        &*&  euclid_mod(pow_nat(x,o1), n) == 1
+//        &*&  euclid_mod(pow_nat(x,o2), n) == 1
+//        &*&  int_of_nat(o1) <= int_of_nat(o2);
+//    ensures  result > 1 &*& int_of_nat(o1)%result == 0
+//        &*&  int_of_nat(o2)%result == 0;
+//
+//lemma void pratt_core_lemma(int p, int x);
+//    requires p > 1 &*& x > 1
+//        &*&  order_mod_n(p,x) == some(nat_of_int(p-1));
+//    ensures  !!is_prime(p);
+//
+//fixpoint bool pratt_pow_thing(int p, int x, int q) {
+//    return euclid_mod(pow_nat(x,nat_of_int((p-1)/q)),p)
+//        != 1;
+//}
+//
+//lemma void pratt_order_check_lemma(int p, list<int> p_minus_1, int x);
+//    requires p > 1 &*& x > 1
+//        &*&  !!forall(p_minus_1,is_prime)
+//        &*&  product(p_minus_1)+1 == p
+//        &*&  euclid_mod(pow_nat(x,nat_of_int(p-1)),p) == 1
+//        &*&  !!forall(p_minus_1,(pratt_pow_thing)(p,x))
+//        ;
+//    ensures  order_mod_n(p,x) == some(nat_of_int(p-1));
 

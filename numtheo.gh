@@ -716,6 +716,35 @@ lemma void prime_divides_product(int p, int a, int b)
     }
 }
 
+lemma void prime_divides_factorial(int p, nat n)
+    requires !!is_prime(p);
+    ensures  (factorial(n)%p == 0) == (int_of_nat(n) >= p);
+{
+    switch(n) {
+    case zero:
+        assert factorial(n) == 1;
+        division_unique(1,p,0,1);
+    case succ(n0):
+        assert factorial(n) == int_of_nat(n)*factorial(n0);
+        prime_divides_factorial(p,n0);
+        if(int_of_nat(n0) >= p) {
+            assert int_of_nat(n) >= p;
+            div_rem(factorial(n0),p);
+            assert factorial(n)
+                == int_of_nat(n)*(p*(factorial(n0)/p));
+            mul_3var(int_of_nat(n),p,(factorial(n0)/p));
+            division_unique(factorial(n),p,int_of_nat(n)*(factorial(n0)/p),0);
+        } else if(int_of_nat(n) == p) {
+            division_unique(factorial(n),p,factorial(n0),0);
+        } else if(factorial(n)%p == 0) {
+            prime_divides_product(p,int_of_nat(n),factorial(n0));
+            assert factorial(n0)%p != 0;
+            division_unique(int_of_nat(n),p,0,int_of_nat(n));
+            assert false;
+        }
+    }
+}
+
 lemma_auto(indices_of_inner(v,l,b))
 void indices_of_length<t>(t v, list<t> l, int b)
     requires true;

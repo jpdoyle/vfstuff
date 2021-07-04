@@ -924,6 +924,16 @@ void euclid_mod_auto(int D, int d)
     }
 }
 
+lemma_auto(euclid_mod(euclid_mod(D,d),d))
+void euclid_mod_mod(int D, int d)
+    requires d > 0;
+    ensures euclid_mod(euclid_mod(D,d), d) == euclid_mod(D,d);
+{
+    euclid_mod_correct(D,d);
+    euclid_mod_correct(euclid_mod(D,d),d);
+    open [_]euclid_div_sol(euclid_mod(D, d),d,?q, ?r);
+    euclid_div_unique(euclid_mod(D,d),d,q,r,0,euclid_mod(D,d));
+}
 
 lemma_auto(bounded(l,h,x)) void bounded_cases(int l, int h, int x)
     requires bounded(l,h,x) && l <= h;
@@ -1213,6 +1223,19 @@ lemma void pow_soft_monotonic(int x,nat y,nat z)
     } else { assert x == 1;
         assert pow_nat(x,y) == 1;
         assert pow_nat(x,z) == 1;
+    }
+}
+
+lemma_auto(factorial(n))
+void factorial_positive(nat n)
+    requires true;
+    ensures factorial(n) >= 1;
+{
+    switch(n) {
+    case zero:
+    case succ(n0):
+        factorial_positive(n0);
+        my_mul_mono_r(int_of_nat(n),1,factorial(n0));
     }
 }
 

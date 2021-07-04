@@ -2,7 +2,7 @@ VF=time verifast -target Linux64 -shared -emit_vfmanifest
 
 .PHONY: all clean
 
-all: nats.vfmanifest.done util.vfmanifest.done lists.vfmanifest.done bitops.vfmanifest.done termination.vfmanifest.done isort.vfmanifest.done slowsort.vfmanifest.done poly.vfmanifest.done numtheo.vfmanifest.done bigint.vfmanifest.done lorg/bi_big_int_mul.vfmanifest.done bin/calc bin/calc-dbg bin/fibber
+all: nats.vfmanifest.done util.vfmanifest.done lists.vfmanifest.done bitops.vfmanifest.done termination.vfmanifest.done isort.vfmanifest.done slowsort.vfmanifest.done poly.vfmanifest.done numtheo.vfmanifest.done finfield.vfmanifest.done bigint.vfmanifest.done lorg/bi_big_int_mul.vfmanifest.done bin/calc bin/calc-dbg bin/fibber
 
 clean:
 	rm *.vfmanifest
@@ -32,6 +32,11 @@ termination.vfmanifest.done: termination.c termination.gh util.vfmanifest.done n
 numtheo.vfmanifest.done: numtheo.c numtheo.h numtheo.gh util.vfmanifest.done nats.vfmanifest.done axioms/prelude.vfmanifest lists.vfmanifest.done
 	${VF} axioms/prelude.vfmanifest nats.vfmanifest util.vfmanifest lists.vfmanifest numtheo.c
 	touch numtheo.vfmanifest.done
+
+finfield.vfmanifest.done: finfield.c finfield.gh numtheo.vfmanifest.done util.vfmanifest.done nats.vfmanifest.done axioms/prelude.vfmanifest lists.vfmanifest.done
+	${VF} axioms/prelude.vfmanifest nats.vfmanifest util.vfmanifest lists.vfmanifest numtheo.vfmanifest finfield.c
+	touch finfield.vfmanifest.done
+
 
 isort.vfmanifest.done: isort.c sorting.h sorting.gh util.vfmanifest.done nats.vfmanifest.done axioms/prelude.vfmanifest lists.vfmanifest.done
 	${VF} axioms/prelude.vfmanifest nats.vfmanifest util.vfmanifest lists.vfmanifest isort.c

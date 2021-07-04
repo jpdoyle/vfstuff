@@ -655,6 +655,19 @@ fixpoint list<int> range(int min, int max) {
     return range_inner(min,max,nat_of_int(max-min));
 }
 
+lemma
+void range_inner_len(int min,int max, nat n)
+    requires true;
+    ensures  length(range_inner(min,max,n))
+        ==   int_of_nat(n);
+{ NAT_INDUCTION(n,n0,range_inner_len(min+1,max,n0)) }
+
+lemma_auto(length(range(min,max)))
+void range_len(int min,int max)
+    requires max >= min;
+    ensures  length(range(min,max)) == max-min;
+{ range_inner_len(min,max,nat_of_int(max-min)); }
+
 lemma void bounded_range(int min, int max, int x)
     requires min <= max;
     ensures  bounded(min,max,x) == mem(x,range(min,max+1));
@@ -997,6 +1010,11 @@ fixpoint int factorial(nat n) {
     case succ(n0): return int_of_nat(n)*factorial(n0);
     }
 }
+
+lemma_auto(factorial(n))
+void factorial_positive(nat n);
+    requires true;
+    ensures factorial(n) >= 1;
 
 #endif
 

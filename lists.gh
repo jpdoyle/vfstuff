@@ -61,6 +61,42 @@ void remove_idempotent<t>(t x, list<t> l)
     ensures  remove(x,l) == remove(x,remove(x,l));
 { LIST_INDUCTION(l, xs, remove_idempotent(x, xs)) }
 
+lemma t not_distinct<t>(list<t> a)
+    requires !distinct(a);
+    ensures  !!mem(result,a) &*& !!mem(result,remove(result,a));
+{
+    switch(a) {
+    case nil: assert false;
+    case cons(x,xs):
+        if(mem(x,xs)) {
+            return x;
+        } else {
+            return not_distinct(xs);
+        }
+    }
+}
+
+lemma t not_permutation_distinct<t>(list<t> a, list<t> b)
+    requires !is_permutation(a,b) &*& !!distinct(a) &*& !!distinct(b);
+    ensures  mem(result,a) != mem(result,b);
+{
+    switch(a) {
+    case nil:
+        switch(b) {
+        case nil: assert false;
+        case cons(bx,bxs):
+            return bx;
+        }
+    case cons(ax,axs):
+        if(!mem(ax,b)) {
+            return ax;
+        } else {
+            distinct_remove(ax,b);
+            return not_permutation_distinct(axs,remove(ax,b));
+        }
+    }
+}
+
 lemma_auto(is_permutation(keys(a),keys(b)))
 void keys_permutation<s,t>(ASSOC(s,t) a, ASSOC(s,t) b);
     requires is_permutation(a,b) && distinct(keys(a))
@@ -194,6 +230,11 @@ lemma void nonneg_sum(list<int> l)
     requires !!forall(l,(ge_than)(0));
     ensures  sum(l) >= 0;
 { LIST_INDUCTION(l,xs,nonneg_sum(xs)) }
+
+lemma void map_length<s,t>(fixpoint(s,t) f, list<s> l)
+    requires true;
+    ensures  length(map(f,l)) == length(l);
+{ LIST_INDUCTION(l,xs,map_length(f,xs)) }
 
 lemma void mem_fst_snd<s,t>(s a, t b, list<pair<s,t> > l)
     requires true;
