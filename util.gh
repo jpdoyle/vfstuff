@@ -652,7 +652,7 @@ fixpoint list<int> range_inner(int min, int max, nat f) {
 }
 
 fixpoint list<int> range(int min, int max) {
-    return range_inner(min,max,nat_of_int(max-min));
+    return max < min ? nil : range_inner(min,max,nat_of_int(max-min));
 }
 
 lemma
@@ -679,6 +679,44 @@ lemma void bounded_range(int min, int max, int x)
             ;
         decreases max+1 - int_of_nat(f) - min;
     { }
+}
+
+lemma_auto(distinct(range(min,max)))
+void range_distinct(int min,int max)
+    requires true;
+    ensures  !!distinct(range(min,max));
+{
+    if(min >= max) {
+        return;
+    }
+
+    for(nat f = zero; max - int_of_nat(f) > min; f = succ(f))
+        invariant max - int_of_nat(f) >= min
+            &*&   let(range_inner(max-int_of_nat(f),max,f),
+                      ?l)
+            &*&   !!distinct(l)
+            &*&   !!forall(l,(bounded)(max-int_of_nat(f),max-1))
+            ;
+        decreases max - int_of_nat(f) - min;
+    {
+        int v = max-int_of_nat(succ(f));
+        assert range_inner(v,max,succ(f))
+            == cons(v,l);
+
+        if(mem(v,l)) {
+            forall_elim(l,(bounded)(max-int_of_nat(f),max-1),
+                    v);
+            assert false;
+        }
+
+        if(!forall(l, (bounded)(max-int_of_nat(succ(f)),max-1))) {
+            int cx = not_forall(l,
+                    (bounded)(max-int_of_nat(succ(f)),max-1));
+            forall_elim(l,(bounded)(max-int_of_nat(f),max-1),
+                    cx);
+            assert false;
+        }
+    }
 }
 
 fixpoint int max_of(int a,int b) { return a > b ? a : b; }
@@ -827,6 +865,26 @@ lemma_auto(euclid_mod(euclid_mod(D,d),d))
 void euclid_mod_mod(int D, int d);
     requires d > 0;
     ensures euclid_mod(euclid_mod(D,d), d) == euclid_mod(D,d);
+
+lemma_auto(euclid_mod(d,d))
+void euclid_mod_self(int D, int d);
+    requires d > 0;
+    ensures euclid_mod(d,d) == 0;
+
+lemma_auto(euclid_mod(D,d))
+void euclid_mod_small(int D, int d);
+    requires D >= 0 && D < d  && d > 0;
+    ensures euclid_mod(D,d) == D;
+
+lemma_auto(euclid_mod(D,d))
+void euclid_mod_nonneg(int D, int d);
+    requires d > 0;
+    ensures euclid_mod(D,d) >= 0;
+
+lemma_auto(euclid_mod(D,d))
+void euclid_mod_below_d(int D, int d);
+    requires d > 0;
+    ensures euclid_mod(D,d) < d;
 
 predicate malloced_string(char* s; list<char> cs) =
         string(s,cs) &*& malloc_block_chars(s,?numbytes)

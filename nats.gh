@@ -45,6 +45,10 @@ lemma_auto(nat_plus(n,m)) void nat_plus_comm(nat n, nat m);
     requires true;
     ensures  nat_plus(n,m) == nat_plus(m,n);
 
+lemma_auto(nat_plus(n,m)) void nat_plus_int_of_nat(nat n, nat m);
+    requires true;
+    ensures  nat_plus(n,m) == nat_of_int(int_of_nat(n)+int_of_nat(m));
+
 lemma_auto(nat_of_int(length(cons(x,xs))))
 void nat_of_int_of_length<t>(t x, list<t> xs);
     requires true;

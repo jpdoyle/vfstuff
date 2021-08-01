@@ -242,21 +242,37 @@ lemma void mem_fst_snd<s,t>(s a, t b, list<pair<s,t> > l)
             mem(b,map(snd,l)));
 { LIST_INDUCTION(l,xs,mem_fst_snd(a,b,xs)) }
 
-lemma s mem_snd_find<s,t>(t b, list<pair<s,t> > l)
-    requires !!mem(b,map(snd,l));
-    ensures  !!mem(pair(result,b),l);
+lemma s map_remove<s,t>(t v, fixpoint(s,t) f, list<s> l)
+    requires !!mem(v,map(f,l));
+    ensures  v == f(result)
+        &*&  map(f,remove(result,l)) == remove(v,map(f,l));
 {
     switch(l) {
     case nil: assert false;
     case cons(x,xs):
-        switch(x) {
-        case pair(y,z):
-            if(z == b) {
-                return y;
-            } else {
-                return mem_snd_find(b,xs);
-            }
+        if(f(x) == v) {
+            return x;
+        } else {
+            return map_remove(v,f,xs);
         }
+    }
+}
+
+lemma s map_preimage<s,t>(t b, fixpoint(s,t) f, list<s> l)
+    requires !!mem(b,map(f,l));
+    ensures  !!mem(result,l) &*& f(result) == b;
+{
+    return map_remove(b,f,l);
+}
+
+lemma s mem_snd_find<s,t>(t b, list<pair<s,t> > l)
+    requires !!mem(b,map(snd,l));
+    ensures  !!mem(pair(result,b),l);
+{
+    pair<s,t> pre = map_preimage(b, snd, l);
+    switch(pre) {
+    case pair(x,y):
+        return x;
     }
 }
 
@@ -286,7 +302,8 @@ lemma void forall_remove<t>(list<t> l, fixpoint(t,bool) p,
 lemma t pigeonhole<t>(list<t> l1, list<t> l2)
     requires !!forall(l1,(contains)(l2))
         &*&  length(l1) > length(l2);
-    ensures  !!mem(result,l1) &*& !!mem(result,remove(result,l1));
+    ensures  !!mem(result,l1) &*& !!mem(result,remove(result,l1))
+        &*&  !distinct(l1);
 {
     switch(l2) {
     case nil:
@@ -303,6 +320,7 @@ lemma t pigeonhole<t>(list<t> l1, list<t> l2)
             }
             return pigeonhole(l1,xs);
         } else if(mem(x,remove(x,l1))) {
+            if(distinct(l1)) { remove_distinct(x,l1); }
             return x;
         } else {
             if(!forall(remove(x,l1),(contains)(xs))) {
@@ -317,6 +335,7 @@ lemma t pigeonhole<t>(list<t> l1, list<t> l2)
             assert !!mem(ret,remove(ret,remove(x,l1)));
             remove_commutes(l1,ret,x);
             assert !!mem(ret,remove(ret,l1));
+            if(distinct(l1)) { remove_distinct(ret,l1); }
             return ret;
         }
     }

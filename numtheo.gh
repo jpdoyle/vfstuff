@@ -292,6 +292,18 @@ lemma int findFactor(int x)
     return factor;
 }
 
+lemma int findSomeFactor(int x)
+    requires x > 1;
+    ensures  !!is_prime(result) &*& x%result == 0 &*& result > 1
+        &*&  result <= x;
+{
+    if(is_prime(x)) {
+        division_unique(x,x,1,0);
+        return x;
+    }
+    return findFactor(x);
+}
+
 fixpoint bool prime_up_to(nat n, int x) {
     return forall(primes_below(n),(nonfactor)(x));
 }
@@ -685,7 +697,7 @@ lemma void gcd_prime(int p, int y)
 }
 
 lemma void prime_divides_product(int p, int a, int b)
-    requires !!is_prime(p) &*& a > 0 &*& b > 0 &*& (a*b)%p == 0;
+    requires !!is_prime(p) &*& a >= 0 &*& b >= 0 &*& (a*b)%p == 0;
     ensures  (a%p == 0 || b%p == 0);
 {
     if(a%p != 0 && b%p != 0) {
@@ -744,6 +756,55 @@ lemma void prime_divides_factorial(int p, nat n)
         }
     }
 }
+
+lemma void prime_divides_pow(int p, int x, nat n)
+    requires !!is_prime(p);
+    ensures  (x%p == 0) == (pow_nat(x,succ(n))%p == 0);
+{
+    switch(n) {
+    case zero:
+    case succ(n0):
+        assert pow_nat(x,succ(n)) == x*pow_nat(x,succ(n0));
+
+        mul_abs_commute(x,pow_nat(x,succ(n0)));
+
+        assert abs(pow_nat(x,succ(n)))
+            == abs(x)*abs(pow_nat(x,succ(n0)));
+
+        prime_divides_pow(p,x,n0);
+
+        mod_abs(pow_nat(x,succ(n)),p);
+        mod_abs(x,p);
+        mod_abs(pow_nat(x,succ(n0)),p);
+
+        if(pow_nat(x,succ(n))%p == 0) {
+            prime_divides_product(p,abs(x),abs(pow_nat(x,succ(n0))));
+
+            if(x%p != 0) {
+                assert abs(x)%p != 0;
+                assert abs(pow_nat(x,succ(n0)))%p == 0;
+                assert pow_nat(x,succ(n0))%p == 0;
+                assert false;
+            }
+        }
+
+        if(x%p == 0) {
+            if(pow_nat(x,succ(n))%p != 0) {
+                div_rem(x,p);
+                assert x == (x/p)*p;
+                assert pow_nat(x,succ(n))
+                    == x*pow_nat(x,succ(n0));
+                assert pow_nat(x,succ(n))
+                    == ((x/p)*p)*pow_nat(x,succ(n0));
+                mul_3var(x/p,p,pow_nat(x,succ(n0)));
+                division_unique(pow_nat(x,succ(n)),p,x/p*pow_nat(x,succ(n0)),0);
+                assert false;
+            }
+        }
+
+    }
+}
+
 
 lemma_auto(indices_of_inner(v,l,b))
 void indices_of_length<t>(t v, list<t> l, int b)
@@ -937,6 +998,56 @@ lemma void unique_prime_factorization(
         forall_remove(l2,is_prime,x);
         unique_prime_factorization(n/x,xs,remove(x,l2));
     }
+}
+
+lemma void prime_factorization_exhaustive(
+        int n, int p, list<int> l)
+    requires product(l) == n
+        &*&  n > 0 &*& !!forall(l,is_prime)
+        &*&  !!is_prime(p) &*& n%p == 0;
+    ensures !!mem(p,l);
+{
+    list<int> l2 = cons(p,nil);
+    div_rem(n,p);
+
+    n = n/p;
+    if(n <= 0) {
+        my_mul_mono_l(n,0,p);
+        assert false;
+    }
+
+    while(n > 1)
+        invariant !!forall(l2,is_prime)
+            &*&   !!mem(p,l2)
+            &*&   n*product(l2) == product(l)
+            &*&   n >= 1;
+        decreases n;
+    {
+        if(is_prime(n)) {
+            l2 = cons(n,l2);
+            n = 1;
+        } else {
+            int q = findFactor(n);
+            div_rem(n,q);
+            mul_3var(q,product(l2),n/q);
+
+            if(n/q >= n) {
+                my_mul_mono_l(2,q,n/q);
+                assert false;
+            }
+
+            l2 = cons(q,l2);
+            n /= q;
+
+            if(n <= 0) {
+                my_mul_mono_l(n,0,q);
+                assert false;
+            }
+        }
+    }
+
+    unique_prime_factorization(product(l), l, l2);
+    is_perm_mem(l, l2, p);
 }
 
 //lemma void prime_no_factors(int x, int y)
