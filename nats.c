@@ -6,13 +6,13 @@ lemma_auto(nat_minus(zero,n))
 void nat_zero_minus(nat n)
     requires true;
     ensures  nat_minus(zero,n) == zero;
-{ switch(n) { case zero: case succ(n0): } }
+{ TRIVIAL_NAT(n) }
 
 lemma_auto(nat_minus(n,zero))
 void nat_minus_zero(nat n)
     requires true;
     ensures  nat_minus(n,zero) == n;
-{ switch(n) { case zero: case succ(n0): } }
+{ TRIVIAL_NAT(n) }
 
 
 lemma void nat_plus_deconstruct(nat n, nat m)
@@ -20,64 +20,43 @@ lemma void nat_plus_deconstruct(nat n, nat m)
     ensures  nat_plus(succ(n),m) == succ(nat_plus(n,m))
         &*&  nat_plus(n,succ(m)) == succ(nat_plus(n,m))
         ;
-{
-    switch(n) {
-    case zero:
-    case succ(n0):
-        nat_plus_deconstruct(n0,succ(m));
-    }
-}
+{ NAT_INDUCTION(n,n0,nat_plus_deconstruct(n0,succ(m))) }
 
 lemma_auto(nat_plus(succ(n),m)) void nat_plus_deconstruct_auto_l(nat n, nat m)
     requires true;
     ensures  nat_plus(succ(n),m) == succ(nat_plus(n,m))
         &&  nat_plus(n,succ(m)) == succ(nat_plus(n,m))
         ;
-{
-    nat_plus_deconstruct(n,m);
-}
+{ nat_plus_deconstruct(n,m); }
 
 lemma_auto(nat_plus(n,succ(m))) void nat_plus_deconstruct_auto_r(nat n, nat m)
     requires true;
     ensures  nat_plus(succ(n),m) == succ(nat_plus(n,m))
         &&  nat_plus(n,succ(m)) == succ(nat_plus(n,m))
         ;
-{
-    nat_plus_deconstruct(n,m);
-}
+{ nat_plus_deconstruct(n,m); }
 
 lemma void nat_plus_assoc(nat l, nat n, nat m)
     requires true;
     ensures  nat_plus(l,nat_plus(n,m)) == nat_plus(nat_plus(l,n),m);
-{
-    switch(l) {
-    case zero:
-    case succ(l0):
-        nat_plus_assoc(l0,n,m);
-    }
-}
+{ NAT_INDUCTION(l,l0,nat_plus_assoc(l0,n,m)) }
 
 lemma_auto(nat_plus(n,zero)) void nat_plus_zero(nat n)
     requires true;
     ensures  nat_plus(n,zero) == n;
-{
-    switch(n) {
-    case zero:
-    case succ(n0):
-        nat_plus_zero(n0);
-    }
-}
+{ NAT_INDUCTION(n,n0,nat_plus_zero(n0)) }
 
 lemma_auto(nat_plus(n,m)) void nat_plus_comm(nat n, nat m)
     requires true;
     ensures  nat_plus(n,m) == nat_plus(m,n);
-{
-    switch(n) {
-    case zero:
-    case succ(n0):
-        nat_plus_comm(n0,m);
-    }
-}
+{ NAT_INDUCTION(n,n0,nat_plus_comm(n0,m)) }
+
+lemma_auto(nat_plus(n,m))
+void nat_plus_int_of_nat(nat n, nat m)
+    requires true;
+    ensures  nat_plus(n,m) == nat_of_int(int_of_nat(n)+int_of_nat(m));
+{ NAT_INDUCTION(n,n0,nat_plus_int_of_nat(n0,m)) }
+
 
 lemma_auto(nat_of_int(length(cons(x,xs)))) void nat_of_int_of_length<t>(t x, list<t> xs)
     requires true;

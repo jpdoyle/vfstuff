@@ -43,6 +43,7 @@ SOFTWARE.
 
 #include <nat.gh>
 #include "util.gh"
+#include "div.gh"
 
 // Definitions
 

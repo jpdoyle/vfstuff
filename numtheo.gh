@@ -2,35 +2,10 @@
 #define VFUTIL_NUMTHEO_GH
 
 #include "util.gh"
+#include "mul.gh"
+#include "div.gh"
 #include "lists.gh"
 #include "sorting.gh"
-
-//lemma void mul_assoc(int x,int y,int z)
-//    requires true;
-//    ensures  x*(y*z) == (x*y)*z;
-//{
-//    if(x >= 0) {
-//        for(int i = 0; i < x; ++i)
-//            invariant i*(y*z) == (i*y)*z
-//                &*&   0 <= i &*& i <= x;
-//            decreases x-i;
-//        {
-//            assert (i+1)*(y*z) == i*(y*z) + y*z;
-//            note_eq(((i+1)*y)*z, (i*y + y)*z);
-//            assert ((i+1)*y)*z == (i*y)*z + y*z;
-//        }
-//    } else {
-//        for(int i = 0; i > x; --i)
-//            invariant i*(y*z) == (i*y)*z
-//                &*&   0 >= i &*& i >= x;
-//            decreases i-x;
-//        {
-//            assert (i-1)*(y*z) == i*(y*z) - y*z;
-//            note_eq(((i-1)*y)*z, (i*y - y)*z);
-//            assert ((i-1)*y)*z == (i*y)*z - y*z;
-//        }
-//    }
-//}
 
 fixpoint int product(list<int> l) {
     switch(l) {
@@ -780,12 +755,7 @@ lemma void prime_divides_pow(int p, int x, nat n)
         if(pow_nat(x,succ(n))%p == 0) {
             prime_divides_product(p,abs(x),abs(pow_nat(x,succ(n0))));
 
-            if(x%p != 0) {
-                assert abs(x)%p != 0;
-                assert abs(pow_nat(x,succ(n0)))%p == 0;
-                assert pow_nat(x,succ(n0))%p == 0;
-                assert false;
-            }
+            if(x%p != 0) { assert false; }
         }
 
         if(x%p == 0) {

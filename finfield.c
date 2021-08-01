@@ -1,7 +1,7 @@
 /*@ #include "finfield.gh" @*/
 
-#if 0
-#define ALREADY_PROVEN() {}
+#if 1
+#define ALREADY_PROVEN()
 #else
 #define ALREADY_PROVEN() assume(false);
 #endif
@@ -161,6 +161,13 @@ ALREADY_PROVEN()
 
         assert false;
     }
+}
+
+lemma void Zp_x_times_zero(int p, int a, int b)
+    requires p > 0 &*& euclid_mod(a,p) == 0;
+    ensures  euclid_mod(b*a,p) == 0;
+{
+    Zp_times(p,b,a);
 }
 
 lemma void Zp_pow(int p, int a, nat n)
@@ -545,16 +552,7 @@ ALREADY_PROVEN()
     Zp_diff_zero(p,j*g,i*g);
     assert euclid_mod((j-i)*g,p) == 0;
     Zp_prod_zero(p,j-i,g);
-    if(i != j) {
-        euclid_mod_correct(j-i,p);
-        assert [_] euclid_div_sol((j-i),p,?q,0);
-        if(q < 0) {
-            my_mul_strict_mono_r(p,q,0);
-            assert false;
-        }
-        my_mul_mono_r(p,1,q);
-        assert false;
-    }
+    if(i != j) { assert false; }
 }
 
 lemma s find_fst<s,t>(list<pair<s,t> > l, t x)
@@ -892,9 +890,6 @@ ALREADY_PROVEN()
         assert r == int_of_nat(nat_of_int(r));
         if(q < 0) {
             my_mul_mono_l(q,-1,int_of_nat(a));
-            assert r < int_of_nat(a);
-            assert q*int_of_nat(a) <= -int_of_nat(a);
-            assert int_of_nat(b) >= 0;
             assert false;
         }
         my_mul_mono_l(0,q,int_of_nat(a));
@@ -1132,10 +1127,7 @@ lemma void coprime_pow_never_hits_0(int n, int x, nat o)
 {
 ALREADY_PROVEN()
     if(euclid_mod(pow_nat(x,o),n) == 0) {
-        if(x == 1) {
-            assert pow_nat(1,o) == 1;
-            assert false;
-        }
+        if(x == 1) { assert false; }
 
         assert x >= 2;
 
@@ -1673,7 +1665,6 @@ ALREADY_PROVEN()
                 euclid_mod_correct(x,p);
                 assert [_]euclid_div_sol(x,p,?q,?r);
                 euclid_div_unique(x,p,q,r,0,x);
-                assert euclid_mod(x,p) == x;
                 assert false;
             }
 
@@ -1691,12 +1682,7 @@ ALREADY_PROVEN()
             if((p-1)/d <= 1) {
                 if((p-1)/d <= 0) {
                     my_mul_mono_l((p-1)/d,0,d);
-                    assert false;
                 }
-
-                assert (p-1)/d == 1;
-                assert p-1 == d*(p-1)/d;
-
                 assert false;
             }
 
@@ -1732,22 +1718,6 @@ ALREADY_PROVEN()
                                 nat_of_int(((p-1)/d)/d_factor)),p);
 
             Zp_pow(p,pow_nat(x,nat_of_int(d)),nat_of_int(((p-1)/d)/d_factor));
-
-            assert euclid_mod(pow_nat(x,nat_of_int(d*(((p-1)/d)/d_factor))),p)
-                == euclid_mod(pow_nat(
-                            euclid_mod(pow_nat(x,nat_of_int(d)),p),
-                            nat_of_int(((p-1)/d)/d_factor)),p);
-
-            assert euclid_mod(pow_nat(x,nat_of_int(d*(((p-1)/d)/d_factor))),p)
-                == euclid_mod(pow_nat(
-                            euclid_mod(1,p),
-                            nat_of_int(((p-1)/d)/d_factor)),p);
-            assert euclid_mod(pow_nat(x,nat_of_int(d*(((p-1)/d)/d_factor))),p)
-                == euclid_mod(pow_nat(1, nat_of_int(((p-1)/d)/d_factor)),p);
-            assert euclid_mod(pow_nat(x,nat_of_int(d*(((p-1)/d)/d_factor))),p)
-                == euclid_mod(1,p);
-            assert euclid_mod(pow_nat(x,nat_of_int(d*(((p-1)/d)/d_factor))),p)
-                == 1;
 
             assert false;
         }
@@ -1970,15 +1940,6 @@ lemma_auto void fast_pow_mod_correct()
                 Zp_times(p,euclid_mod(pow_nat(x,e_over_2)*pow_nat(x,e_over_2),p),x);
                 Zp_times(p,pow_nat(x,e_over_2)*pow_nat(x,e_over_2),x);
 
-                assert res
-                    == euclid_mod(
-                            (pow_nat(x,e_over_2)*pow_nat(x,e_over_2))
-                            *x,p);
-
-                assert (pow_nat(x,e_over_2)*pow_nat(x,e_over_2))*x
-                    == pow_nat(x,succ(nat_double(e_over_2)));
-                assert (pow_nat(x,e_over_2)*pow_nat(x,e_over_2))*x
-                    == pow_nat(x,e);
                 assert false;
             } else {
                 assert false;

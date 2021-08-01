@@ -2,6 +2,8 @@
 #define VFSTUFF_POLY_H
 
 #include "util.gh"
+#include "mul.gh"
+#include "mul.gh"
 #include "lists.gh"
 
 fixpoint int poly_eval(list<int> poly, int pt) {

@@ -1,0 +1,207 @@
+#ifndef VFUTIL_DIV_GH
+#define VFUTIL_DIV_GH
+
+#include "mul.gh"
+
+lemma void division_zero_unique(int d, int q, int r);
+    requires d != 0 &*& abs(r) < abs(d) &*& 0 == d*q + r;
+    ensures  q == (0/d) &*& q == 0 &*& r == (0%d) &*& r == 0;
+
+lemma void division_unique(int D, int d, int q, int r);
+    requires d != 0 &*& abs(r) < abs(d) &*& abs(d*q) <= abs(D)
+        &*&  D == d*q + r;
+    ensures  q == (D/d) &*& r == (D%d);
+
+lemma void div_monotonic_numerator(int x, int y, int d);
+    requires d > 0 &*& x >= 0 &*& y >= x;
+    ensures  x/d <= y/d;
+
+lemma void div_monotonic_denominator(int D, int x, int y);
+    requires D > 0 &*& x > 0 &*& y >= x;
+    ensures  D/y <= D/x;
+
+lemma void div_shrinks(int x, int d);
+    requires d > 0 &*& x >= 0;
+    ensures  x/d <= x;
+
+lemma void div_twice(int x, int y, int z);
+    requires y != 0 &*& z != 0;
+    ensures  (x/y)/z == x/(y*z);
+
+lemma void mod_shrinks(int x, int d);
+    requires d != 0;
+    ensures  abs(x%d) <= abs(x);
+
+lemma void into_numerator(int x, int y, int d);
+    requires d > 0 &*& x >= 0 &*& y >= 0;
+    ensures  x + (y/d) == (d*x + y)/d;
+
+lemma void mod_sign(int x, int d);
+    requires d > 0;
+    ensures  x >= 0 ? x%d >= 0 : x%d <= 0;
+
+lemma void mod_abs(int x, int d);
+    requires d > 0;
+    ensures  abs(x%d) == abs(x)%d;
+
+lemma void div_sign(int x, int d);
+    requires d > 0;
+    ensures  x >= 0 ? x/d >= 0 : x/d <= 0;
+
+lemma void div_nudge(int x, int y, int d);
+    requires d > 0 &*& x >= 0 &*& y >= 0 &*& y < d;
+    ensures  (x*d + y)/d == x;
+
+lemma void mod_plus(int x, int y, int d);
+    requires d > 0 &*& x >= 0 &*& y >= 0;
+    ensures  (x%d + y)%d == (x+y)%d;
+
+lemma void mod_times(int x, int y, int d);
+    requires d > 0 &*& x >= 0 &*& y >= 0;
+    ensures  (x%d * y)%d == (x*y)%d;
+
+lemma void mod_times_d(int x, int y, int d);
+    requires d > 0 &*& x >= 0 &*& y >= 0;
+    ensures  (x + y*d)%d == x%d;
+
+lemma void mod_twice(int x, int d1, int d2);
+    requires d1 > 0 &*& x >= 0 &*& d2 > 0 &*& d1%d2 == 0;
+    ensures  (x%d1)%d2 == x%d2;
+
+fixpoint pair<int,int> euclid_div_inner(nat f, int D, int d, int q) {
+    switch(f) {
+    case zero:
+        return pair(q,D);
+    case succ(f0):
+        return D >= d ? euclid_div_inner(f0,D-d,d,q+1)
+            :  D <  0 ? euclid_div_inner(f0,D+d,d,q-1)
+                      : pair(q,D);
+    }
+}
+
+fixpoint pair<int,int> euclid_div(int D, int d) {
+    return euclid_div_inner(nat_of_int(abs(D)),D,d,0);
+}
+
+lemma void euclid_div_fuel(nat f1, nat f0, int D, int d, int q)
+    requires int_of_nat(f1) >= int_of_nat(f0)
+        &*&  int_of_nat(f0) >= abs(D)
+        &*&  d > 0;
+    ensures  euclid_div_inner(f1,D,d,q) == euclid_div_inner(f0,D,d,q);
+{
+    switch(f1) {
+    case zero:
+    case succ(f1_0):
+        switch(f0) {
+        case zero:
+        case succ(f0_0):
+            if(D >= d) {
+                euclid_div_fuel(f1_0,f0_0,D-d,d,q+1);
+            } else if(D <= -d) {
+                euclid_div_fuel(f1_0,f0_0,D+d,d,q-1);
+            } else if(D < 0) {
+                TRIVIAL_NAT(f0_0)
+                TRIVIAL_NAT(f1_0)
+            }
+        }
+    }
+}
+
+lemma void euclid_div_correct(nat f, int D, int d, int q)
+    requires int_of_nat(f) >= abs(D) &*& d > 0;
+    ensures  switch(euclid_div_inner(f,D,d,q)) {
+        case pair(qv,rv):
+            return  0 <= rv &*& rv < d &*& D + q*d == qv*d + rv;
+    };
+{
+    switch(f) {
+    case zero:
+    case succ(f0):
+        if(D >= d) {
+            euclid_div_correct(f0, D-d, d, q+1);
+        } else if(D <= -d) {
+            euclid_div_correct(f0, D+d, d, q-1);
+        } else if(D < 0) {
+            TRIVIAL_NAT(f0)
+            switch(euclid_div_inner(f,D,d,q)) {
+            case pair(qv,rv):
+                switch(euclid_div_inner(f0,D+d,d,q-1)) {
+                case pair(qv0,rv0):
+                    note_eq( (D+d) + (q-1)*d , qv0*d + rv0);
+                }
+            }
+        }
+    }
+}
+
+predicate euclid_div_sol(int D, int d; int q, int r)
+    = d > 0
+    &*& switch(euclid_div(D,d)) {
+        case pair(qv,rv): return q == qv &*& r == rv;
+
+    } &*& 0 <= r &*& r < d &*& D == q * d + r;
+
+lemma void euclid_div_zero(int d, int q, int r);
+    requires d > 0 &*& r >= 0 &*& r < d &*& 0 == q*d + r;
+    ensures  q == 0 &*& r == 0;
+
+lemma void euclid_div_unique(int D, int d, int q1, int r1,
+                                           int q2, int r2);
+    requires d > 0 &*& r1 >= 0 &*& r1 < d &*& D == q1*d + r1
+        &*&  r2 >= 0 &*& r2 < d &*& D == q2*d + r2;
+    ensures  q1 == q2 &*& r1 == r2;
+
+lemma void euclid_div_unique_intro(int D, int d, int q, int r);
+    requires d > 0 &*& r >= 0 &*& r < d &*& D == q*d + r;
+    ensures  [_]euclid_div_sol(D,d,q,r)
+        &*&  euclid_div(D,d) == pair(q,r);
+
+lemma void euclid_div_intro(int D, int d);
+    requires d > 0;
+    ensures  [_]euclid_div_sol(D,d,_,_);
+
+lemma_auto void euclid_div_auto();
+    requires [?f]euclid_div_sol(?D,?d,?q,?r);
+    ensures  [ f]euclid_div_sol( D, d, q, r)
+        &*&  r >= 0 &*& r < d &*& d > 0 &*& D == q*d + r;
+
+fixpoint int euclid_mod(int D, int d) {
+    return snd(euclid_div(D,d));
+}
+
+lemma void euclid_mod_correct(int D, int d);
+    requires d > 0;
+    ensures  [_]euclid_div_sol(D,d,_,euclid_mod(D,d));
+
+lemma_auto(euclid_mod(D,d))
+void euclid_mod_auto(int D, int d);
+    requires d > 0;
+    ensures euclid_mod(D, d) == (D % d + d) % d;
+
+lemma_auto(euclid_mod(euclid_mod(D,d),d))
+void euclid_mod_mod(int D, int d);
+    requires d > 0;
+    ensures euclid_mod(euclid_mod(D,d), d) == euclid_mod(D,d);
+
+lemma_auto(euclid_mod(d,d))
+void euclid_mod_self(int D, int d);
+    requires d > 0;
+    ensures euclid_mod(d,d) == 0;
+
+lemma_auto(euclid_mod(D,d))
+void euclid_mod_small(int D, int d);
+    requires D >= 0 && D < d  && d > 0;
+    ensures euclid_mod(D,d) == D;
+
+lemma_auto(euclid_mod(D,d))
+void euclid_mod_nonneg(int D, int d);
+    requires d > 0;
+    ensures euclid_mod(D,d) >= 0;
+
+lemma_auto(euclid_mod(D,d))
+void euclid_mod_below_d(int D, int d);
+    requires d > 0;
+    ensures euclid_mod(D,d) < d;
+
+#endif
+

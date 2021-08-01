@@ -1,0 +1,408 @@
+#ifndef VFUTIL_CORE_GH
+#define VFUTIL_CORE_GH
+
+#include <quantifiers.gh>
+#include <list.gh>
+#include <listex.gh>
+#include "nats.gh"
+
+#define BEGIN_FORALL(t,v,l,p) if(!forall(l,p)) { \
+    t v = not_forall(l,p);
+
+#define END_FORALL() assert false; }
+
+#define SKIP_PROOF() { assume(false); }
+
+fixpoint int abs_of(int x) { return x >= 0 ? x : -x; }
+
+predicate let<t>(t x; t y) = y == x;
+
+fixpoint bool nonneg(int x) { return x >= 0; }
+
+lemma_auto void let_auto<t>()
+    requires [?f]let<t>(?x,?y);
+    ensures  [ f]let<t>( x, y) &*& y == x;
+{ open let(_,_); }
+
+fixpoint t o<r,s,t>(fixpoint(s,t) f, fixpoint(r,s) g, r x) {
+    return f(g(x));
+}
+
+fixpoint t flip<r,s,t>(fixpoint(r,s,t) f, s y, r x) { return f(x,y); }
+
+fixpoint bool not(bool b) { return !b; }
+
+fixpoint s constf<s,t>(s x, t y) { return x; }
+
+fixpoint list<t> singleton<t>(t x) { return {x}; }
+
+fixpoint t onpairs<r,s,t>(fixpoint(r,s,t) f, pair<r,s> p) {
+    switch(p) {
+    case pair(x,y): return f(x,y);
+    }
+}
+
+fixpoint bool ge_than(int x, int y) { return y >= x; }
+
+fixpoint option<t> nth_of<t>(int n, list<t> l) {
+    switch(l) {
+    case nil: return none;
+    case cons(x,xs):
+        return n == 0 ? some(x)
+            :  n  > 0 ? nth_of(n-1,xs)
+            :           none;
+    }
+}
+
+lemma void index_of_positive<t>(t v, list<t> l);
+    requires true;
+    ensures  index_of(v,l) >= 0;
+
+lemma_auto(nth_of(index_of(v,l),l))
+void nth_of_index_of<t>(t v, list<t> l);
+    requires true;
+    ensures  (nth_of(index_of(v,l),l) == some(v))
+        == mem(v,l);
+
+lemma void nth_of_mem<t>(int n, list<t> l, t v);
+    requires nth_of(n,l) == some(v);
+    ensures  !!mem(v,l);
+
+
+lemma
+void nth_of_bounds<t>(int n, list<t> l);
+    requires true;
+    ensures  (nth_of(n,l) != none) == (n >= 0 && n < length(l));
+
+lemma void nth_of_is_nth<t>(int n, list<t> l);
+    requires true;
+    ensures  switch(nth_of(n,l)) {
+        case none: return n < 0 || length(l) <= n;
+        case some(x):
+            return n >= 0 &*& n < length(l) &*& x == nth(n,l);
+    };
+
+lemma void nth_of_append<t>(int n, list<t> a,list<t> b)
+    requires n >= 0;
+    ensures  n < length(a)
+        ?    nth_of(n,append(a,b)) == nth_of(n,a)
+        :    nth_of(n,append(a,b)) == nth_of(n-length(a),b);
+{
+    switch(a) {
+    case nil:
+    case cons(x,xs):
+        if(n > 0) {
+            nth_of_append(n-1,xs,b);
+        }
+    }
+}
+
+fixpoint option<t> safe_head<t>(list<t> l) {
+    switch(l) {
+    case nil: return none;
+    case cons(x,xs):
+        return some(x);
+    }
+}
+
+
+fixpoint option<pair<k,v> > assoc_of<k,v>(k key, list<pair<k,v> > l) {
+    switch(l) {
+    case nil: return none;
+    case cons(x,xs):
+        return fst(x) == key ? some(x)
+            : assoc_of(key,xs);
+    }
+}
+
+fixpoint option<v> lookup_of<k,v>(k key, list<pair<k,v> > l) {
+    switch(l) {
+    case nil: return none;
+    case cons(x,xs):
+        return fst(x) == key ? some(snd(x))
+            : lookup_of(key,xs);
+    }
+}
+
+fixpoint list<pair<k,v> > take_until<k,v>(k key, list<pair<k,v> > l) {
+    switch(l) {
+    case nil: return nil;
+    case cons(x,xs):
+        return fst(x) == key ? {}
+            : cons(x,take_until(key,xs));
+    }
+}
+
+fixpoint bool equals<t>(t x, t y) { return x == y; }
+
+lemma void note(bool x)
+    requires x == true;
+    ensures  x == true;
+{}
+
+lemma void note_weird(bool x)
+    requires x != true;
+    ensures  x == false;
+{}
+
+lemma void equal_facts(bool x, bool y)
+    requires (!!x && !!y) || (!x && !y);
+    ensures  x == y;
+{}
+
+lemma void nonequal_facts(bool x, bool y)
+    requires x != y;
+    ensures x ? !y : !!y;
+{}
+
+lemma void true_fact(bool x)
+    requires !!x;
+    ensures  x == true;
+{}
+
+lemma void false_fact(bool x)
+    requires !x;
+    ensures  x == false;
+{}
+
+
+lemma void note_eq<t>(t x, t y)
+    requires x == y;
+    ensures  x == y;
+{}
+
+#define NOOP(x)
+
+#define SIMPLE_LIST_(l,X_OP,x,XS_OP,xs) switch(l) { case nil: case cons(x,xs): X_OP(x) XS_OP(xs) }
+#define SIMPLE_LIST(l,X_OP,XS_OP) SIMPLE_LIST_(l,X_OP,l##__x,XS_OP,l##__xs)
+#define TRIVIAL_LIST(l) SIMPLE_LIST(l,NOOP,NOOP)
+
+#define SIMPLE_PAIR_(p,X_OP,x,Y_OP,y) switch(p) { case pair(x,y): X_OP(x) Y_OP(y) }
+#define SIMPLE_PAIR(p,X_OP,Y_OP) SIMPLE_PAIR_(p,X_OP,p##__x,Y_OP,p##__y)
+#define TRIVIAL_PAIR(p) SIMPLE_PAIR(p,NOOP,NOOP)
+
+fixpoint t id<t>(t x) { return x; }
+
+inductive either<s,t> = left(s) | right(t);
+
+#define SIMPLE_OPTION_(e,SOME_OP,x) switch(e) { case none: case some(x): SOME_OP(r) }
+#define SIMPLE_OPTION(e,SOME_OP) SIMPLE_OPTION_(e,SOME_OP,e##__x)
+#define TRIVIAL_OPTION(e) SIMPLE_OPTION(e,NOOP)
+
+#define SIMPLE_EITHER_(e,L_OP,l,R_OP,r) switch(e) { case left(l): L_OP(l) case right(r): R_OP(r) }
+#define SIMPLE_EITHER(e,L_OP,R_OP) SIMPLE_EITHER_(e,L_OP,e##__x,R_OP,e##__y)
+#define TRIVIAL_EITHER(e) SIMPLE_EITHER(e,NOOP,NOOP)
+
+#define TRIVIAL_LIST2(l) switch(l) { case nil: case cons(l##_x,l##_xs): TRIVIAL_LIST(l##_xs) }
+#define LIST_INDUCTION(l,xs,step) switch(l) { case nil: \
+    case cons(l##_x,xs): step; }
+
+lemma
+void option_eq<t>(t x, t y);
+    requires true;
+    ensures  (some(x) == some(y)) == (x == y);
+
+fixpoint t option_into<s,t>(t noneVal, fixpoint(s,t) f, option<s> o) {
+    switch(o) {
+    case none: return noneVal;
+    case some(x): return f(x);
+    }
+}
+
+fixpoint option<t> opmap<s,t>(fixpoint(s,t) f, option<s> op) {
+    return option_into(none,(o)(some,f),op);
+}
+
+fixpoint option<t> opstep<s,t>(fixpoint(s,option<t>) f, option<s> o) {
+    return option_into(none,f,o);
+}
+
+fixpoint list<t> oplist<t>(option<t> o) {
+    switch(o) {
+    case none: return nil;
+    case some(x): return {x};
+    }
+}
+
+fixpoint bool is_right<s,t>(either<s,t> e) {
+    switch(e) {
+    case  left(l): return false;
+    case right(r): return true;
+    }
+}
+
+fixpoint bool is_lefts<s,t>(either<s,t> e) {
+    switch(e) {
+    case  left(l): return true;
+    case right(r): return false;
+    }
+}
+
+fixpoint either<r,t> either_rmap<r,s,t>(fixpoint(s,t) f, either<r,s> e) {
+    switch(e) {
+    case left(l): return left(l);
+    case right(r): return right(f(r));
+    }
+}
+
+fixpoint either<s,t> either_lmap<r,s,t>(fixpoint(r,s) f, either<r,t> e) {
+    switch(e) {
+    case left(l): return left(f(l));
+    case right(r): return right(r);
+    }
+}
+
+fixpoint either<r,s> either_bimap<p,q,r,s>(fixpoint(p,r) lf,
+        fixpoint(q,s) rf, either<p,q> e) {
+    switch(e) {
+    case left(l): return left(lf(l));
+    case right(r): return right(rf(r));
+    }
+}
+
+fixpoint t either_into<r,s,t>(fixpoint(r,t) lf, fixpoint(s,t) rf,
+        either<r,s> e) {
+    switch(e) {
+    case left(l): return lf(l);
+    case right(r): return rf(r);
+    }
+}
+
+fixpoint either<r,t> either_step<r,s,t>(fixpoint(s,either<r,t>) f,
+        either<r,s> e) {
+    return either_into(left,f,e);
+}
+
+fixpoint either<r,t> either_opstep<r,s,t>(r noneVal,
+        fixpoint(s,option<t>) f, either<r,s> e) {
+    return either_step(
+        (o)((option_into)(left(noneVal),right),f),e);
+}
+
+lemma void either_into_factor<r,s,t>(fixpoint(r,t) l, fixpoint(s,t) r,
+        either<r,s> e)
+    requires true;
+    ensures  (o)(either_unify,(either_bimap)(l,r),e)
+        == either_into(l,r,e);
+{ TRIVIAL_EITHER(e) }
+
+lemma void either_bifunctor<p,q,r, s,t,w>(
+        fixpoint(q,r) lf, fixpoint(p,q) lg,
+        fixpoint(t,w) rf, fixpoint(s,t) rg,
+        either<s,p> e1, either<p,s> e2);
+    requires true;
+    ensures emp
+
+        &*& either_rmap(id,e1) == e1
+        &*& either_rmap(id,e2) == e2
+        &*& either_lmap(id,e1) == e1
+        &*& either_lmap(id,e2) == e2
+        &*& either_bimap(id,id,e1) == e1
+        &*& either_bimap(id,id,e2) == e2
+
+        &*& either_rmap(lf,either_rmap(lg,e1))
+                == either_rmap((o)(lf,lg),e1)
+        &*& either_lmap(lf,either_lmap(lg,e2))
+                == either_lmap((o)(lf,lg),e2)
+
+        &*& either_lmap(rf,either_lmap(rg,e1))
+                == either_lmap((o)(rf,rg),e1)
+        &*& either_rmap(rf,either_rmap(rg,e2))
+                == either_rmap((o)(rf,rg),e2)
+
+        &*& either_bimap(rf,lf,either_bimap(rg,lg,e1))
+                == either_bimap((o)(rf,rg),(o)(lf,lg),e1)
+        &*& either_bimap(lf,rf,either_bimap(lg,rg,e2))
+                == either_bimap((o)(lf,lg),(o)(rf,rg),e2)
+        ;
+
+fixpoint t either_unify<t>(either<t,t> v) {
+    switch(v) {
+    case left(l): return l;
+    case right(r): return r;
+    }
+}
+
+fixpoint pair<r,t> pair_rmap<r,s,t>(fixpoint(s,t) f, pair<r,s> e) {
+    switch(e) {
+    case pair(l,r): return pair(l,f(r));
+    }
+}
+
+fixpoint pair<s,t> pair_lmap<r,s,t>(fixpoint(r,s) f, pair<r,t> e) {
+    switch(e) {
+    case pair(l,r): return pair(f(l),r);
+    }
+}
+
+fixpoint pair<r,s> pair_bimap<p,q,r,s>(fixpoint(p,r) lf,
+        fixpoint(q,s) rf, pair<p,q> e) {
+    switch(e) {
+    case pair(l,r): return pair(lf(l),rf(r));
+    }
+}
+
+lemma void pair_bifunctor<p,q,r, s,t,w>(
+        fixpoint(q,r) lf, fixpoint(p,q) lg,
+        fixpoint(t,w) rf, fixpoint(s,t) rg,
+        pair<s,p> e1, pair<p,s> e2);
+    requires true;
+    ensures emp
+
+        &*& pair_rmap(id,e1) == e1
+        &*& pair_rmap(id,e2) == e2
+        &*& pair_lmap(id,e1) == e1
+        &*& pair_lmap(id,e2) == e2
+        &*& pair_bimap(id,id,e1) == e1
+        &*& pair_bimap(id,id,e2) == e2
+
+        &*& pair_rmap(lf,pair_rmap(lg,e1))
+                == pair_rmap((o)(lf,lg),e1)
+        &*& pair_lmap(lf,pair_lmap(lg,e2))
+                == pair_lmap((o)(lf,lg),e2)
+
+        &*& pair_lmap(rf,pair_lmap(rg,e1))
+                == pair_lmap((o)(rf,rg),e1)
+        &*& pair_rmap(rf,pair_rmap(rg,e2))
+                == pair_rmap((o)(rf,rg),e2)
+
+        &*& pair_bimap(rf,lf,pair_bimap(rg,lg,e1))
+                == pair_bimap((o)(rf,rg),(o)(lf,lg),e1)
+        &*& pair_bimap(lf,rf,pair_bimap(lg,rg,e2))
+                == pair_bimap((o)(lf,lg),(o)(rf,rg),e2)
+        ;
+
+fixpoint int max_of(int a,int b) { return a > b ? a : b; }
+fixpoint int min_of(int a,int b) { return a < b ? a : b; }
+
+lemma void max_of_correct(int a, int b, int c);
+    requires true;
+    ensures  max_of(a,b) >= a &*& max_of(a,b) >= b
+        &*&  (c >= a && c >= b) == (c >= max_of(a,b));
+
+lemma void min_of_correct(int a, int b, int c);
+    requires true;
+    ensures  min_of(a,b) <= a &*& min_of(a,b) <= b
+        &*&  (c <= a && c <= b) == (c <= min_of(a,b));
+
+lemma_auto(max_of(a,b))
+void max_of_auto1(int a, int b);
+    requires true;
+    ensures  max_of(a,b) >= a;
+
+lemma_auto(max_of(a,b))
+void max_of_auto2(int a, int b);
+    requires true;
+    ensures  max_of(a,b) == max_of(b,a);
+
+
+fixpoint bool isbit(int x) { return x == 0 || x == 1; }
+
+lemma_auto(int_of_nat(nat_minus(n,m)))
+void nat_minus_int(nat n, nat m);
+    requires true;
+    ensures  int_of_nat(nat_minus(n,m))
+        ==   max_of(0,int_of_nat(n)-int_of_nat(m));
+
+#endif
+

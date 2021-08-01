@@ -3,6 +3,13 @@
 #ifndef NATS_GH
 #define NATS_GH
 
+#define NAT_NOOP(x)
+#define SIMPLE_NAT_(n,PRED_OP,m) switch(n) { case zero: case succ(m): PRED_OP(m) }
+#define SIMPLE_NAT(n,PRED_OP) SIMPLE_NAT_(n,PRED_OP,n##__m)
+#define TRIVIAL_NAT(n) SIMPLE_NAT(n,NAT_NOOP)
+#define NAT_INDUCTION(n,n0,step) switch(n) { case zero: \
+    case succ(n0): step; }
+
 lemma void nat_plus_deconstruct(nat n, nat m);
     requires true;
     ensures  nat_plus(succ(n),m) == succ(nat_plus(n,m))

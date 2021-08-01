@@ -4,6 +4,7 @@
 #include <string.h>
 #include <limits.h>
 #include "../b64.h"
+/*@ #include "../div.gh" @*/
 /*@ #include "../util.gh" @*/
 /*@ #include "../poly.gh" @*/
 
