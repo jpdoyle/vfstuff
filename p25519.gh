@@ -1,0 +1,23 @@
+#ifndef VFUTIL_P25519_GH
+#define VFUTIL_P25519_GH
+
+#include "util.gh"
+#include "numtheo.gh"
+#include "finfield.gh"
+
+fixpoint int P25519() {
+    return pow_nat(2,nat_of_int(255)) - 19;
+}
+
+lemma void p25519_formula();
+    requires true;
+    ensures  P25519
+        ==   pow_nat(pow_nat(2,N15),N16)*pow_nat(2,N15) - 19;
+
+lemma void p25519_2_generates();
+    requires true;
+    ensures  euclid_mod(pow_nat(2,nat_of_int(P25519-1)),P25519)
+        ==   1;
+
+#endif
+

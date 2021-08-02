@@ -1949,5 +1949,60 @@ lemma_auto void fast_pow_mod_correct()
     }
 }
 
+lemma
+void primes_below_step(int n)
+    requires n >= 1;
+    ensures  int_of_nat(nat_of_int(n)) == n
+        &*&  int_of_nat(succ(nat_of_int(n))) == n+1
+        &*&  is_prime(n+1)
+        ==   all_no_divide(n+1,primes_below(nat_of_int(n)));
+{
+    prime_test(n+1);
+    int_of_nat_of_int(n+1);
+    assert nat_of_int(n+1) == succ(nat_of_int(n));
+
+    if(forall(primes_below(nat_of_int(n)),(no_divide)(n+1)))  {
+        if(!forall(primes_below(nat_of_int(n)),(nonfactor)(n+1))) {
+            int cx = not_forall(primes_below(nat_of_int(n)),
+                    (nonfactor)(n+1));
+            forall_elim(primes_below(nat_of_int(n)),
+                    (no_divide)(n+1), cx);
+            assert false;
+        }
+    }
+
+    if(forall(primes_below(nat_of_int(n)),(nonfactor)(n+1))) {
+        if(!forall(primes_below(nat_of_int(n)),(no_divide)(n+1)))  {
+            int cx = not_forall(primes_below(nat_of_int(n)),
+                    (no_divide)(n+1));
+            forall_elim(primes_below(nat_of_int(n)),
+                    (nonfactor)(n+1), cx);
+            assert false;
+        }
+    }
+}
+
+lemma_auto
+void primes_below_16()
+    requires true;
+    ensures  primes_below(N16) == {13,11,7,5,3,2};
+{
+    primes_below_step(2);
+    primes_below_step(3);
+    primes_below_step(4);
+    primes_below_step(5);
+    primes_below_step(6);
+    primes_below_step(7);
+    primes_below_step(8);
+    primes_below_step(9);
+    primes_below_step(10);
+    primes_below_step(11);
+    primes_below_step(12);
+    primes_below_step(13);
+    primes_below_step(14);
+    primes_below_step(15);
+}
+
+
 @*/
 

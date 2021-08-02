@@ -1,3 +1,6 @@
+#ifndef VFUTIL_FINFIELD_GH
+#define VFUTIL_FINFIELD_GH
+
 #include "util.gh"
 #include "numtheo.gh"
 
@@ -223,73 +226,17 @@ void prime_up_to_no_divide(nat n, int x)
 }
 
 lemma
-void primes_below_step(int n)
+void primes_below_step(int n);
     requires n >= 1;
     ensures  int_of_nat(nat_of_int(n)) == n
         &*&  int_of_nat(succ(nat_of_int(n))) == n+1
         &*&  is_prime(n+1)
         ==   all_no_divide(n+1,primes_below(nat_of_int(n)));
-{
-    prime_test(n+1);
-    int_of_nat_of_int(n+1);
-    assert nat_of_int(n+1) == succ(nat_of_int(n));
-
-    if(forall(primes_below(nat_of_int(n)),(no_divide)(n+1)))  {
-        if(!forall(primes_below(nat_of_int(n)),(nonfactor)(n+1))) {
-            int cx = not_forall(primes_below(nat_of_int(n)),
-                    (nonfactor)(n+1));
-            forall_elim(primes_below(nat_of_int(n)),
-                    (no_divide)(n+1), cx);
-            assert false;
-        }
-    }
-
-    if(forall(primes_below(nat_of_int(n)),(nonfactor)(n+1))) {
-        if(!forall(primes_below(nat_of_int(n)),(no_divide)(n+1)))  {
-            int cx = not_forall(primes_below(nat_of_int(n)),
-                    (no_divide)(n+1));
-            forall_elim(primes_below(nat_of_int(n)),
-                    (nonfactor)(n+1), cx);
-            assert false;
-        }
-    }
-}
 
 lemma_auto
-void primes_below_16()
+void primes_below_16();
     requires true;
     ensures  primes_below(N16) == {13,11,7,5,3,2};
-{
-    primes_below_step(2);
-    primes_below_step(3);
-    primes_below_step(4);
-    primes_below_step(5);
-    primes_below_step(6);
-    primes_below_step(7);
-    primes_below_step(8);
-    primes_below_step(9);
-    primes_below_step(10);
-    primes_below_step(11);
-    primes_below_step(12);
-    primes_below_step(13);
-    primes_below_step(14);
-    primes_below_step(15);
-}
-
-//predicate fast_pow_mod(int p, int x, bool e_odd, int e_over_2;
-//                       int e, int result)
-//    =   p > 1 &*& e_over_2 >= 0
-//    &*& (e_over_2 == 0
-//        ? (e_odd ? e == 1 &*& result == euclid_mod(x,p)
-//                 : e == 0 &*& result == 0)
-//        :   fast_pow_mod(p,x,e_over_2%2 == 1, e_over_2/2, e_over_2,
-//                ?x_p_e_2)
-//        &*& let(euclid_mod(x_p_e_2*x_p_e_2,p), ?x_even)
-//        &*& (e_odd ? e == 2*e_over_2 + 1
-//                    &*& result == euclid_mod(x_even * x,p)
-//                   : e == 2*e_over_2
-//                    &*& result == x_even)
-//        );
 
 predicate fast_pow_mod(int p, int x, bool e_odd, nat e_over_2;
                        nat e, int result)
@@ -308,8 +255,10 @@ predicate fast_pow_mod(int p, int x, bool e_odd, nat e_over_2;
                         &*& result == x_even);
         };
 
-lemma_auto void fast_pow_mod_correct();
+lemma void fast_pow_mod_correct();
     requires [?f]fast_pow_mod(?p,?x,?e_odd,?e_over_2,?e,?res);
     ensures  [ f]fast_pow_mod( p, x, e_odd, e_over_2, e, res)
         &*&  p > 1 &*& res == euclid_mod(pow_nat(x,e),p);
+
+#endif
 
