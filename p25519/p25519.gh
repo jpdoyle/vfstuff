@@ -1,9 +1,9 @@
 #ifndef VFUTIL_P25519_GH
 #define VFUTIL_P25519_GH
 
-#include "util.gh"
-#include "numtheo.gh"
-#include "finfield.gh"
+#include "../util.gh"
+#include "../numtheo.gh"
+#include "../finfield.gh"
 
 fixpoint int P25519() {
     return pow_nat(2,nat_of_int(255)) - 19;
@@ -14,10 +14,9 @@ lemma void p25519_formula();
     ensures  P25519
         ==   pow_nat(pow_nat(2,N15),N16)*pow_nat(2,N15) - 19;
 
-lemma void p25519_2_generates();
-    requires true;
-    ensures  euclid_mod(pow_nat(2,nat_of_int(P25519-1)),P25519)
-        ==   1;
+lemma pratt_cert p25519_pratt(nat f);
+    requires int_of_nat(f) >= 20;
+    ensures  pratt_certificate(result,1,f,P25519);
 
 #endif
 

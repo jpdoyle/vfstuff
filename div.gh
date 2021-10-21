@@ -173,10 +173,19 @@ lemma void euclid_mod_correct(int D, int d);
     requires d > 0;
     ensures  [_]euclid_div_sol(D,d,_,euclid_mod(D,d));
 
+lemma void euclid_div_exact(int D, int d, int q, int r);
+    requires d > 0 &*& r >= 0 &*& r < d &*& D == q*d + r;
+    ensures  euclid_div(D,d) == pair(q,r);
+
 lemma_auto(euclid_mod(D,d))
 void euclid_mod_auto(int D, int d);
     requires d > 0;
     ensures euclid_mod(D, d) == (D % d + d) % d;
+
+lemma_auto(euclid_mod(D,d))
+void euclid_mod_nonneg_auto(int D, int d);
+    requires d > 0;
+    ensures (D >= 0 || D%d == 0) == (euclid_mod(D, d) == D%d);
 
 lemma_auto(euclid_mod(euclid_mod(D,d),d))
 void euclid_mod_mod(int D, int d);

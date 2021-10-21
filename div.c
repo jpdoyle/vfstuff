@@ -1,11 +1,18 @@
 /*@ #include "div.gh" @*/
 
+#if 1
+#define ALREADY_PROVEN()
+#else
+#define ALREADY_PROVEN() assume(false);
+#endif
+
 /*@
 
 lemma void division_zero_unique(int d, int q, int r)
     requires d != 0 &*& abs(r) < abs(d) &*& 0 == d*q + r;
     ensures  q == (0/d) &*& q == 0 &*& r == (0%d) &*& r == 0;
 {
+ALREADY_PROVEN()
     div_rem(0,d);
     assert abs(0/d*d) == 0;
     assert 0/d*d == 0;
@@ -36,6 +43,7 @@ lemma void division_unique(int D, int d, int q, int r)
         &*&   D == d*q + r;
     ensures  q == (D/d) &*& r == (D%d);
 {
+ALREADY_PROVEN()
     div_rem(D,d);
 
     assert D == d*q + r;
@@ -55,6 +63,7 @@ lemma void mod_abs(int x, int d)
     requires d > 0;
     ensures  abs(x%d) == abs(x)%d;
 {
+ALREADY_PROVEN()
     div_rem(x,d);
     if(x < 0) {
         division_unique(-x,d,-(x/d),-(x%d));
@@ -65,6 +74,7 @@ lemma void mod_plus(int x, int y, int d)
     requires d > 0 &*& x >= 0 &*& y >= 0;
     ensures  (x%d + y)%d == (x+y)%d;
 {
+ALREADY_PROVEN()
     div_rem(x,d);
     div_rem(x+y,d);
 
@@ -115,6 +125,7 @@ lemma void euclid_div_zero(int d, int q, int r)
     requires d > 0 &*& r >= 0 &*& r < d &*& 0 == q*d + r;
     ensures  q == 0 &*& r == 0;
 {
+    ALREADY_PROVEN()
     if(q > 0) {
         my_mul_mono_l(1,q,d);
         assert false;
@@ -134,6 +145,7 @@ lemma void euclid_div_unique(int D, int d, int q1, int r1,
         &*&  r2 >= 0 &*& r2 < d &*& D == q2*d + r2;
     ensures  q1 == q2 &*& r1 == r2;
 {
+    ALREADY_PROVEN()
     if(r2 >= r1) {
         euclid_div_zero(d,q2-q1,r2-r1);
     } else {
@@ -145,6 +157,7 @@ lemma void euclid_div_intro(int D, int d)
     requires d > 0;
     ensures  [_]euclid_div_sol(D,d,_,_);
 {
+    ALREADY_PROVEN()
     euclid_div_correct(nat_of_int(abs(D)),D,d,0);
     close euclid_div_sol(D,d,_,_);
     leak euclid_div_sol(D,d,_,_);
@@ -155,6 +168,7 @@ lemma_auto void euclid_div_auto()
     ensures  [ f]euclid_div_sol( D, d, q, r)
         &*&  r >= 0 &*& r < d &*& d > 0 &*& D == q*d + r;
 {
+    ALREADY_PROVEN()
     if(!(r >= 0 && r < d && d > 0 && D == q*d + r)) {
         open euclid_div_sol(_,_,_,_);
         assert false;
@@ -166,6 +180,7 @@ lemma void euclid_div_unique_intro(int D, int d, int q, int r)
     ensures  [_]euclid_div_sol(D,d,q,r)
         &*&  euclid_div(D,d) == pair(q,r);
 {
+    ALREADY_PROVEN()
     nat f = nat_of_int(abs_of(D));
     int_of_nat_of_int(abs_of(D));
     euclid_div_correct(f,D,d,0);
@@ -181,11 +196,22 @@ lemma void euclid_mod_correct(int D, int d)
     requires d > 0;
     ensures  [_]euclid_div_sol(D,d,_,euclid_mod(D,d));
 {
+    ALREADY_PROVEN()
     int_of_nat_of_int(abs_of(D));
     euclid_div_correct(nat_of_int(abs_of(D)),D,d,0);
     switch(euclid_div(D,d)) {
     case pair(q,r):
         euclid_div_unique_intro(D,d,q,r);
+    }
+}
+
+lemma void euclid_div_exact(int D, int d, int q, int r)
+    requires d > 0 &*& r >= 0 &*& r < d &*& D == q*d + r;
+    ensures  euclid_div(D,d) == pair(q,r);
+{
+    if(euclid_div(D,d) != pair(q,r)) {
+        euclid_div_unique_intro(D,d,q,r);
+        assert false;
     }
 }
 
@@ -195,6 +221,7 @@ void euclid_mod_auto(int D, int d)
     ensures euclid_mod(D, d) == (D % d + d) % d;
 
 {
+    ALREADY_PROVEN()
     euclid_mod_correct(D,d);
     open [_]euclid_div_sol(D,d,?q, euclid_mod(D, d));
     div_rem(D,d);
@@ -205,6 +232,29 @@ void euclid_mod_auto(int D, int d)
         euclid_div_unique(D, d, q, euclid_mod(D, d), D/d-1,
                 D%d + d);
         division_unique(D%d + d, d, 0, D%d + d);
+    }
+}
+
+lemma_auto(euclid_mod(D,d))
+void euclid_mod_nonneg_auto(int D, int d)
+    requires d > 0;
+    ensures (D >= 0 || D%d == 0) == (euclid_mod(D, d) == D%d);
+{
+    div_rem(D,d);
+    mod_sign(D,d);
+    if(D < 0 && D%d != 0 && euclid_mod(D,d) == D%d) {
+        euclid_mod_correct(D,d);
+        assert false;
+    }
+
+    if(D%d == 0 && euclid_mod(D,d) != D%d) {
+        euclid_div_exact(D,d,D/d,0);
+        assert false;
+    }
+
+    if(D >= 0 && euclid_mod(D,d) != D%d) {
+        euclid_div_exact(D,d,D/d,D%d);
+        assert false;
     }
 }
 

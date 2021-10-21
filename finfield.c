@@ -853,13 +853,6 @@ ALREADY_PROVEN()
             Zp_diff_zero(p,pow_nat(x,p_minus_1),1);
         } else {
             prime_divides_factorial(p,p_minus_1);
-            assert factorial(p_minus_1)%p != 0;
-            if(euclid_mod(factorial(p_minus_1),p) == 0) {
-                euclid_mod_correct(factorial(p_minus_1),p);
-                assert [_] euclid_div_sol(factorial(p_minus_1),p,?q,0);
-                division_unique(factorial(p_minus_1),p,q,0);
-                assert false;
-            }
             assert false;
         }
     }
@@ -1899,55 +1892,126 @@ ALREADY_PROVEN()
     }
 }
 
-lemma_auto void fast_pow_mod_correct()
-    requires [?f]fast_pow_mod(?p,?x,?e_odd,?e_over_2,?e,?res);
-    ensures  [ f]fast_pow_mod( p, x, e_odd, e_over_2, e, res)
-        &*&  p > 1 &*& res == euclid_mod(pow_nat(x,e),p);
+lemma
+pratt_cert pratt_certificate_build(int g,
+        list<pair<int,pratt_cert> > factors, int q, int p)
+    requires pratt_certificate(pratt_cert(g,factors),?rest,?fp,p)
+        &*&  pratt_certificate(?qcert,1,?fq,q)
+        &*&  rest%q == 0
+        &*&  !!pratt_pow_thing(p,g,q);
+    ensures  pratt_certificate(result, rest/q, _, p)
+        &*& result == pratt_cert(g,cons(pair(q,qcert),factors));
 {
-    if(p <= 1) {
-        open [f]fast_pow_mod(_,_,_,_,_,_);
+    pratt_certificate_prime_inner(q,qcert,fq);
+    assert !!is_prime(q);
+    if(rest == 1) {
+        division_unique(rest,q,0,1);
         assert false;
     }
 
-    if(res != euclid_mod(pow_nat(x,e),p)) {
-        open [f]fast_pow_mod(_,_,_,_,_,_);
-        switch(e_over_2) {
-        case zero:
-        case succ(e_over_2_0):
-            assert [f]fast_pow_mod(p,x,int_of_nat(e_over_2)%2 == 1,
-                    nat_of_int(int_of_nat(e_over_2)/2), e_over_2, ?x_p_e_2);
-            fast_pow_mod_correct();
-            assert [f]let(euclid_mod(x_p_e_2*x_p_e_2,p), ?x_even);
-            assert nat_of_int(int_of_nat(e_over_2)
-                              +int_of_nat(e_over_2))
-                == nat_double(e_over_2);
-            pow_plus(x,e_over_2,int_of_nat(e_over_2));
-            assert pow_nat(x,e_over_2)*pow_nat(x,e_over_2)
-                == pow_nat(x,nat_double(e_over_2));
-            assert x_even
-                == euclid_mod(euclid_mod(pow_nat(x,e_over_2),p)
-                              *euclid_mod(pow_nat(x,e_over_2),p),
-                              p);
-            Zp_times(p,pow_nat(x,e_over_2),pow_nat(x,e_over_2));
-
-            if(e_odd) {
-                assert res == euclid_mod(x_even*x,p);
-                mul_3var(x_p_e_2,x_p_e_2,x);
-                assert res
-                    == euclid_mod(
-                            euclid_mod(pow_nat(x,e_over_2)*pow_nat(x,e_over_2),p)
-                            *x,p);
-                Zp_times(p,euclid_mod(pow_nat(x,e_over_2)*pow_nat(x,e_over_2),p),x);
-                Zp_times(p,pow_nat(x,e_over_2)*pow_nat(x,e_over_2),x);
-
-                assert false;
-            } else {
+    if(q >= p) {
+        if(rest >= p || rest <= 0) {
+            open pratt_certificate(pratt_cert(g,factors),_,_,p);
+            assert p - 1
+                == product(map(fst,factors))*rest;
+            if(product(map(fst,factors)) <= 0) {
+                my_mul_mono_l(product(map(fst,factors)),0,rest);
                 assert false;
             }
+            my_mul_mono_l(1,product(map(fst,factors)),rest);
+            assert false;
         }
+        assert rest < p;
+        division_unique(rest,q,0,rest);
         assert false;
     }
+
+    if(product(map(fst,factors))*rest != p-1 || g <= 1 || g >= p ||
+            euclid_mod(pow_nat(g,nat_of_int(p-1)),p) != 1 || rest < 1 ||
+            !forall(map(fst,factors),(pratt_pow_thing)(p,g)) || factors == nil
+            ) {
+        open pratt_certificate(pratt_cert(g,factors),rest,fp,p);
+        assert false;
+    }
+
+    assert pratt_certificate(pratt_cert(g,factors),rest,fp,p)
+      &*&  pratt_certificate(qcert,1,fq,q);
+
+    nat f = zero;
+
+    while(int_of_nat(f) < max_of(int_of_nat(fq),int_of_nat(fp)))
+        invariant int_of_nat(f) <= max_of(int_of_nat(fq),int_of_nat(fp));
+        decreases max_of(int_of_nat(fq),int_of_nat(fp)) - int_of_nat(f);
+    { f = succ(f); }
+
+    pratt_certificate_raise_fuel(pratt_cert(g,factors),fp,f);
+    pratt_certificate_raise_fuel(qcert,fq,f);
+
+    div_rem(rest,q);
+    assert rest == q*(rest/q);
+    mul_3var(q,product(map(fst,factors)),rest/q);
+    assert product(map(fst,cons(pair(q,qcert),factors)))*(rest/q)
+        == (q*product(map(fst,factors)))*(rest/q);
+    assert product(map(fst,cons(pair(q,qcert),factors)))*(rest/q)
+        == (q*product(map(fst,factors)))*(rest/q);
+    if(rest/q < 1) {
+        my_mul_mono_r(q,rest/q,0);
+        assert false;
+    }
+    close pratt_certificate(pratt_cert(g,cons(pair(q,qcert),factors)), rest/q, succ(f), p);
+    return pratt_cert(g,cons(pair(q,qcert),factors));
 }
+
+
+//lemma_auto void fast_pow_mod_correct()
+//    requires [?f]fast_pow_mod(?p,?x,?e_odd,?e_over_2,?e,?res);
+//    ensures  [ f]fast_pow_mod( p, x, e_odd, e_over_2, e, res)
+//        &*&  p > 1 &*& res == euclid_mod(pow_nat(x,e),p);
+//{
+//    if(p <= 1) {
+//        open [f]fast_pow_mod(_,_,_,_,_,_);
+//        assert false;
+//    }
+//
+//    if(res != euclid_mod(pow_nat(x,e),p)) {
+//        open [f]fast_pow_mod(_,_,_,_,_,_);
+//        switch(e_over_2) {
+//        case zero:
+//        case succ(e_over_2_0):
+//            assert [f]fast_pow_mod(p,x,int_of_nat(e_over_2)%2 == 1,
+//                    nat_of_int(int_of_nat(e_over_2)/2), e_over_2, ?x_p_e_2);
+//            fast_pow_mod_correct();
+//            assert [f]let(euclid_mod(x_p_e_2*x_p_e_2,p), ?x_even);
+//            assert nat_of_int(int_of_nat(e_over_2)
+//                              +int_of_nat(e_over_2))
+//                == nat_double(e_over_2);
+//            pow_plus(x,e_over_2,int_of_nat(e_over_2));
+//            assert pow_nat(x,e_over_2)*pow_nat(x,e_over_2)
+//                == pow_nat(x,nat_double(e_over_2));
+//            assert x_even
+//                == euclid_mod(euclid_mod(pow_nat(x,e_over_2),p)
+//                              *euclid_mod(pow_nat(x,e_over_2),p),
+//                              p);
+//            Zp_times(p,pow_nat(x,e_over_2),pow_nat(x,e_over_2));
+//
+//            if(e_odd) {
+//                assert res == euclid_mod(x_even*x,p);
+//                mul_3var(x_p_e_2,x_p_e_2,x);
+//                assert res
+//                    == euclid_mod(
+//                            euclid_mod(pow_nat(x,e_over_2)*pow_nat(x,e_over_2),p)
+//                            *x,p);
+//                Zp_times(p,euclid_mod(pow_nat(x,e_over_2)*pow_nat(x,e_over_2),p),x);
+//                Zp_times(p,pow_nat(x,e_over_2)*pow_nat(x,e_over_2),x);
+//
+//                assert false;
+//            } else {
+//                assert false;
+//            }
+//        }
+//        assert false;
+//    }
+//}
 
 lemma
 void primes_below_step(int n)
@@ -1957,6 +2021,7 @@ void primes_below_step(int n)
         &*&  is_prime(n+1)
         ==   all_no_divide(n+1,primes_below(nat_of_int(n)));
 {
+    ALREADY_PROVEN()
     prime_test(n+1);
     int_of_nat_of_int(n+1);
     assert nat_of_int(n+1) == succ(nat_of_int(n));
@@ -1987,6 +2052,7 @@ void primes_below_16()
     requires true;
     ensures  primes_below(N16) == {13,11,7,5,3,2};
 {
+    ALREADY_PROVEN()
     primes_below_step(2);
     primes_below_step(3);
     primes_below_step(4);
@@ -2003,6 +2069,52 @@ void primes_below_16()
     primes_below_step(15);
 }
 
+lemma void exp_by_sq(int p, int g, int e, int g_p_e)
+    requires p > 1 &*& e >= 0
+        &*&  g >= 0 &*& g < p
+        &*&  g_p_e == euclid_mod(pow_nat(g,nat_of_int(e)),p);
+    ensures  euclid_mod(pow_nat(g,nat_of_int(2*e)),p)
+        ==   (g_p_e*g_p_e)%p
+        &*&  euclid_mod(pow_nat(g,nat_of_int(2*e+1)),p)
+        ==   (g*g_p_e*g_p_e)%p;
+{
+    int_of_nat_of_int(p);
+    int_of_nat_of_int(p-1);
+    int g_p_2e = euclid_mod(pow_nat(g,nat_of_int(2*e)),p);
+    if(g_p_2e != (g_p_e*g_p_e)%p) {
+        Zp_times(p,pow_nat(g,nat_of_int(e)),pow_nat(g,nat_of_int(e)));
+        assert euclid_mod(g_p_e*g_p_e,p)
+            == euclid_mod(pow_nat(g,nat_of_int(e))
+                          *pow_nat(g,nat_of_int(e)),p);
+        pow_times2(g,nat_of_int(e),2);
+        assert euclid_mod(g_p_e*g_p_e,p)
+            == euclid_mod(pow_nat(g,nat_of_int(2*e)),p);
+        euclid_mod_correct(g_p_e*g_p_e,p);
+        assert [_]euclid_div_sol(g_p_e*g_p_e,p,
+                _,g_p_2e);
+
+        my_mul_mono_l(0,g_p_e,g_p_e);
+        assert false;
+    }
+
+    int g_p_2e_1 = euclid_mod(pow_nat(g,nat_of_int(2*e+1)),p);
+    if(g_p_2e_1 != (g*g_p_e*g_p_e)%p) {
+        mul_3var(g,g_p_e,g_p_e);
+        mul_3var(g,pow_nat(g,nat_of_int(e)),pow_nat(g,nat_of_int(e)));
+        Zp_times(p,pow_nat(g,nat_of_int(e)),pow_nat(g,nat_of_int(e)));
+        Zp_times(p,g,pow_nat(g,nat_of_int(e))*pow_nat(g,nat_of_int(e)));
+        Zp_times(p,g,g_p_e*g_p_e);
+
+        pow_times2(g,nat_of_int(e),2);
+        assert succ(nat_of_int(2*e))
+            == nat_of_int(2*e + 1);
+        euclid_mod_correct(g*g_p_e*g_p_e,p);
+
+        my_mul_mono_l(0,g_p_e,g_p_e);
+        my_mul_mono_l(0,g,g_p_e*g_p_e);
+        assert false;
+    }
+}
 
 @*/
 

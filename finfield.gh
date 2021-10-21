@@ -123,9 +123,14 @@ lemma void pratt_core_lemma(int p, int x);
 
 
 fixpoint bool pratt_pow_thing(int p, int x, int q) {
-    return euclid_mod(pow_nat(x,nat_of_int((p-1)/q)),p)
-        != 1;
+    return euclid_mod(pow_nat(x,nat_of_int((p-1)/q)),p) != 1;
 }
+
+lemma_auto(pratt_pow_thing(p,x,q))
+void pratt_pow_thing_auto(int p, int x, int q)
+    requires !pratt_pow_thing(p,x,q);
+    ensures  euclid_mod(pow_nat(x,nat_of_int((p-1)/q)),p) == 1;
+{}
 
 lemma void pratt_order_check_lemma(int p, list<int> p_minus_1, int x);
     requires p > 1 &*& x > 1 &*& x < p
@@ -173,6 +178,22 @@ predicate pratt_certificate(pratt_cert cert, int rest_of_p_1, nat fuel; int p)
             }
             &*& !!forall(map(fst,factors),(pratt_pow_thing)(p,g));
     };
+
+lemma
+void pratt_certificate_raise_fuel(pratt_cert cert, nat f1, nat f2);
+    requires [?fr]pratt_certificate(cert,?rest,f1,?p)
+        &*&  int_of_nat(f1) <= int_of_nat(f2);
+    ensures  [ fr]pratt_certificate(cert, rest,f2, p);
+
+lemma
+pratt_cert pratt_certificate_build(int g,
+        list<pair<int,pratt_cert> > factors, int q, int p);
+    requires pratt_certificate(pratt_cert(g,factors),?rest,_,p)
+        &*&  pratt_certificate(?qcert,1,_,q)
+        &*&  rest%q == 0
+        &*&  !!pratt_pow_thing(p,g,q);
+    ensures  pratt_certificate(result, rest/q, _, p)
+        &*& result == pratt_cert(g,cons(pair(q,qcert),factors));
 
 lemma
 void pratt_certificate_prime_inner(int p, pratt_cert cert, nat fuel);
@@ -238,27 +259,62 @@ void primes_below_16();
     requires true;
     ensures  primes_below(N16) == {13,11,7,5,3,2};
 
-predicate fast_pow_mod(int p, int x, bool e_odd, nat e_over_2;
-                       nat e, int result)
-    =   p > 1
-    &*& switch(e_over_2) {
-        case zero:
-            return (e_odd ? e == N1   &*& result == euclid_mod(x,p)
-                          : e == zero &*& result == 1);
-        case succ(e_over_2_0):
-            return fast_pow_mod(p,x,int_of_nat(e_over_2)%2 == 1,
-                    nat_of_int(int_of_nat(e_over_2)/2), e_over_2, ?x_p_e_2)
-            &*& let(euclid_mod(x_p_e_2*x_p_e_2,p), ?x_even)
-            &*& (e_odd ? e == succ(nat_double(e_over_2))
-                        &*& result == euclid_mod(x_even * x,p)
-                       : e == nat_double(e_over_2)
-                        &*& result == x_even);
-        };
+// predicate fast_pow_mod(int p, int x, bool e_odd, nat e_over_2;
+//                        nat e, int result);
+// 
+// lemma_auto void fast_pow_mod_correct();
+//     requires [?f]fast_pow_mod(?p,?x,?e_odd,?e_over_2,?e,?res);
+//     ensures  [ f]fast_pow_mod( p, x, e_odd, e_over_2, e, res)
+//         &*&  p > 1 &*& res == euclid_mod(pow_nat(x,e),p)
+//         &*&  int_of_nat(e) == 2*int_of_nat(e_over_2) + (e_odd ? 1 : 0);
+// 
+// lemma void fast_pow_base(int p, int x, bool e_odd, int e, int result);
+//     requires p > 1
+//         &*&  e_odd ? e == 1 &*& result == euclid_mod(x,p)
+//                    : e == 0 &*& result == 1;
+//     ensures  e_odd
+//             ? fast_pow_mod(p,x,e_odd,_,nat_of_int(e),result)
+//             : fast_pow_mod(p,x,e_odd,_,nat_of_int(e),1);
+// 
+// lemma void fast_pow_step(int p, int x, bool e_odd, nat e_over_2,
+//             int e, int result);
+//     requires p > 1 &*& fast_pow_mod(p,x,_,_,e_over_2,?prev)
+//         &*&  e_odd ?   e == 2*int_of_nat(e_over_2) + 1
+//                    &*& result == euclid_mod((prev*prev)*x,p)
+//                    :   e == 2*int_of_nat(e_over_2)
+//                    &*& result == euclid_mod(prev*prev,p);
+//     ensures  fast_pow_mod(p,x,e_odd,e_over_2,nat_of_int(e),result);
 
-lemma void fast_pow_mod_correct();
-    requires [?f]fast_pow_mod(?p,?x,?e_odd,?e_over_2,?e,?res);
-    ensures  [ f]fast_pow_mod( p, x, e_odd, e_over_2, e, res)
-        &*&  p > 1 &*& res == euclid_mod(pow_nat(x,e),p);
+
+lemma void exp_by_sq(int p, int g, int e, int g_p_e);
+    requires p > 1 &*& e >= 0
+        &*&  g >= 0 &*& g < p
+        &*&  g_p_e == euclid_mod(pow_nat(g,nat_of_int(e)),p);
+    ensures  euclid_mod(pow_nat(g,nat_of_int(2*e)),p)
+        ==   (g_p_e*g_p_e)%p
+        &*&  euclid_mod(pow_nat(g,nat_of_int(2*e+1)),p)
+        ==   (g*g_p_e*g_p_e)%p;
+
+//lemma pratt_cert build_pratt_cert(int p, int g, int e, int e_factor)
+//    requires pratt_certificate(_,1,_,e_factor)
+//        &*&  pratt_certificate(_,?rest,_,p)
+//        &*&  e_factor > 0
+//        &*&  rest%
+
+//    =   p > 1
+//    &*& switch(e_over_2) {
+//        case zero:
+//            return (e_odd ? e == N1   &*& result == euclid_mod(x,p)
+//                          : e == zero &*& result == 1);
+//        case succ(e_over_2_0):
+//            return fast_pow_mod(p,x,int_of_nat(e_over_2)%2 == 1,
+//                    nat_of_int(int_of_nat(e_over_2)/2), e_over_2, ?x_p_e_2)
+//            &*& let(euclid_mod(x_p_e_2*x_p_e_2,p), ?x_even)
+//            &*& (e_odd ? e == succ(nat_double(e_over_2))
+//                        &*& result == euclid_mod(x_even * x,p)
+//                       : e == nat_double(e_over_2)
+//                        &*& result == x_even);
+//        };
 
 #endif
 
