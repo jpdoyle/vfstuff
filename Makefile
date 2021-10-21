@@ -2,7 +2,7 @@ VF=time verifast -target Linux64 -shared -emit_vfmanifest
 
 .PHONY: all clean core_lib demos bins lorg_lib
 
-DEMOS = binsearch.vfmanifest isort.vfmanifest b64.vfmanifest
+DEMOS = binsearch.vfmanifest isort.vfmanifest mergesort.vfmanifest slowsort.vfmanifest b64.vfmanifest
 BINS = bin/fibber bin/calc bin/calc-dbg
 
 all: core_lib demos bins lorg_lib
