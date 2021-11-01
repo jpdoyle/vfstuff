@@ -121,6 +121,80 @@ ALREADY_PROVEN()
 
 }
 
+lemma void mod_shrinks(int x, int d)
+    requires d != 0;
+    ensures  abs(x%d) <= abs(x);
+{
+    if(abs(x) < abs(x%d)) {
+        div_rem(x,d);
+        division_unique(x,d,0,x);
+        assert false;
+    }
+}
+
+
+lemma void mod_times(int x, int y, int d)
+    requires d > 0 &*& x >= 0 &*& y >= 0;
+    ensures  (x%d * y)%d == (x*y)%d;
+{
+    ALREADY_PROVEN()
+    div_rem(x,d);
+    div_rem((x%d)*y,d);
+    note_eq(x*y , (d*(x/d) + x%d)*y);
+    assert x*y == (d*(x/d))*y + (x%d)*y;
+    assert x*y == (d*(x/d))*y + d*(((x%d)*y)/d) + ((x%d)*y)%d;
+    mul_3var(d,x/d,y);
+    assert x*y == d*((x/d)*y + ((x%d)*y)/d) + ((x%d)*y)%d;
+    my_mul_mono_l(0,x,y);
+    my_mul_mono_l(0,x%d,y);
+    mod_shrinks(x,d);
+    my_mul_mono_l(x%d,x,y);
+    mod_sign((x%d)*y,d);
+    assert ((x%d)*y)%d >= 0;
+    assert x*y >= 0;
+    division_unique(x*y,d,(x/d)*y + ((x%d)*y)/d,((x%d)*y)%d);
+}
+
+lemma void mod_times_d(int x, int y, int d)
+    requires d > 0 &*& x >= 0 &*& y >= 0;
+    ensures  (x + y*d)%d == x%d;
+{
+    ALREADY_PROVEN()
+    div_rem(x,d);
+    mod_sign(x,d);
+    mod_shrinks(x,d);
+    assert x%d <= x;
+    my_mul_mono_l(0,y,d);
+    division_unique(x+y*d,d,x/d+y,x%d);
+}
+
+lemma void mod_twice(int x, int d1, int d2)
+    requires d1 > 0 &*& x >= 0 &*& d2 > 0 &*& d1%d2 == 0;
+    ensures  (x%d1)%d2 == x%d2;
+{
+    ALREADY_PROVEN()
+    div_rem(x,d1);
+    assert x == d1*(x/d1) + x%d1;
+    div_rem(x%d1,d2);
+    assert x%d1 == d2*((x%d1)/d2) + (x%d1)%d2;
+    div_rem(d1,d2);
+    assert d1 == d2*(d1/d2);
+
+    assert x == (d2*(d1/d2))*(x/d1) + d2*((x%d1)/d2) + (x%d1)%d2;
+    mul_3var(d2,d1/d2,x/d1);
+    assert x == d2*((d1/d2)*(x/d1) + (x%d1)/d2) + (x%d1)%d2;
+
+    mod_sign(x,d1);
+    mod_shrinks(x,d1);
+    assert x%d1 >= 0 &*& x%d1 <= x;
+    mod_sign(x%d1,d2);
+    mod_shrinks(x%d1,d2);
+    assert (x%d1)%d2 >= 0 &*& (x%d1)%d2 <= x;
+
+    division_unique(x,d2,(d1/d2)*(x/d1) + (x%d1)/d2,(x%d1)%d2);
+}
+
+
 lemma void euclid_div_zero(int d, int q, int r)
     requires d > 0 &*& r >= 0 &*& r < d &*& 0 == q*d + r;
     ensures  q == 0 &*& r == 0;
@@ -240,6 +314,7 @@ void euclid_mod_nonneg_auto(int D, int d)
     requires d > 0;
     ensures (D >= 0 || D%d == 0) == (euclid_mod(D, d) == D%d);
 {
+    ALREADY_PROVEN()
     div_rem(D,d);
     mod_sign(D,d);
     if(D < 0 && D%d != 0 && euclid_mod(D,d) == D%d) {
@@ -263,6 +338,7 @@ void euclid_mod_mod(int D, int d)
     requires d > 0;
     ensures euclid_mod(euclid_mod(D,d), d) == euclid_mod(D,d);
 {
+    ALREADY_PROVEN()
     euclid_mod_correct(D,d);
     euclid_mod_correct(euclid_mod(D,d),d);
     open [_]euclid_div_sol(euclid_mod(D, d),d,?q, ?r);
@@ -274,6 +350,7 @@ void euclid_mod_self(int D, int d)
     requires d > 0;
     ensures euclid_mod(d,d) == 0;
 {
+    ALREADY_PROVEN()
     euclid_div_unique_intro(d,d,1,0);
 }
 
@@ -282,6 +359,7 @@ void euclid_mod_small(int D, int d)
     requires D >= 0 && D < d  && d > 0;
     ensures euclid_mod(D,d) == D;
 {
+    ALREADY_PROVEN()
     euclid_div_unique_intro(D,d,0,D);
 }
 
@@ -290,6 +368,7 @@ void euclid_mod_nonneg(int D, int d)
     requires d > 0;
     ensures euclid_mod(D,d) >= 0;
 {
+    ALREADY_PROVEN()
     euclid_mod_correct(D,d);
 }
 
@@ -298,6 +377,7 @@ void euclid_mod_below_d(int D, int d)
     requires d > 0;
     ensures euclid_mod(D,d) < d;
 {
+    ALREADY_PROVEN()
     euclid_mod_correct(D,d);
 }
 
@@ -305,6 +385,7 @@ lemma void div_monotonic_numerator(int x, int y, int d)
     requires d > 0 &*& x >= 0 &*& y >= x;
     ensures  x/d <= y/d;
 {
+    ALREADY_PROVEN()
     div_rem(x,d);
     div_rem(y,d);
 
@@ -318,6 +399,7 @@ lemma void into_numerator(int x, int y, int d)
     requires d > 0 &*& x >= 0 &*& y >= 0;
     ensures  x + (y/d) == (d*x + y)/d;
 {
+    ALREADY_PROVEN()
     division_unique(x*d,d,x,0);
     div_rem(d*x + y,d);
 
@@ -348,6 +430,7 @@ lemma void div_sign(int x, int d)
     requires d > 0;
     ensures  x >= 0 ? x/d >= 0 : x/d <= 0;
 {
+    ALREADY_PROVEN()
     div_rem(x,d);
     if(x >= 0 && x/d < 0) {
         mul_mono_l(x/d,-1,d);
@@ -364,6 +447,7 @@ lemma void div_monotonic_denominator(int D, int x, int y)
     requires D > 0 &*& x > 0 &*& y >= x;
     ensures  D/y <= D/x;
 {
+    ALREADY_PROVEN()
     div_rem(D,x); div_rem(D,y);
     div_sign(D,y);
 
@@ -379,6 +463,7 @@ lemma void div_shrinks(int x, int d)
     requires d > 0 &*& x >= 0;
     ensures  x/d <= x;
 {
+    ALREADY_PROVEN()
     if(x/d > x) {
         div_sign(x,d);
         mod_sign(x,d);
@@ -396,6 +481,7 @@ lemma void div_twice(int x, int y, int z)
     ensures  (x/y)/z == x/(y*z);
 
 {
+    ALREADY_PROVEN()
     if(y*z == 0) mul_to_zero(y,z);
     div_rem(x,y);
     div_rem(x/y,z);

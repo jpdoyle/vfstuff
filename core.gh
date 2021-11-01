@@ -404,5 +404,14 @@ void nat_minus_int(nat n, nat m);
     ensures  int_of_nat(nat_minus(n,m))
         ==   max_of(0,int_of_nat(n)-int_of_nat(m));
 
+lemma void abs_triangle(int x, int y)
+    requires true;
+    ensures  abs(x+y) <= abs(x) + abs(y);
+{
+    if(x >= 0) {}
+    if(y >= 0) {}
+}
+
+
 #endif
 

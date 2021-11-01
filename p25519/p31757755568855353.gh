@@ -1,0 +1,51 @@
+#ifndef VFUTIL_P31757755568855353_GH
+#define VFUTIL_P31757755568855353_GH
+
+#include "p25519.gh"
+
+lemma void p25519_31757755568855353_10_generates();
+    requires true;
+    ensures  euclid_mod(
+            pow_nat(10,
+                nat_of_int(31757755568855353-1)),
+            31757755568855353)
+        == 1;
+
+lemma void p25519_31757755568855353_1_factors();
+    requires true;
+    ensures  product({2, 2, 2, 3, 31, 107, 223, 4153, 430751}) + 1
+        ==   31757755568855353;
+
+lemma void p25519_31757755568855353_10_exact_order();
+    requires true;
+    ensures  !!forall({2, 2, 2, 3, 31, 107, 223, 4153,
+            430751},(pratt_pow_thing)(31757755568855353,10));
+
+lemma pratt_cert p25519_31757755568855353_pratt();
+    requires true;
+    ensures  pratt_certificate(result,1,_,31757755568855353);
+
+lemma void p25519_430751_17_generates();
+    requires true;
+    ensures  euclid_mod(
+            pow_nat(17,
+                nat_of_int(430751-1)),
+            430751)
+        == 1;
+
+lemma void p25519_430751_1_factors();
+    requires true;
+    ensures  product({2, 5, 5, 5, 1723}) + 1
+        ==   430751;
+
+lemma void p25519_430751_17_exact_order();
+    requires true;
+    ensures  !!forall({2, 5, 5, 5, 1723},(pratt_pow_thing)(430751,17));
+
+lemma pratt_cert p25519_430751_pratt();
+    requires true;
+    ensures  pratt_certificate(result,1,_,430751);
+
+
+#endif
+

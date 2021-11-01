@@ -11,15 +11,12 @@
 
 void merge(int* out, size_t ln, size_t rn, int* l, int* r)
     /*@ requires out[..(ln+rn)] |-> _
-            &*&  [?fl]l[..ln] |-> ?ls
-            &*&  [?fr]r[..rn] |-> ?rs
-            &*&  !!sorted(ls)
-            &*&  !!sorted(rs)
+            &*&  [?fl]l[..ln] |-> ?ls &*&  [?fr]r[..rn] |-> ?rs
+            &*&  !!sorted(ls) &*&  !!sorted(rs)
             ;
       @*/
     /*@ ensures  out[..(ln+rn)] |-> ?outs
-            &*&  [ fl]l[..ln] |->  ls
-            &*&  [ fr]r[..rn] |->  rs
+            &*&  [ fl]l[..ln] |->  ls &*&  [ fr]r[..rn] |->  rs
             &*&  !!sorted(outs)
             &*&  !!is_permutation(outs,append(ls,rs));
       @*/
@@ -33,12 +30,8 @@ void merge(int* out, size_t ln, size_t rn, int* l, int* r)
         /*@ requires out[(li+ri)..(ln+rn)] |-> _
                 &*&  [fl]l[li..ln] |-> ?loop_ls
                 &*&  [fr]r[ri..rn] |-> ?loop_rs
-                &*&  !!sorted(loop_ls)
-                &*&  !!sorted(loop_rs)
-                &*&  li <= ln
-                &*&  ri <= rn
-                ;
-        @*/
+                &*&  !!sorted(loop_ls) &*& !!sorted(loop_rs)
+                ; @*/
         /*@ ensures  out[(old_li+old_ri)..(ln+rn)] |-> ?loop_outs
                 &*&  [fl]l[old_li..ln] |->  loop_ls
                 &*&  [fr]r[old_ri..rn] |->  loop_rs
@@ -103,14 +96,7 @@ void merge(int* out, size_t ln, size_t rn, int* l, int* r)
         /*@ recursive_call(); @*/
         /*@ {
             assert out[(old_li+old_ri+1)..(ln+rn)] |-> ?final_outs;
-            assert !!sorted(final_outs);
-            assert !!is_permutation(final_outs,append(next_ls,next_rs));
-            assert out[(old_li+old_ri)..(ln+rn)]
-                |-> cons(next_val,final_outs);
-            if(!sorted(cons(next_val,final_outs))) {
-                all_ge_permutation(next_val,final_outs,append(next_ls,next_rs));
-                assert false;
-            }
+            all_ge_permutation(next_val,final_outs,append(next_ls,next_rs));
             permutation2_transitive(append(loop_ls,loop_rs),
                 cons(next_val,append(next_ls,next_rs)),
                 cons(next_val,final_outs));
@@ -124,8 +110,7 @@ void mergesort_inner(int* arr, size_t n, int* scratch)
             &*&  [2]call_perm_level(currentThread,pair(lt, n), {mergesort_inner})
       ; @*/
     /*@ ensures  arr[..n] |-> ?new_l &*& scratch[..n] |-> _
-            &*&  !!sorted(new_l)
-            &*&  !!is_permutation2(l,new_l); @*/
+            &*&  !!sorted(new_l) &*& !!is_permutation2(l,new_l); @*/
     /*@ terminates; @*/
 {
     /* For recursion */

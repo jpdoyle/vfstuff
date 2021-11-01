@@ -134,6 +134,22 @@ lemma void primes_below_complete(int p, nat n)
     }
 }
 
+lemma void primes_below_as_filter(nat n)
+    requires true;
+    ensures  primes_below(n) ==
+        filter(is_prime,reverse(range(1,int_of_nat(succ(n)))));
+{
+    switch(n) {
+    case zero:
+    case succ(n0):
+        primes_below_as_filter(n0);
+        if(int_of_nat(n0) > 1) {
+            reverse_range(1,int_of_nat(n0));
+        }
+    }
+}
+
+
 lemma void shift_primes_below_range(int bound, nat n)
     requires true;
     ensures  (
@@ -277,6 +293,51 @@ lemma int findSomeFactor(int x)
         return x;
     }
     return findFactor(x);
+}
+
+lemma int findSmallFactor(int x)
+    requires x > 1 &*& !is_prime(x);
+    ensures  !!is_prime(result) &*& x%result == 0 &*& result > 1
+        &*&  result*result <= x;
+{
+    int ret = findFactor(x);
+    if(ret*ret <= x) {
+        return ret;
+    }
+
+    assert ret*ret > x;
+    div_rem(x,ret);
+    div_sign(x,ret);
+    assert x == ret*(x/ret);
+
+    if(x/ret >= ret) {
+        my_mul_mono_r(ret,ret,x/ret);
+        assert false;
+    }
+
+    assert x/ret < ret;
+    if((x/ret)*(x/ret) > x) {
+        my_mul_mono_l(x/ret,ret,x/ret);
+        assert false;
+    }
+
+    if(x/ret <= 1) {
+        my_mul_mono_r(ret,x/ret,1);
+        assert false;
+    }
+
+    int final_ret = findSomeFactor(x/ret);
+    div_rem(x/ret,final_ret);
+    mul_3var(ret,(x/ret)/final_ret, final_ret);
+    division_unique(x,final_ret,ret*((x/ret)/final_ret),0);
+
+    if(final_ret*final_ret > x) {
+        my_mul_mono_l(final_ret,x/ret,final_ret);
+        my_mul_mono_r(x/ret,final_ret,x/ret);
+        assert false;
+    }
+
+    return final_ret;
 }
 
 fixpoint bool prime_up_to(nat n, int x) {

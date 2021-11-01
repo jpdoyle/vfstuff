@@ -1754,6 +1754,18 @@ ALREADY_PROVEN()
 }
 
 lemma
+void prime_no_divide_sqrt(nat n, int x)
+    requires x > 1 &*& int_of_nat(n) < x &*& int_of_nat(n)*int_of_nat(n) >= x;
+    ensures  is_prime(x) == all_no_divide(x,primes_below(n));
+{
+    ALREADY_PROVEN()
+    assert int_of_nat(succ(n)) == int_of_nat(n)+1;
+    my_mul_strict_mono_l(int_of_nat(n),int_of_nat(n)+1,int_of_nat(n));
+    my_mul_strict_mono_r(int_of_nat(n)+1,int_of_nat(n),int_of_nat(n)+1);
+    prime_test_sqrt(x,n);
+}
+
+lemma
 void pratt_certificate_prime_inner(int p, pratt_cert cert, nat fuel)
     requires [?fr]pratt_certificate(cert,1,fuel,p);
     ensures  [ fr]pratt_certificate(cert,1,fuel,p)
@@ -1766,17 +1778,11 @@ ALREADY_PROVEN()
             open pratt_certificate(_,_,_,_);
             switch(cert) {
             case pratt_small(x):
-                if(mem(x,primes_below(N16))) {
+                if(mem(x,primes_below(nat_of_int(100)))) {
                     assert false;
                 } else {
-                    assert !!prime_up_to(N16,x);
-                    if(x <= 16) {
-                        division_unique(x,x,1,0);
-                        prime_up_to_no_factors(N16,x,x);
-                        assert false;
-                    }
-
-                    prime_test_sqrt(x,N16);
+                    assert !!all_no_divide(x,primes_below(nat_of_int(100)));
+                    prime_no_divide_sqrt(nat_of_int(100),x);
                 }
                 assert false;
             case pratt_cert(g,factors):
@@ -1788,17 +1794,11 @@ ALREADY_PROVEN()
             open pratt_certificate(_,_,_,_);
             switch(cert) {
             case pratt_small(x):
-                if(mem(x,primes_below(N16))) {
+                if(mem(x,primes_below(nat_of_int(100)))) {
                     assert false;
                 } else {
-                    assert !!prime_up_to(N16,x);
-                    if(x <= 16) {
-                        division_unique(x,x,1,0);
-                        prime_up_to_no_factors(N16,x,x);
-                        assert false;
-                    }
-
-                    prime_test_sqrt(x,N16);
+                    assert !!all_no_divide(x,primes_below(nat_of_int(100)));
+                    prime_no_divide_sqrt(nat_of_int(100),x);
                 }
                 assert false;
             case pratt_cert(g,factors):
@@ -1902,6 +1902,7 @@ pratt_cert pratt_certificate_build(int g,
     ensures  pratt_certificate(result, rest/q, _, p)
         &*& result == pratt_cert(g,cons(pair(q,qcert),factors));
 {
+    ALREADY_PROVEN()
     pratt_certificate_prime_inner(q,qcert,fq);
     assert !!is_prime(q);
     if(rest == 1) {
@@ -2013,6 +2014,7 @@ pratt_cert pratt_certificate_build(int g,
 //    }
 //}
 
+
 lemma
 void primes_below_step(int n)
     requires n >= 1;
@@ -2047,26 +2049,12 @@ void primes_below_step(int n)
     }
 }
 
-lemma_auto
-void primes_below_16()
+lemma_auto(is_prime(3))
+void is_prime_3()
     requires true;
-    ensures  primes_below(N16) == {13,11,7,5,3,2};
+    ensures  !!is_prime(3);
 {
-    ALREADY_PROVEN()
     primes_below_step(2);
-    primes_below_step(3);
-    primes_below_step(4);
-    primes_below_step(5);
-    primes_below_step(6);
-    primes_below_step(7);
-    primes_below_step(8);
-    primes_below_step(9);
-    primes_below_step(10);
-    primes_below_step(11);
-    primes_below_step(12);
-    primes_below_step(13);
-    primes_below_step(14);
-    primes_below_step(15);
 }
 
 lemma void exp_by_sq(int p, int g, int e, int g_p_e)
@@ -2078,6 +2066,15 @@ lemma void exp_by_sq(int p, int g, int e, int g_p_e)
         &*&  euclid_mod(pow_nat(g,nat_of_int(2*e+1)),p)
         ==   (g*g_p_e*g_p_e)%p;
 {
+    ALREADY_PROVEN()
+    if(!is_prime(2)) {
+        assert false;
+    }
+
+    if(!is_prime(3)) {
+        assert false;
+    }
+
     int_of_nat_of_int(p);
     int_of_nat_of_int(p-1);
     int g_p_2e = euclid_mod(pow_nat(g,nat_of_int(2*e)),p);
@@ -2115,6 +2112,663 @@ lemma void exp_by_sq(int p, int g, int e, int g_p_e)
         assert false;
     }
 }
+
+lemma
+void primes_below_sieve_v1(nat n)
+    requires true;
+    ensures  primes_below(nat_of_int(int_of_nat(n)*int_of_nat(n)))
+        ==   append(
+                filter((notf)(
+                    (flip)(mem,
+                        prod(mul,
+                            reverse(primes_below(n)),
+                            range(2,(int_of_nat(n)*int_of_nat(n)+1)/2+1)))),
+                    reverse(range(int_of_nat(n)+1,
+                                  int_of_nat(n)*int_of_nat(n)+1))),
+                primes_below(n));
+{
+    ALREADY_PROVEN()
+    int n_squared = int_of_nat(n)*int_of_nat(n);
+
+    if(int_of_nat(n) > n_squared) {
+        TRIVIAL_NAT(n)
+        my_mul_mono_l(1,int_of_nat(n),int_of_nat(n));
+        assert false;
+    }
+
+    fixpoint(int,bool) sieve_f =
+        (notf)((flip)(mem,
+                    prod(mul,
+                        reverse(primes_below(n)),
+                        range(2,(n_squared+1)/2 + 1))));
+
+    for(nat m = n; int_of_nat(m) < int_of_nat(n)*int_of_nat(n);
+                   m = succ(m))
+        invariant int_of_nat(m) <= int_of_nat(n)*int_of_nat(n)
+            &*&   int_of_nat(m) >= int_of_nat(n)
+            &*&   primes_below(m)
+            ==    append(
+                    filter(sieve_f,
+                        reverse(range(int_of_nat(n)+1,int_of_nat(m)+1))),
+                    primes_below(n))
+            ;
+        decreases int_of_nat(n)*int_of_nat(n) - int_of_nat(m);
+    {
+        int p = int_of_nat(succ(m));
+
+        assert filter(sieve_f,
+                reverse(range(int_of_nat(n)+1,int_of_nat(succ(m))+1)))
+            == filter(sieve_f,
+                cons(int_of_nat(m)+1,
+                    reverse(range(int_of_nat(n)+1,int_of_nat(m)+1))));
+
+        if(!is_prime(p)) {
+            assert primes_below(succ(m)) == primes_below(m);
+
+            int f = findSmallFactor(p);
+
+            div_rem(p,f);
+            assert p == f*(p/f);
+
+            if(f > int_of_nat(n)) {
+                assert f*f <= p;
+                assert p <= int_of_nat(m)+1;
+                my_mul_strict_mono_l(int_of_nat(n),f,f);
+                my_mul_strict_mono_r(int_of_nat(n),int_of_nat(n),f);
+                assert false;
+            }
+
+            if(f < 2) {
+                assert false;
+            }
+
+            if(p/f < 2) {
+                my_mul_strict_mono_r(f,p/f,2);
+                my_mul_mono_r(f,2,f);
+                assert false;
+            }
+
+            if(p/f > (n_squared+1)/2) {
+                div_rem(n_squared+1,2);
+                assert f*(p/f) == p;
+                assert p <= n_squared;
+                assert p <= 2*((n_squared+1)/2) + (n_squared+1)%2;
+                assert p <= 2*((n_squared+1)/2);
+                assert p <  2*(p/f);
+                my_mul_mono_l(2,f,p/f);
+
+                assert false;
+            }
+
+            if(!mem(p/f,
+                    range(2,(n_squared+1)/2 + 1))) {
+                bounded_range(2,(n_squared+1)/2,p/f);
+                assert false;
+            }
+
+
+            if(sieve_f(p)) {
+                prod_correct(mul,reverse(primes_below(n)),
+                        range(2,(n_squared+1)/2 + 1), f,
+                        p/f);
+                assert false;
+            }
+
+            assert primes_below(succ(m))
+                ==    append(
+                        filter(sieve_f,
+                            reverse(range(int_of_nat(n)+1,
+                                          int_of_nat(succ(m))+1))),
+                        primes_below(n));
+        } else {
+            assert primes_below(succ(m)) == cons(p,primes_below(m));
+
+            if(!sieve_f(p)) {
+                pair<int,int> factors
+                    = prod_exact(mul,reverse(primes_below(n)),
+                        range(2,(n_squared+1)/2 + 1), p);
+                switch(factors) {
+                case pair(a,b):
+                    assert a >= 2;
+                    bounded_range(2,(n_squared+1)/2,b);
+                    assert b >= 2;
+                    assert a*b == p;
+                    division_unique(p,a,b,0);
+                    prime_no_factors(p,a);
+                }
+                assert false;
+            }
+
+            assert primes_below(succ(m))
+                ==    append(
+                        filter(sieve_f,
+                            reverse(range(int_of_nat(n)+1,
+                                          int_of_nat(succ(m))+1))),
+                        primes_below(n));
+        }
+    }
+}
+
+lemma void multiples_from_map(nat n, int b, int x)
+    requires true;
+    ensures  multiples_from(n,b*x,x)
+        ==   map((mul)(x),range(b+1,b+1+int_of_nat(n)));
+{
+    switch(n) {
+    case zero:
+    case succ(n0):
+        multiples_from_map(n0,b+1,x);
+    }
+}
+
+lemma void multiples_map(nat n, int x)
+    requires true;
+    ensures  multiples(n,x)
+        ==   map((mul)(x),range(2,int_of_nat(n)+2));
+{ multiples_from_map(n,1,x); }
+
+lemma void multiples_prod(nat n, list<int> l)
+    requires true;
+    ensures  all_multiples(n,l)
+        ==   prod(mul,l,range(2,int_of_nat(n)+2));
+{
+    switch(l) {
+    case nil:
+    case cons(x,xs):
+        multiples_map(n,x);
+        multiples_prod(n,xs);
+    }
+}
+
+lemma
+void primes_below_sieve_v2(nat n)
+    requires true;
+    ensures  primes_below(nat_of_int(int_of_nat(n)*int_of_nat(n)))
+        ==   append(
+                reverse(filter((notf)(
+                    (flip)(mem,
+                        all_multiples(nat_of_int(int_of_nat(n)*int_of_nat(n)),
+                            reverse(primes_below(n))))),
+                    range(int_of_nat(n)+1,
+                                  int_of_nat(n)*int_of_nat(n)+1))),
+                primes_below(n));
+{
+    ALREADY_PROVEN()
+    primes_below_sieve_v1(n);
+    filter_reverse(range(int_of_nat(n)+1,
+                                  int_of_nat(n)*int_of_nat(n)+1),
+            (notf)(
+                    (flip)(mem,
+                        all_multiples(nat_of_int(int_of_nat(n)*int_of_nat(n)),
+                            reverse(primes_below(n))))));
+
+    if(primes_below(nat_of_int(int_of_nat(n)*int_of_nat(n)))
+        !=   append(
+                filter((notf)(
+                    (flip)(mem,
+                        all_multiples(nat_of_int(int_of_nat(n)*int_of_nat(n)),
+                            reverse(primes_below(n))))),
+                    reverse(range(int_of_nat(n)+1,
+                                  int_of_nat(n)*int_of_nat(n)+1))),
+                primes_below(n))) {
+
+        append_cancels(
+            filter((notf)(
+                (flip)(mem,
+                    all_multiples(nat_of_int(int_of_nat(n)*int_of_nat(n)),
+                        reverse(primes_below(n))))),
+                reverse(range(int_of_nat(n)+1,
+                                int_of_nat(n)*int_of_nat(n)+1))),
+            filter((notf)(
+                (flip)(mem,
+                    prod(mul,
+                        reverse(primes_below(n)),
+                        range(2,(int_of_nat(n)*int_of_nat(n)+1)/2+1)))),
+                reverse(range(int_of_nat(n)+1,
+                                int_of_nat(n)*int_of_nat(n)+1))),
+
+            primes_below(n));
+
+        int cx = two_filters(
+            reverse(range(int_of_nat(n)+1,
+                    int_of_nat(n)*int_of_nat(n)+1)),
+
+            (notf)(
+                (flip)(mem,
+                    all_multiples(nat_of_int(int_of_nat(n)*int_of_nat(n)),
+                        reverse(primes_below(n))))),
+
+            (notf)(
+                (flip)(mem,
+                    prod(mul,
+                        reverse(primes_below(n)),
+                        range(2,(int_of_nat(n)*int_of_nat(n)+1)/2+1)))));
+
+        bounded_range(int_of_nat(n)+1, int_of_nat(n)*int_of_nat(n), cx);
+
+        multiples_prod(nat_of_int(int_of_nat(n)*int_of_nat(n)),
+                reverse(primes_below(n)));
+
+        if(mem(cx,
+                all_multiples(nat_of_int(int_of_nat(n)*int_of_nat(n)),
+                    reverse(primes_below(n))))) {
+
+            pair<int,int> factors = prod_exact(mul,
+                    reverse(primes_below(n)),
+                    range(2,int_of_nat(n)*int_of_nat(n)+2),
+                    cx);
+
+            switch(factors) {
+            case pair(a,b):
+                assert cx == a*b;
+                assert a >= 2;
+
+                bounded_range(2,int_of_nat(n)*int_of_nat(n)+1,b);
+
+                assert b >= 2;
+                assert cx <= int_of_nat(n)*int_of_nat(n);
+                if(b > (int_of_nat(n)*int_of_nat(n)+1)/2) {
+                    div_rem(int_of_nat(n)*int_of_nat(n)+1,2);
+                    my_mul_strict_mono_r(a,
+                            (int_of_nat(n)*int_of_nat(n)+1)/2, b);
+                    assert a*b > a*((int_of_nat(n)*int_of_nat(n)+1)/2);
+                    my_mul_mono_l(2,a,(int_of_nat(n)*int_of_nat(n)+1)/2);
+
+                    assert false;
+                }
+
+                if(!mem(b,range(2,(int_of_nat(n)*int_of_nat(n)+1)/2+1))) {
+                    if(2 <= (int_of_nat(n)*int_of_nat(n)+1)/2) {
+                        bounded_range(2,(int_of_nat(n)*int_of_nat(n)+1)/2,b);
+                    }
+                    assert false;
+                }
+
+                prod_correct(mul,
+                        reverse(primes_below(n)),
+                        range(2,(int_of_nat(n)*int_of_nat(n)+1)/2+1),
+                        a, b);
+                assert false;
+            }
+
+        } else {
+            assert !!mem(cx,
+                    prod(mul,
+                        reverse(primes_below(n)),
+                        range(2,(int_of_nat(n)*int_of_nat(n)+1)/2+1)));
+
+            pair<int,int> factors = prod_exact(mul,
+                    reverse(primes_below(n)),
+                    range(2,(int_of_nat(n)*int_of_nat(n)+1)/2+1),
+                    cx);
+
+            switch(factors) {
+            case pair(a,b):
+                assert cx == a*b;
+                assert a >= 2;
+
+                if(!bounded(2,(int_of_nat(n)*int_of_nat(n)+1)/2,b)) {
+                    bounded_range(2,(int_of_nat(n)*int_of_nat(n)+1)/2,b);
+                    assert false;
+                }
+
+                assert b >= 2;
+                assert cx <= int_of_nat(n)*int_of_nat(n);
+                assert b <= (int_of_nat(n)*int_of_nat(n)+1)/2;
+
+                if(int_of_nat(n)*int_of_nat(n)+1 <
+                        (int_of_nat(n)*int_of_nat(n)+1)/2) {
+                    div_rem(int_of_nat(n)*int_of_nat(n)+1,2);
+                    assert false;
+                }
+
+                assert b <= int_of_nat(n)*int_of_nat(n)+1;
+
+                if(!mem(b,range(2,int_of_nat(n)*int_of_nat(n)+2))) {
+                    bounded_range(2,int_of_nat(n)*int_of_nat(n)+1,b);
+                    assert false;
+                }
+
+                prod_correct(mul,
+                        reverse(primes_below(n)),
+                        range(2,int_of_nat(n)*int_of_nat(n)+2),
+                        a, b);
+
+                assert false;
+            }
+        }
+
+        assert false;
+    }
+}
+
+lemma
+void primes_below_fast_step(int lo, int hi, int m)
+    requires lo >= m &*& lo <= hi &*& m >= 1 &*& hi <= m*m;
+    //ensures  primes_below(nat_of_int(n+1))
+    //    ==   (all_no_divide(n+1,reverse(primes_below(nat_of_int(m))))
+    //         ? cons(n+1,primes_below(nat_of_int(n)))
+    //         : primes_below(nat_of_int(n)));
+    //ensures  all_no_divide(n+1,reverse(primes_below(nat_of_int(m))))
+    ensures  primes_below(nat_of_int(hi))
+        ==   append(
+                filter((flip)(all_no_divide,primes_below(nat_of_int(m))),
+                        reverse(range(lo+1,hi+1))),
+                primes_below(nat_of_int(lo)));
+{
+    ALREADY_PROVEN()
+    for(int i = lo; i < hi; ++i)
+        invariant i >= lo &*& i <= hi
+            &*&   primes_below(nat_of_int(i))
+            ==    append(
+                    filter((flip)(all_no_divide,primes_below(nat_of_int(m))),
+                            reverse(range(lo+1,i+1))),
+                    primes_below(nat_of_int(lo)));
+        decreases hi-i;
+    {
+        note_eq(reverse(range(lo+1,i+2)),
+                cons(i+1,reverse(range(lo+1,i+1))));
+        prime_no_divide_sqrt(nat_of_int(m), i+1);
+        assert nat_of_int(i+1) == succ(nat_of_int(i));
+    }
+}
+
+lemma_auto(primes_below(N16))
+void primes_below_16()
+    requires true;
+    ensures  primes_below(N16) == {13,11,7,5,3,2};
+{
+    ALREADY_PROVEN()
+    primes_below_step(2);
+    note_eq(reverse(primes_below(N2)),{2});
+    primes_below_fast_step(2,4,2);
+    note_eq(reverse(primes_below(N4)),{2,3});
+    primes_below_fast_step(4,16,4);
+}
+
+
+lemma
+void primes_below_32()
+    requires true;
+    ensures  primes_below(nat_of_int(32)) == {31,29,23,19,17,13,11,7,5,3,2};
+{
+    ALREADY_PROVEN()
+    primes_below_fast_step(16,32,16);
+}
+
+lemma
+void primes_below_48()
+    requires true;
+    ensures  primes_below(nat_of_int(48))
+        == append({47,43,41,37},primes_below(nat_of_int(32)));
+{
+    ALREADY_PROVEN()
+    primes_below_fast_step(32,48,16);
+}
+
+// 65 because apparently verifast overworks itself when it encounters
+// nat_of_int(64)
+lemma
+void primes_below_65()
+    requires true;
+    ensures  primes_below(nat_of_int(65))
+        == append({61,59,53},primes_below(nat_of_int(48)));
+{
+    ALREADY_PROVEN()
+    primes_below_fast_step(48,65,16);
+}
+
+lemma
+void primes_below_80()
+    requires true;
+    ensures  primes_below(nat_of_int(80))
+        == append({79,73,71,67},primes_below(nat_of_int(65)));
+{
+    ALREADY_PROVEN()
+    primes_below_fast_step(65,80,16);
+}
+
+lemma
+void primes_below_96()
+    requires true;
+    ensures  primes_below(nat_of_int(96))
+        ==   append({89,83},primes_below(nat_of_int(80)));
+{
+    ALREADY_PROVEN()
+    primes_below_fast_step(80,96,16);
+}
+
+lemma_auto
+void primes_below_100()
+    requires true;
+    ensures  primes_below(nat_of_int(100)) == {97,89,83,79,73,71,67,61,59,53,47,43,41,37,31,29,23,19,17,13,11,7,5,3,2};
+{
+    ALREADY_PROVEN()
+
+    primes_below_32();
+    primes_below_48();
+    primes_below_65();
+    primes_below_80();
+    primes_below_96();
+    primes_below_fast_step(96,100,16);
+}
+
+lemma void modpow2_correct(int p, int g, nat bits)
+    requires p > 1 &*& g >= 0;
+    ensures  modpow2(p,g,bits)
+        ==   euclid_mod(pow_nat(g%p,
+                            nat_of_int(pow_nat(2,bits))),
+                        p);
+{
+    switch(bits) {
+    case zero:
+        euclid_mod_nonneg_auto(g, p);
+
+    case succ(bits0):
+        modpow2_correct(p,g,bits0);
+        div_rem(g,p);
+        mod_sign(g,p);
+        exp_by_sq(p,g%p,pow_nat(2,bits0),modpow2(p,g,bits0));
+    }
+}
+
+lemma void modpow_correct_general(int p, int g, int e, nat bits)
+    requires p > 1 &*& g >= 0 &*& e >= 0;
+    ensures  modpow(p,g,e,bits)
+        ==   euclid_mod(pow_nat(g,nat_of_int(e%pow_nat(2,bits))),p);
+{
+    switch(bits) {
+    case zero:
+        assert pow_nat(2,bits) == 1;
+        division_unique(e,1,e,0);
+    case succ(bits0):
+        modpow2_correct(p,g,bits0);
+        modpow_correct_general(p,g,e,bits0);
+
+        int shift = pow_nat(2,bits0);
+        int shifted = e/shift;
+        div_rem(e,shift);
+        div_sign(e,shift);
+        div_rem(shifted,2);
+        div_sign(shifted,2);
+        assert e == shift*shifted + e%shift;
+        note_eq(e ,  shift*(2*(shifted/2) + shifted%2) + e%shift);
+
+        mul_3var(shift,2,shifted/2);
+        assert e == (2*shift)*(shifted/2) + shift*(shifted%2) + e%shift;
+
+        mod_sign(shifted,2);
+        mod_sign(e,shift);
+        assert shifted%2 >= 0;
+        assert shifted%2 <= 1;
+        my_mul_mono_r(shift,shifted%2,1);
+        my_mul_mono_r(shift,0,shifted%2);
+        assert shift*2 == 2*shift;
+        assert e%shift >= 0;
+        assert e%shift < shift;
+        assert shift*(shifted%2) + e%shift < 2*shift;
+        assert shift*(shifted%2) + e%shift >= 0;
+
+        assert 2*(shifted/2) >= 0;
+        assert 2*(shifted/2) <= shifted;
+        my_mul_mono_l(0,shift,2*(shifted/2));
+        assert shift*(2*(shifted/2)) >= 0;
+        assert shift*(2*(shifted/2)) <= e;
+
+        division_unique(e,2*shift,shifted/2,
+                shift*(shifted%2)+e%shift);
+
+        assert modpow(p,g,e,bits0)
+            == euclid_mod(pow_nat(g, nat_of_int(e%shift)),
+                          p);
+        assert modpow2(p,g,bits0)
+            == euclid_mod(pow_nat(g%p, nat_of_int(shift)),
+                          p);
+
+        euclid_mod_nonneg_auto(g,p);
+        Zp_pow(p,g,nat_of_int(shift));
+        assert modpow2(p,g,bits0)
+            == euclid_mod(pow_nat(g, nat_of_int(shift)),
+                          p);
+
+
+        if(shifted%2 == 1) {
+
+            assert modpow(p,g,e,bits)
+                == (euclid_mod(pow_nat(g, nat_of_int(shift)),p)
+                    *euclid_mod(pow_nat(g, nat_of_int(e%shift)), p))%p;
+
+            my_mul_mono_l(0,
+                euclid_mod(pow_nat(g, nat_of_int(shift)),p),
+                euclid_mod(pow_nat(g, nat_of_int(e%shift)),p));
+
+            euclid_mod_nonneg_auto(
+                euclid_mod(pow_nat(g, nat_of_int(shift)),p)
+                    *euclid_mod(pow_nat(g, nat_of_int(e%shift)), p),
+                p);
+
+            assert modpow(p,g,e,bits)
+                == euclid_mod((euclid_mod(pow_nat(g, nat_of_int(shift)),p)
+                    *euclid_mod(pow_nat(g, nat_of_int(e%shift)), p)),p);
+
+            Zp_times(p,pow_nat(g,nat_of_int(shift)),
+                    pow_nat(g,nat_of_int(e%shift)));
+
+            assert modpow(p,g,e,bits)
+                == euclid_mod((pow_nat(g, nat_of_int(shift))
+                    *pow_nat(g, nat_of_int(e%shift))),p);
+
+            pow_plus(g,nat_of_int(shift),e%shift);
+            assert modpow(p,g,e,bits)
+                == euclid_mod(pow_nat(g, nat_of_int(shift + e%shift)),p);
+
+            assert modpow(p,g,e,bits)
+                == euclid_mod(pow_nat(g, nat_of_int(e%(2*shift))),p);
+
+        } else {
+            if(shifted%2 >= 1) { assert false; }
+            if(shifted%2 < 0) { assert false; }
+            assert shifted%2 == 0;
+
+            division_unique(e,2*shift,shifted/2,e%shift);
+            assert modpow(p,g,e,bits)
+                == modpow(p,g,e,bits0)%p;
+            assert modpow(p,g,e,bits)
+                == euclid_mod(pow_nat(g, nat_of_int(e%shift)),p)%p;
+            euclid_mod_nonneg_auto(
+                euclid_mod(pow_nat(g, nat_of_int(e%shift)),p),
+                p);
+            assert modpow(p,g,e,bits)
+                == euclid_mod(pow_nat(g, nat_of_int(e%(2*shift))),p);
+        }
+    }
+}
+
+lemma void modpow_correct(int p, int g, int e, nat bits)
+    requires p > 1 &*& g >= 0 &*& pow_nat(2,bits) > e &*& e >= 0;
+    ensures  modpow(p,g,e,bits) == euclid_mod(pow_nat(g,nat_of_int(e)),p);
+{
+    division_unique(e,pow_nat(2,bits),0,e);
+    modpow_correct_general(p,g,e,bits);
+}
+
+lemma void modpow2_step(int p, int g, nat bits, int acc)
+    requires p > 1 &*& acc == modpow2(p,g,bits);
+    ensures  modpow2(p,g,succ(bits))
+        ==  (acc*acc)%p;
+{}
+
+lemma void modpow_step(int p, int g, int e, nat bits0, int acc, int pow2,
+        int sofar)
+    requires p > 1 &*& g >= 0 &*& acc == modpow2(p,g,bits0) &*& e >= 0
+        &*&  pow2 == pow_nat(2,bits0)
+        &*&  sofar == modpow(p,g,e,bits0);
+    ensures  modpow2(p,g,succ(bits0)) == (acc*acc)%p
+        &*&  (e/pow2)%2 == 1
+        ?    modpow(p,g,e,succ(bits0)) == (acc*sofar)%p
+        :    modpow(p,g,e,succ(bits0)) == sofar
+        ;
+{
+    modpow_correct_general(p,g,e,bits0);
+    modpow_correct_general(p,g,e,succ(bits0));
+    division_unique(p,p,1,0);
+
+    if((e/pow2)%2 == 1) {
+        assert modpow(p,g,e,succ(bits0))
+            == (acc*sofar)%p;
+    } else {
+        assert modpow(p,g,e,succ(bits0))
+            == (1*sofar)%p;
+        assert sofar == euclid_mod(pow_nat(g,nat_of_int(e%pow2)),p);
+        assert sofar == pow_nat(g,nat_of_int(e%pow2))%p;
+        mod_twice(pow_nat(g,nat_of_int(e%pow2)),p,p);
+    }
+}
+
+lemma void modpow_step_by_2(int p, int g, int e, nat bits0, int acc, int pow2,
+        int sofar)
+    requires p > 1 &*& g >= 0 &*& acc == modpow2(p,g,bits0) &*& e >= 0
+        &*&  pow2 == pow_nat(2,bits0)
+        &*&  sofar == modpow(p,g,e,bits0)
+        &*&  let((acc*acc)%p,?acc1);
+    ensures  modpow2(p,g,succ(succ(bits0))) == (acc1*acc1)%p
+        &*&  (e/pow2)%2 == 1
+        ?    ((e/(2*pow2))%2 == 1
+             ? modpow(p,g,e,succ(succ(bits0))) == (acc1*((acc*sofar)%p))%p
+             : modpow(p,g,e,succ(succ(bits0))) == (acc*sofar)%p
+             )
+        :    ((e/(2*pow2))%2 == 1
+             ? modpow(p,g,e,succ(succ(bits0))) == (acc1*sofar)%p
+             : modpow(p,g,e,succ(succ(bits0))) == sofar
+             )
+        ;
+{
+    modpow_step(p,g,e,bits0,acc,pow2,sofar);
+    int next_sofar = sofar;
+    note_eq(acc1,(acc*acc)%p);
+
+    if((e/pow2)%2 == 1) {
+        modpow_step(p,g,e,succ(bits0),(acc*acc)%p,2*pow2,(acc*sofar)%p);
+        if((e/(2*pow2))%2 == 1) {
+            if(modpow(p,g,e,succ(succ(bits0))) !=
+                (acc1*((acc*sofar)%p))%p) { assert false; }
+        } else {
+            if(modpow(p,g,e,succ(succ(bits0))) !=
+                (acc*sofar)%p) { assert false; }
+        }
+    } else {
+        modpow_step(p,g,e,succ(bits0),(acc*acc)%p,2*pow2,sofar);
+        if((e/(2*pow2))%2 == 1) {
+            if(modpow(p,g,e,succ(succ(bits0))) !=
+                (acc1*sofar)%p) { assert false; }
+        } else {
+            if(modpow(p,g,e,succ(succ(bits0))) !=
+                sofar) { assert false; }
+        }
+    }
+}
+
+
 
 @*/
 

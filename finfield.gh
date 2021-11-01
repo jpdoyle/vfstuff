@@ -149,8 +149,10 @@ predicate pratt_certificate(pratt_cert cert, int rest_of_p_1, nat fuel; int p)
     switch(cert) {
     case pratt_small(x):
         // Bigger?
-        return  x > 1 &*& x < 17*17
-            &*& (mem(x,primes_below(N16)) || prime_up_to(N16,x))
+        return  x > 1 &*& x <= 100*100
+            &*& (mem(x,primes_below(nat_of_int(100))) ||
+                    (x > 100 &&
+                     all_no_divide(x,primes_below(nat_of_int(100)))))
             &*& p == x &*& rest_of_p_1 == 1;
     case pratt_cert(g, factors):
         return  p == product(map(fst,factors))*rest_of_p_1 + 1
@@ -214,6 +216,13 @@ lemma_auto(no_divide(x,y)) void no_divide_def(int x, int y)
     ensures  no_divide(x,y) == (y != 0 && x%y != 0);
 {}
 
+fixpoint bool any_divides(int n, list<int> l) {
+    switch(l) {
+    case nil: return false;
+    case cons(x,xs): return x*(n/x) == n || any_divides(n,xs);
+    }
+}
+
 fixpoint bool all_no_divide(int n, list<int> l) {
     switch(l) {
     case nil: return true;
@@ -247,6 +256,11 @@ void prime_up_to_no_divide(nat n, int x)
 }
 
 lemma
+void prime_no_divide_sqrt(nat n, int x);
+    requires x > 1 &*& int_of_nat(n) < x &*& int_of_nat(n)*int_of_nat(n) >= x;
+    ensures  is_prime(x) == all_no_divide(x,primes_below(n));
+
+lemma
 void primes_below_step(int n);
     requires n >= 1;
     ensures  int_of_nat(nat_of_int(n)) == n
@@ -254,10 +268,80 @@ void primes_below_step(int n);
         &*&  is_prime(n+1)
         ==   all_no_divide(n+1,primes_below(nat_of_int(n)));
 
-lemma_auto
+lemma
+void primes_below_fast_step(int lo, int hi, int m);
+    requires lo >= m &*& lo <= hi &*& m >= 1 &*& hi <= m*m;
+    //ensures  primes_below(nat_of_int(n+1))
+    //    ==   (all_no_divide(n+1,reverse(primes_below(nat_of_int(m))))
+    //         ? cons(n+1,primes_below(nat_of_int(n)))
+    //         : primes_below(nat_of_int(n)));
+    ensures  primes_below(nat_of_int(hi))
+        ==   append(
+                filter((flip)(all_no_divide,primes_below(nat_of_int(m))),
+                        reverse(range(lo+1,hi+1))),
+                primes_below(nat_of_int(lo)));
+
+    //all_no_divide(n+1,reverse(primes_below(nat_of_int(m))))
+    //    ?    !!is_prime(n+1)
+    //    &*&  primes_below(nat_of_int(n+1))
+    //    ==   cons(n+1,primes_below(nat_of_int(n)))
+    //    :    !is_prime(n+1)
+    //    &*&  primes_below(nat_of_int(n+1))
+    //    ==   primes_below(nat_of_int(n));
+
+lemma_auto(is_prime(3))
+void is_prime_3();
+    requires true;
+    ensures  !!is_prime(3);
+
+fixpoint list<int> multiples_from(nat n, int base, int x) {
+    switch(n) {
+    case zero: return nil;
+    case succ(n0): return cons(base+x,multiples_from(n0,base+x,x));
+    }
+}
+
+fixpoint list<int> multiples(nat n, int x) {
+    return multiples_from(n,x,x);
+}
+
+fixpoint list<int> all_multiples(nat n, list<int> l) {
+    switch(l) {
+    case nil: return nil;
+    case cons(x,xs): return append(multiples(n,x),all_multiples(n,xs));
+    }
+}
+
+lemma
+void primes_below_sieve_v2(nat n);
+    requires true;
+    ensures  primes_below(nat_of_int(int_of_nat(n)*int_of_nat(n)))
+        ==   append(
+                reverse(filter((notf)(
+                    (flip)(mem,
+                        all_multiples(nat_of_int(int_of_nat(n)*int_of_nat(n)),
+                            reverse(primes_below(n))))),
+                    range(int_of_nat(n)+1,
+                                  int_of_nat(n)*int_of_nat(n)+1))),
+                primes_below(n));
+
+
+lemma_auto(primes_below(N16))
 void primes_below_16();
     requires true;
     ensures  primes_below(N16) == {13,11,7,5,3,2};
+
+lemma_auto(primes_below(N16))
+void primes_below_16_correct()
+    requires true;
+    ensures  !!forall(primes_below(N16),is_prime);
+{ primes_below_correct(N16); }
+
+
+lemma_auto
+void primes_below_100();
+    requires true;
+    ensures  primes_below(nat_of_int(100)) == {97,89,83,79,73,71,67,61,59,53,47,43,41,37,31,29,23,19,17,13,11,7,5,3,2};
 
 // predicate fast_pow_mod(int p, int x, bool e_odd, nat e_over_2;
 //                        nat e, int result);
@@ -294,6 +378,73 @@ lemma void exp_by_sq(int p, int g, int e, int g_p_e);
         ==   (g_p_e*g_p_e)%p
         &*&  euclid_mod(pow_nat(g,nat_of_int(2*e+1)),p)
         ==   (g*g_p_e*g_p_e)%p;
+
+fixpoint int modpow2(int p, int g, nat bits) {
+    switch(bits) {
+    case zero: return g%p;
+    case succ(bits0):
+        return (modpow2(p,g,bits0)*modpow2(p,g,bits0))%p;
+    }
+}
+
+lemma void modpow2_correct(int p, int g, nat bits);
+    requires p > 1 &*& g >= 0;
+    ensures  modpow2(p,g,bits)
+        ==   euclid_mod(pow_nat(g%p,
+                            nat_of_int(pow_nat(2,bits))),
+                        p);
+
+fixpoint int modpow(int p, int g, int e, nat bits) {
+    switch(bits) {
+    case zero: return 1;
+    case succ(bits0):
+        return ((((e/pow_nat(2,bits0))%2 == 1) ? modpow2(p,g,bits0) : 1)
+            *modpow(p,g,e,bits0))%p;
+    }
+}
+
+lemma void modpow_correct_general(int p, int g, int e, nat bits);
+    requires p > 1 &*& g >= 0 &*& e >= 0;
+    ensures  modpow(p,g,e,bits)
+        ==   euclid_mod(pow_nat(g,nat_of_int(e%pow_nat(2,bits))),p);
+
+lemma void modpow_correct(int p, int g, int e, nat bits);
+    requires p > 1 &*& g >= 0 &*& pow_nat(2,bits) > e &*& e >= 0 &*& g < p;
+    ensures  modpow(p,g,e,bits) == euclid_mod(pow_nat(g,nat_of_int(e)),p);
+
+lemma void modpow2_step(int p, int g, nat bits, int acc);
+    requires p > 1 &*& acc == modpow2(p,g,bits) &*& g < p;
+    ensures  modpow2(p,g,succ(bits))
+        ==  (acc*acc)%p;
+
+lemma void modpow_step(int p, int g, int e, nat bits0, int acc, int pow2,
+        int sofar);
+    requires p > 1 &*& g >= 0 &*& acc == modpow2(p,g,bits0) &*& e >= 0 &*& g < p
+        &*&  pow2 == pow_nat(2,bits0)
+        &*&  sofar == modpow(p,g,e,bits0);
+    ensures  modpow2(p,g,succ(bits0)) == (acc*acc)%p
+        &*&  (e/pow2)%2 == 1
+        ?    modpow(p,g,e,succ(bits0)) == (acc*sofar)%p
+        :    modpow(p,g,e,succ(bits0)) == sofar
+        ;
+
+lemma void modpow_step_by_2(int p, int g, int e, nat bits0, int acc, int pow2,
+        int sofar);
+    requires p > 1 &*& g >= 0 && acc == modpow2(p,g,bits0) &*& e >= 0 &*& g < p
+        &*&  pow2 == pow_nat(2,bits0)
+        &*&  sofar == modpow(p,g,e,bits0)
+        &*&  let((acc*acc)%p,?acc1);
+    ensures  modpow2(p,g,succ(succ(bits0))) == (acc1*acc1)%p
+        &*&  (e/pow2)%2 == 1
+        ?    ((e/(2*pow2))%2 == 1
+             ? modpow(p,g,e,succ(succ(bits0))) == (acc1*((acc*sofar)%p))%p
+             : modpow(p,g,e,succ(succ(bits0))) == (acc*sofar)%p
+             )
+        :    ((e/(2*pow2))%2 == 1
+             ? modpow(p,g,e,succ(succ(bits0))) == (acc1*sofar)%p
+             : modpow(p,g,e,succ(succ(bits0))) == sofar
+             )
+        ;
 
 //lemma pratt_cert build_pratt_cert(int p, int g, int e, int e_factor)
 //    requires pratt_certificate(_,1,_,e_factor)

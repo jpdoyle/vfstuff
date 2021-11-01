@@ -8,8 +8,9 @@
 419
 991
 2437
-75707
 
+37853
+75707
 569003
 8574133
 2773320623
@@ -103,6 +104,69 @@ lemma void p25519_569003_1_factors();
 lemma void p25519_569003_2_exact_order();
     requires true;
     ensures  !!forall({2, 7, 97, 419},(pratt_pow_thing)(569003,2));
+
+lemma void p25519_75707_2_generates();
+    requires true;
+    ensures  euclid_mod(
+            pow_nat(2,
+                nat_of_int(75707-1)),
+            75707)
+        == 1;
+
+lemma void p25519_75707_1_factors();
+    requires true;
+    ensures  product({2,37853}) + 1
+        ==   75707;
+
+lemma void p25519_75707_2_exact_order();
+    requires true;
+    ensures  !!forall({2,37853},(pratt_pow_thing)(75707,2));
+
+lemma void p25519_37853_2_generates();
+    requires true;
+    ensures  euclid_mod(
+            pow_nat(2,
+                nat_of_int(37853-1)),
+            37853)
+        == 1;
+
+lemma void p25519_37853_1_factors();
+    requires true;
+    ensures  product({2, 2, 9463}) + 1
+        ==   37853;
+
+lemma void p25519_37853_2_exact_order();
+    requires true;
+    ensures  !!forall({2, 2, 9463},(pratt_pow_thing)(37853,2));
+
+
+lemma pratt_cert p25519_1919519569386763_pratt();
+    requires true;
+    ensures  pratt_certificate(result,1,_,1919519569386763);
+
+lemma pratt_cert p25519_72106336199_pratt();
+    requires true;
+    ensures  pratt_certificate(result,1,_,72106336199);
+
+lemma pratt_cert p25519_2773320623_pratt();
+    requires true;
+    ensures  pratt_certificate(result,1,_,2773320623);
+
+lemma pratt_cert p25519_8574133_pratt();
+    requires true;
+    ensures  pratt_certificate(result,1,_,8574133);
+
+lemma pratt_cert p25519_569003_pratt();
+    requires true;
+    ensures  pratt_certificate(result,1,_,569003);
+
+lemma pratt_cert p25519_75707_pratt();
+    requires true;
+    ensures  pratt_certificate(result,1,_,75707);
+
+lemma pratt_cert p25519_37853_pratt();
+    requires true;
+    ensures  pratt_certificate(result,1,_,37853);
 
 #endif
 

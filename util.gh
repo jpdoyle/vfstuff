@@ -76,6 +76,33 @@ void range_len(int min,int max)
     ensures  length(range(min,max)) == max-min;
 { range_inner_len(min,max,nat_of_int(max-min)); }
 
+lemma void reverse_range_inner(int min,int max, nat f)
+    requires max > min &*& int_of_nat(succ(f)) == max-min;
+    ensures  reverse(range_inner(min,max,succ(f)))
+        ==   cons(max-1,reverse(range_inner(min,max-1,f)));
+{
+    switch(f) {
+    case zero:
+    case succ(f0):
+        reverse_range_inner(min+1,max,f0);
+    }
+}
+
+lemma_auto(reverse(range(min,max)))
+void reverse_range(int min,int max)
+    requires max > min;
+    ensures  reverse(range(min,max))
+        ==   cons(max-1,reverse(range(min,max-1)));
+{
+    nat f = nat_of_int(max-min);
+    switch(f) {
+    case zero: assert false;
+    case succ(f0):
+        int_of_nat_of_int(max-min);
+        reverse_range_inner(min,max,f0);
+    }
+}
+
 lemma void bounded_range(int min, int max, int x)
     requires min <= max;
     ensures  bounded(min,max,x) == mem(x,range(min,max+1));

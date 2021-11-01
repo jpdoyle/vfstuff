@@ -2,6 +2,21 @@
 
 /*@
 
+lemma t two_filters<t>(list<t> l,
+        fixpoint(t,bool) f1, fixpoint(t,bool) f2)
+    requires filter(f1,l) != filter(f2,l);
+    ensures  !!mem(result,l) &*& f1(result) != f2(result);
+{
+    switch(l) {
+    case nil: assert false;
+    case cons(x,xs):
+        if(f1(x) != f2(x)) {
+            return x;
+        }
+        return two_filters(xs,f1,f2);
+    }
+}
+
 lemma_auto(nth_of(n,l))
 void nth_of_bounds_auto<t>(int n,list<t> l)
     requires true;
@@ -49,6 +64,49 @@ void keys_permutation<s,t>(ASSOC(s,t) a, ASSOC(s,t) b)
         mem_keys(fst(x),snd(x),b);
         assert !!mem(fst(x),keys(b));
     }
+}
+
+lemma void append_cancels_l<t>(list<t> a1, list<t> a2, list<t> b)
+    requires true;
+    ensures  (append(a1,b) == append(a2,b)) == (a1 == a2);
+{
+    switch(a1) {
+    case nil:
+        switch(a2) {
+        case nil:
+        case cons(x,xs):
+            length_append(a1,b);
+            length_append(a2,b);
+        }
+    case cons(x1,xs1):
+        switch(a2) {
+        case nil:
+            length_append(a1,b);
+            length_append(a2,b);
+        case cons(x2,xs2):
+            append_cancels_l(xs1,xs2,b);
+        }
+    }
+}
+
+lemma void append_cancels_r<t>(list<t> a1, list<t> a2, list<t> b)
+    requires true;
+    ensures  (append(b,a1) == append(b,a2)) == (a1 == a2);
+{
+    switch(b) {
+    case nil:
+    case cons(x,xs):
+        append_cancels_r(a1,a2,xs);
+    }
+}
+
+lemma void append_cancels<t>(list<t> a1, list<t> a2, list<t> b)
+    requires true;
+    ensures  (append(a1,b) == append(a2,b)) == (a1 == a2)
+        &*&  (append(b,a1) == append(b,a2)) == (a1 == a2);
+{
+    append_cancels_l(a1,a2,b);
+    append_cancels_r(a1,a2,b);
 }
 
 lemma_auto(drop(n,append(p,s))) void drop_of_append<t>(

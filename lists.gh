@@ -132,6 +132,11 @@ void take_of_append_r<t>(
     requires n >= length(p);
     ensures take(n,append(p,s)) == append(p,take(n-length(p),s));
 
+lemma void append_cancels<t>(list<t> a1, list<t> a2, list<t> b);
+    requires true;
+    ensures  (append(a1,b) == append(a2,b)) == (a1 == a2)
+        &*&  (append(b,a1) == append(b,a2)) == (a1 == a2);
+
 lemma_auto(all_eq(reverse(l),x))
 void all_eq_reverse<t>(list<t> l, t x);
     requires true;
@@ -292,6 +297,17 @@ lemma void forall_filter<t>(list<t> l, fixpoint(t,bool) p,
     requires !!forall(l,p);
     ensures  !!forall(filter(f,l),p);
 { LIST_INDUCTION(l,xs,forall_filter(xs,p,f)) }
+
+lemma void filter_append<t>(list<t> l, list<t> r,
+        fixpoint(t,bool) f)
+    requires true;
+    ensures  filter(f,append(l,r)) == append(filter(f,l),filter(f,r));
+{ LIST_INDUCTION(l,xs,filter_append(xs,r,f)) }
+
+lemma t two_filters<t>(list<t> l,
+        fixpoint(t,bool) f1, fixpoint(t,bool) f2);
+    requires filter(f1,l) != filter(f2,l);
+    ensures  !!mem(result,l) &*& f1(result) != f2(result);
 
 lemma void forall_remove<t>(list<t> l, fixpoint(t,bool) p,
         t x)
@@ -571,6 +587,19 @@ void take_reverse<t>(int n, list<t> a)
     }
 }
 
+lemma void filter_reverse<t>(list<t> l,
+        fixpoint(t,bool) f)
+    requires true;
+    ensures  filter(f,reverse(l)) == reverse(filter(f,l));
+{
+    switch(l) {
+    case nil:
+    case cons(x,xs):
+        filter_append(reverse(xs),{x},f);
+        filter_reverse(xs,f);
+    }
+}
+
 lemma
 void nth_of_map<s,t>(int n, list<s> l,fixpoint(s,t) f)
     requires true;
@@ -629,6 +658,68 @@ void append_ntake_ndrop<t>(nat n,list<t> l)
 { NAT_LIST_INDUCTION(n,n0,l,xs,
         append_ntake_ndrop(n0,xs)) }
 
+fixpoint list<t> prod<r,s,t>(fixpoint(r,s,t) op, list<r> lhs, list<s> rhs)
+{
+    switch(lhs) {
+    case nil:
+        return nil;
+    case cons(x,xs):
+        return append(map((op)(x),rhs),prod(op,xs,rhs));
+    }
+}
+
+lemma
+void prod_length<r,s,t>(fixpoint(r,s,t) op, list<r> lhs, list<s> rhs)
+    requires true;
+    ensures  length(prod(op,lhs,rhs)) == length(lhs)*length(rhs);
+{
+    switch(lhs) {
+    case nil:
+    case cons(x,xs):
+        map_length((op)(x),rhs);
+        prod_length(op,xs,rhs);
+        note_eq(length(prod(op,lhs,rhs)),
+            length(rhs) + (length(lhs)-1)*length(rhs));
+    }
+}
+
+lemma
+void prod_correct<r,s,t>(fixpoint(r,s,t) op, list<r> lhs, list<s> rhs,
+        r lval, s rval)
+    requires !!mem(lval,lhs) &*& !!mem(rval,rhs);
+    ensures  !!mem(op(lval,rval),prod(op,lhs,rhs));
+{
+    switch(lhs) {
+    case nil:
+    case cons(x,xs):
+        if(x == lval) {
+            mem_map(rval, rhs, (op)(x));
+            return;
+        }
+        prod_correct(op,xs,rhs,lval,rval);
+    }
+}
+
+lemma
+pair<r,s> prod_exact<r,s,t>(fixpoint(r,s,t) op, list<r> lhs, list<s> rhs,
+        t val)
+    requires !!mem(val,prod(op,lhs,rhs));
+    ensures  switch(result) {
+    case pair(lval,rval):
+        return op(lval,rval) == val &*& !!mem(lval,lhs) &*&
+            !!mem(rval,rhs);
+    };
+{
+    switch(lhs) {
+    case nil: assert false;
+    case cons(x,xs):
+        if(mem(val,map((op)(x),rhs))) {
+            s rval = map_preimage(val,(op)(x),rhs);
+            return pair(x,rval);
+        }
+        return prod_exact(op,xs,rhs,val);
+    }
+}
 
 #endif
 

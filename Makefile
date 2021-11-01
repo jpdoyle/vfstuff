@@ -5,7 +5,7 @@ VF=time verifast -target Linux64 -shared -emit_vfmanifest
 DEMOS = binsearch.vfmanifest isort.vfmanifest mergesort.vfmanifest slowsort.vfmanifest b64.vfmanifest
 BINS = bin/fibber bin/calc bin/calc-dbg
 
-all: core_lib demos bins lorg_lib
+all: core_lib demos bins lorg_lib p25519_lib
 bins: ${BINS}
 
 clean:
@@ -32,6 +32,11 @@ core_lib: ${CORE_LIB}
 
 demos: ${DEMOS} ${CORE_LIB}
 	${VF} ${CORE_LIB} ${DEMOS}
+
+P25519_LIB = p25519/p31757755568855353.vfmanifest p25519/p75445702479781427272750846543864801_factors.vfmanifest p25519/p75445702479781427272750846543864801.vfmanifest p25519/p74058212732561358302231226437062788676166966415465897661863160754340907.vfmanifest p25519/p25519.vfmanifest
+
+p25519_lib: ${P25519_LIB} ${CORE_LIB}
+	${VF} ${CORE_LIB} ${P25519_LIB}
 
 LORG_LIB = b64.vfmanifest lorg/bi_big_int.vfmanifest lorg/bi_big_int_plus.vfmanifest lorg/bi_big_int_hex.vfmanifest lorg/bi_big_int_hex2.vfmanifest lorg/bi_big_int_mul.vfmanifest
 
