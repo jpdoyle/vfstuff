@@ -2486,6 +2486,13 @@ void primes_below_16()
     primes_below_fast_step(4,16,4);
 }
 
+lemma_auto(primes_below(N16))
+void primes_below_16_correct()
+    requires true;
+    ensures  !!forall(primes_below(N16),is_prime);
+{ primes_below_correct(N16); }
+
+
 
 lemma
 void primes_below_32()

@@ -11,6 +11,7 @@ bins: ${BINS}
 clean:
 	rm *.vfmanifest || true
 	rm lorg/*.vfmanifest || true
+	rm p25519/*.vfmanifest || true
 	rm bin/* || true
 
 %.vfmanifest: %.c

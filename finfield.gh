@@ -332,10 +332,9 @@ void primes_below_16();
     ensures  primes_below(N16) == {13,11,7,5,3,2};
 
 lemma_auto(primes_below(N16))
-void primes_below_16_correct()
+void primes_below_16_correct();
     requires true;
     ensures  !!forall(primes_below(N16),is_prime);
-{ primes_below_correct(N16); }
 
 
 lemma_auto
