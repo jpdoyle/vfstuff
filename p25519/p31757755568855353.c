@@ -2,7 +2,7 @@
 
 /*@
 
-lemma void p25519_31757755568855353_10_generates()
+lemma void p25519_31757755568855353_g10_generates()
     requires true;
     ensures  euclid_mod(
             pow_nat(10,
@@ -22,7 +22,7 @@ lemma void p25519_31757755568855353_1_factors()
         ==   31757755568855353;
 {}
 
-lemma void p25519_31757755568855353_10_exact_order()
+lemma void p25519_31757755568855353_g10_exact_order()
     requires true;
     ensures  !!forall({2, 2, 2, 3, 31, 107, 223, 4153, 430751},(pratt_pow_thing)(31757755568855353,10));
 {
@@ -37,7 +37,7 @@ lemma void p25519_31757755568855353_10_exact_order()
     PRATT_FACTOR(p,g,430751,64)
 }
 
-lemma void p25519_430751_17_generates()
+lemma void p25519_430751_g17_generates()
     requires true;
     ensures  euclid_mod(
             pow_nat(17,
@@ -56,7 +56,7 @@ lemma void p25519_430751_1_factors()
         ==   430751;
 {}
 
-lemma void p25519_430751_17_exact_order()
+lemma void p25519_430751_g17_exact_order()
     requires true;
     ensures  !!forall({2, 5, 5, 5, 1723},(pratt_pow_thing)(430751,17));
 {
@@ -72,20 +72,13 @@ lemma pratt_cert p25519_430751_pratt()
     requires true;
     ensures  pratt_certificate(result,1,_,430751);
 {
-    p25519_430751_17_generates();
-    p25519_430751_1_factors();
-    p25519_430751_17_exact_order();
+    PRATT_BUILD_PRELUDE(430751,17)
 
-    int P = 430751;
-    int g = 17;
-
-    PRATT_BUILD_PRELUDE(P,g)
-
-    PRATT_BUILD_SMALL(P,g,2)
-    PRATT_BUILD_SMALL(P,g,5)
-    PRATT_BUILD_SMALL(P,g,5)
-    PRATT_BUILD_SMALL(P,g,5)
-    PRATT_BUILD_SMALL(P,g,1723)
+    PRATT_BUILD_SMALL(2)
+    PRATT_BUILD_SMALL(5)
+    PRATT_BUILD_SMALL(5)
+    PRATT_BUILD_SMALL(5)
+    PRATT_BUILD_SMALL(1723)
 
     return ret;
 }
@@ -94,24 +87,17 @@ lemma pratt_cert p25519_31757755568855353_pratt()
     requires true;
     ensures  pratt_certificate(result,1,_,31757755568855353);
 {
-    p25519_31757755568855353_10_generates();
-    p25519_31757755568855353_1_factors();
-    p25519_31757755568855353_10_exact_order();
+    PRATT_BUILD_PRELUDE(31757755568855353,10)
 
-    int P = 31757755568855353;
-    int g = 10;
-
-    PRATT_BUILD_PRELUDE(P,g)
-
-    PRATT_BUILD_SMALL(P,g,2)
-    PRATT_BUILD_SMALL(P,g,2)
-    PRATT_BUILD_SMALL(P,g,2)
-    PRATT_BUILD_SMALL(P,g,3)
-    PRATT_BUILD_SMALL(P,g,31)
-    PRATT_BUILD_SMALL(P,g,107)
-    PRATT_BUILD_SMALL(P,g,223)
-    PRATT_BUILD_SMALL(P,g,4153)
-    PRATT_BUILD_BIG(P,g,430751)
+    PRATT_BUILD_SMALL(2)
+    PRATT_BUILD_SMALL(2)
+    PRATT_BUILD_SMALL(2)
+    PRATT_BUILD_SMALL(3)
+    PRATT_BUILD_SMALL(31)
+    PRATT_BUILD_SMALL(107)
+    PRATT_BUILD_SMALL(223)
+    PRATT_BUILD_SMALL(4153)
+    PRATT_BUILD_BIG(430751)
 
     return ret;
 }

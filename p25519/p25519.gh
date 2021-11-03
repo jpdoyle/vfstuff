@@ -130,21 +130,25 @@ lemma void p25519_is_prime();
         assert false; \
     }
 
-#define PRATT_BUILD_PRELUDE(P,g) \
+#define PRATT_BUILD_PRELUDE(this_P,this_g) \
+    int P = this_P; int g = this_g; \
+    p25519_##this_P##_g##this_g##_generates(); \
+    p25519_##this_P##_1_factors(); \
+    p25519_##this_P##_g##this_g##_exact_order(); \
     int f; \
     pratt_cert ret; \
     pratt_cert cert; \
     list<pair<int,pratt_cert> > fact = nil; \
     close pratt_certificate(pratt_cert(g,fact),P-1,N0,P);
 
-#define PRATT_BUILD_SMALL(P,g,F) \
+#define PRATT_BUILD_SMALL(F) \
     f = F; \
     cert = pratt_small(f); \
     close pratt_certificate(cert,1,zero,f); \
     ret = pratt_certificate_build(g,fact,f,P); \
     fact = cons(pair(f,cert),fact);
 
-#define PRATT_BUILD_BIG(P,g,F) \
+#define PRATT_BUILD_BIG(F) \
     f = F; \
     cert = p25519_##F##_pratt(); \
     ret = pratt_certificate_build(g,fact,f,P); \

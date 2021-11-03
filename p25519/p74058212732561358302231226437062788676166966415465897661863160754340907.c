@@ -10,7 +10,8 @@
 
 /*@
 
-lemma void p25519_74058212732561358302231226437062788676166966415465897661863160754340907_2_generates()
+lemma void
+p25519_74058212732561358302231226437062788676166966415465897661863160754340907_g2_generates()
     requires true;
     ensures  euclid_mod(
             pow_nat(2,
@@ -35,7 +36,8 @@ lemma void p25519_74058212732561358302231226437062788676166966415465897661863160
         74058212732561358302231226437062788676166966415465897661863160754340907-1;
 {}
 
-lemma void p25519_74058212732561358302231226437062788676166966415465897661863160754340907_2_exact_order()
+lemma void
+p25519_74058212732561358302231226437062788676166966415465897661863160754340907_g2_exact_order()
     requires true;
     ensures  !!forall({2, 3, 353, 57467, 132049, 1923133,
                         31757755568855353,
@@ -56,7 +58,7 @@ lemma void p25519_74058212732561358302231226437062788676166966415465897661863160
     PRATT_FACTOR(p,g,75445702479781427272750846543864801,160)
 }
 
-lemma void p25519_1923133_2_generates()
+lemma void p25519_1923133_g2_generates()
     requires true;
     ensures  euclid_mod(
             pow_nat(2,
@@ -77,7 +79,7 @@ lemma void p25519_1923133_1_factors()
         ==   1923133;
 {}
 
-lemma void p25519_1923133_2_exact_order()
+lemma void p25519_1923133_g2_exact_order()
     requires true;
     ensures  !!forall({2, 2, 3, 43, 3727},(pratt_pow_thing)(1923133,2));
 {
@@ -94,25 +96,19 @@ lemma pratt_cert p25519_1923133_pratt()
     requires true;
     ensures  pratt_certificate(result,1,_,1923133);
 {
-    p25519_1923133_2_generates();
-    p25519_1923133_1_factors();
-    p25519_1923133_2_exact_order();
 
-    int P = 1923133;
-    int g = 2;
-
-    PRATT_BUILD_PRELUDE(P,g)
-    PRATT_BUILD_SMALL(P,g,2)
-    PRATT_BUILD_SMALL(P,g,2)
-    PRATT_BUILD_SMALL(P,g,3)
-    PRATT_BUILD_SMALL(P,g,43)
-    PRATT_BUILD_SMALL(P,g,3727)
+    PRATT_BUILD_PRELUDE(1923133,2)
+    PRATT_BUILD_SMALL(2)
+    PRATT_BUILD_SMALL(2)
+    PRATT_BUILD_SMALL(3)
+    PRATT_BUILD_SMALL(43)
+    PRATT_BUILD_SMALL(3727)
 
     return ret;
 }
 
 
-lemma void p25519_132049_39_generates()
+lemma void p25519_132049_g39_generates()
     requires true;
     ensures  euclid_mod(
             pow_nat(39,
@@ -143,7 +139,7 @@ lemma void p25519_132049_1_factors()
         ==   132049;
 {}
 
-lemma void p25519_132049_39_exact_order()
+lemma void p25519_132049_g39_exact_order()
     requires true;
     ensures  !!forall({2, 2, 2, 2, 3, 3, 7, 131},(pratt_pow_thing)(132049,39));
 {
@@ -160,28 +156,21 @@ lemma pratt_cert p25519_132049_pratt()
     requires true;
     ensures  pratt_certificate(result,1,_,132049);
 {
-    p25519_132049_39_generates();
-    p25519_132049_1_factors();
-    p25519_132049_39_exact_order();
-
-    int P = 132049;
-    int g = 39;
-
-    PRATT_BUILD_PRELUDE(P,g)
-    PRATT_BUILD_SMALL(P,g,2)
-    PRATT_BUILD_SMALL(P,g,2)
-    PRATT_BUILD_SMALL(P,g,2)
-    PRATT_BUILD_SMALL(P,g,2)
-    PRATT_BUILD_SMALL(P,g,3)
-    PRATT_BUILD_SMALL(P,g,3)
-    PRATT_BUILD_SMALL(P,g,7)
-    PRATT_BUILD_SMALL(P,g,131)
+    PRATT_BUILD_PRELUDE(132049,39)
+    PRATT_BUILD_SMALL(2)
+    PRATT_BUILD_SMALL(2)
+    PRATT_BUILD_SMALL(2)
+    PRATT_BUILD_SMALL(2)
+    PRATT_BUILD_SMALL(3)
+    PRATT_BUILD_SMALL(3)
+    PRATT_BUILD_SMALL(7)
+    PRATT_BUILD_SMALL(131)
 
     return ret;
 }
 
 
-lemma void p25519_57467_2_generates()
+lemma void p25519_57467_g2_generates()
     requires true;
     ensures  euclid_mod(
             pow_nat(2,
@@ -212,7 +201,7 @@ lemma void p25519_57467_1_factors()
         ==   57467;
 {}
 
-lemma void p25519_57467_2_exact_order()
+lemma void p25519_57467_g2_exact_order()
     requires true;
     ensures  !!forall({2, 59, 487},(pratt_pow_thing)(57467,2));
 {
@@ -228,17 +217,10 @@ lemma pratt_cert p25519_57467_pratt()
     requires true;
     ensures  pratt_certificate(result,1,_,57467);
 {
-    p25519_57467_2_generates();
-    p25519_57467_1_factors();
-    p25519_57467_2_exact_order();
-
-    int P = 57467;
-    int g = 2;
-
-    PRATT_BUILD_PRELUDE(P,g)
-    PRATT_BUILD_SMALL(P,g,2)
-    PRATT_BUILD_SMALL(P,g,59)
-    PRATT_BUILD_SMALL(P,g,487)
+    PRATT_BUILD_PRELUDE(57467,2)
+    PRATT_BUILD_SMALL(2)
+    PRATT_BUILD_SMALL(59)
+    PRATT_BUILD_SMALL(487)
 
     return ret;
 }
@@ -247,22 +229,16 @@ lemma pratt_cert p25519_74058212732561358302231226437062788676166966415465897661
     requires true;
     ensures  pratt_certificate(result,1,_,74058212732561358302231226437062788676166966415465897661863160754340907);
 {
-    p25519_74058212732561358302231226437062788676166966415465897661863160754340907_2_generates();
-    p25519_74058212732561358302231226437062788676166966415465897661863160754340907_1_factors();
-    p25519_74058212732561358302231226437062788676166966415465897661863160754340907_2_exact_order();
 
-    int P = 74058212732561358302231226437062788676166966415465897661863160754340907;
-    int g = 2;
-
-    PRATT_BUILD_PRELUDE(P,g)
-    PRATT_BUILD_SMALL(P,g,2)
-    PRATT_BUILD_SMALL(P,g,3)
-    PRATT_BUILD_SMALL(P,g,353)
-    PRATT_BUILD_BIG(P,g,57467)
-    PRATT_BUILD_BIG(P,g,132049)
-    PRATT_BUILD_BIG(P,g,1923133)
-    PRATT_BUILD_BIG(P,g,31757755568855353)
-    PRATT_BUILD_BIG(P,g,75445702479781427272750846543864801)
+    PRATT_BUILD_PRELUDE(74058212732561358302231226437062788676166966415465897661863160754340907,2)
+    PRATT_BUILD_SMALL(2)
+    PRATT_BUILD_SMALL(3)
+    PRATT_BUILD_SMALL(353)
+    PRATT_BUILD_BIG(57467)
+    PRATT_BUILD_BIG(132049)
+    PRATT_BUILD_BIG(1923133)
+    PRATT_BUILD_BIG(31757755568855353)
+    PRATT_BUILD_BIG(75445702479781427272750846543864801)
 
     return ret;
 }
