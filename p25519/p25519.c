@@ -36,7 +36,7 @@ ALREADY_PROVEN()
     int P = 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed;
     int g = 2;
 
-    DECLARE_256_NATS()
+    DECLARE_256_NATS(zero,0)
     MODPOW_FULL(P,g,P-1,256)
 
 }
@@ -56,7 +56,7 @@ ALREADY_PROVEN()
     p25519_formula();
     int g = 2;
     int p = 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed;
-    DECLARE_256_NATS()
+    DECLARE_256_NATS(zero,0)
 
     PRATT_FACTOR(p,g,2,256)
     PRATT_FACTOR(p,g,3,256)

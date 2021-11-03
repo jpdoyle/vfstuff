@@ -22,265 +22,37 @@ lemma void p25519_is_prime();
     requires true;
     ensures  !!is_prime(P25519);
 
-#define DECLARE_256_NATS() \
-    nat n0 = zero; \
-    nat n1 = succ(n0); \
-    nat n2 = succ(n1); \
-    nat n3 = succ(n2); \
-    nat n4 = succ(n3); \
-    nat n5 = succ(n4); \
-    nat n6 = succ(n5); \
-    nat n7 = succ(n6); \
-    nat n8 = succ(n7); \
-    nat n9 = succ(n8); \
-    nat n10 = succ(n9); \
-    nat n11 = succ(n10); \
-    nat n12 = succ(n11); \
-    nat n13 = succ(n12); \
-    nat n14 = succ(n13); \
-    nat n15 = succ(n14); \
-    nat n16 = succ(n15); \
-    nat n17 = succ(n16); \
-    nat n18 = succ(n17); \
-    nat n19 = succ(n18); \
-    nat n20 = succ(n19); \
-    nat n21 = succ(n20); \
-    nat n22 = succ(n21); \
-    nat n23 = succ(n22); \
-    nat n24 = succ(n23); \
-    nat n25 = succ(n24); \
-    nat n26 = succ(n25); \
-    nat n27 = succ(n26); \
-    nat n28 = succ(n27); \
-    nat n29 = succ(n28); \
-    nat n30 = succ(n29); \
-    nat n31 = succ(n30); \
-    nat n32 = succ(n31); \
-    nat n33 = succ(n32); \
-    nat n34 = succ(n33); \
-    nat n35 = succ(n34); \
-    nat n36 = succ(n35); \
-    nat n37 = succ(n36); \
-    nat n38 = succ(n37); \
-    nat n39 = succ(n38); \
-    nat n40 = succ(n39); \
-    nat n41 = succ(n40); \
-    nat n42 = succ(n41); \
-    nat n43 = succ(n42); \
-    nat n44 = succ(n43); \
-    nat n45 = succ(n44); \
-    nat n46 = succ(n45); \
-    nat n47 = succ(n46); \
-    nat n48 = succ(n47); \
-    nat n49 = succ(n48); \
-    nat n50 = succ(n49); \
-    nat n51 = succ(n50); \
-    nat n52 = succ(n51); \
-    nat n53 = succ(n52); \
-    nat n54 = succ(n53); \
-    nat n55 = succ(n54); \
-    nat n56 = succ(n55); \
-    nat n57 = succ(n56); \
-    nat n58 = succ(n57); \
-    nat n59 = succ(n58); \
-    nat n60 = succ(n59); \
-    nat n61 = succ(n60); \
-    nat n62 = succ(n61); \
-    nat n63 = succ(n62); \
-    nat n64 = succ(n63); \
-    nat n65 = succ(n64); \
-    nat n66 = succ(n65); \
-    nat n67 = succ(n66); \
-    nat n68 = succ(n67); \
-    nat n69 = succ(n68); \
-    nat n70 = succ(n69); \
-    nat n71 = succ(n70); \
-    nat n72 = succ(n71); \
-    nat n73 = succ(n72); \
-    nat n74 = succ(n73); \
-    nat n75 = succ(n74); \
-    nat n76 = succ(n75); \
-    nat n77 = succ(n76); \
-    nat n78 = succ(n77); \
-    nat n79 = succ(n78); \
-    nat n80 = succ(n79); \
-    nat n81 = succ(n80); \
-    nat n82 = succ(n81); \
-    nat n83 = succ(n82); \
-    nat n84 = succ(n83); \
-    nat n85 = succ(n84); \
-    nat n86 = succ(n85); \
-    nat n87 = succ(n86); \
-    nat n88 = succ(n87); \
-    nat n89 = succ(n88); \
-    nat n90 = succ(n89); \
-    nat n91 = succ(n90); \
-    nat n92 = succ(n91); \
-    nat n93 = succ(n92); \
-    nat n94 = succ(n93); \
-    nat n95 = succ(n94); \
-    nat n96 = succ(n95); \
-    nat n97 = succ(n96); \
-    nat n98 = succ(n97); \
-    nat n99 = succ(n98); \
-    nat n100 = succ(n99); \
-    nat n101 = succ(n100); \
-    nat n102 = succ(n101); \
-    nat n103 = succ(n102); \
-    nat n104 = succ(n103); \
-    nat n105 = succ(n104); \
-    nat n106 = succ(n105); \
-    nat n107 = succ(n106); \
-    nat n108 = succ(n107); \
-    nat n109 = succ(n108); \
-    nat n110 = succ(n109); \
-    nat n111 = succ(n110); \
-    nat n112 = succ(n111); \
-    nat n113 = succ(n112); \
-    nat n114 = succ(n113); \
-    nat n115 = succ(n114); \
-    nat n116 = succ(n115); \
-    nat n117 = succ(n116); \
-    nat n118 = succ(n117); \
-    nat n119 = succ(n118); \
-    nat n120 = succ(n119); \
-    nat n121 = succ(n120); \
-    nat n122 = succ(n121); \
-    nat n123 = succ(n122); \
-    nat n124 = succ(n123); \
-    nat n125 = succ(n124); \
-    nat n126 = succ(n125); \
-    nat n127 = succ(n126); \
-    nat n128 = succ(n127); \
-    nat n129 = succ(n128); \
-    nat n130 = succ(n129); \
-    nat n131 = succ(n130); \
-    nat n132 = succ(n131); \
-    nat n133 = succ(n132); \
-    nat n134 = succ(n133); \
-    nat n135 = succ(n134); \
-    nat n136 = succ(n135); \
-    nat n137 = succ(n136); \
-    nat n138 = succ(n137); \
-    nat n139 = succ(n138); \
-    nat n140 = succ(n139); \
-    nat n141 = succ(n140); \
-    nat n142 = succ(n141); \
-    nat n143 = succ(n142); \
-    nat n144 = succ(n143); \
-    nat n145 = succ(n144); \
-    nat n146 = succ(n145); \
-    nat n147 = succ(n146); \
-    nat n148 = succ(n147); \
-    nat n149 = succ(n148); \
-    nat n150 = succ(n149); \
-    nat n151 = succ(n150); \
-    nat n152 = succ(n151); \
-    nat n153 = succ(n152); \
-    nat n154 = succ(n153); \
-    nat n155 = succ(n154); \
-    nat n156 = succ(n155); \
-    nat n157 = succ(n156); \
-    nat n158 = succ(n157); \
-    nat n159 = succ(n158); \
-    nat n160 = succ(n159); \
-    nat n161 = succ(n160); \
-    nat n162 = succ(n161); \
-    nat n163 = succ(n162); \
-    nat n164 = succ(n163); \
-    nat n165 = succ(n164); \
-    nat n166 = succ(n165); \
-    nat n167 = succ(n166); \
-    nat n168 = succ(n167); \
-    nat n169 = succ(n168); \
-    nat n170 = succ(n169); \
-    nat n171 = succ(n170); \
-    nat n172 = succ(n171); \
-    nat n173 = succ(n172); \
-    nat n174 = succ(n173); \
-    nat n175 = succ(n174); \
-    nat n176 = succ(n175); \
-    nat n177 = succ(n176); \
-    nat n178 = succ(n177); \
-    nat n179 = succ(n178); \
-    nat n180 = succ(n179); \
-    nat n181 = succ(n180); \
-    nat n182 = succ(n181); \
-    nat n183 = succ(n182); \
-    nat n184 = succ(n183); \
-    nat n185 = succ(n184); \
-    nat n186 = succ(n185); \
-    nat n187 = succ(n186); \
-    nat n188 = succ(n187); \
-    nat n189 = succ(n188); \
-    nat n190 = succ(n189); \
-    nat n191 = succ(n190); \
-    nat n192 = succ(n191); \
-    nat n193 = succ(n192); \
-    nat n194 = succ(n193); \
-    nat n195 = succ(n194); \
-    nat n196 = succ(n195); \
-    nat n197 = succ(n196); \
-    nat n198 = succ(n197); \
-    nat n199 = succ(n198); \
-    nat n200 = succ(n199); \
-    nat n201 = succ(n200); \
-    nat n202 = succ(n201); \
-    nat n203 = succ(n202); \
-    nat n204 = succ(n203); \
-    nat n205 = succ(n204); \
-    nat n206 = succ(n205); \
-    nat n207 = succ(n206); \
-    nat n208 = succ(n207); \
-    nat n209 = succ(n208); \
-    nat n210 = succ(n209); \
-    nat n211 = succ(n210); \
-    nat n212 = succ(n211); \
-    nat n213 = succ(n212); \
-    nat n214 = succ(n213); \
-    nat n215 = succ(n214); \
-    nat n216 = succ(n215); \
-    nat n217 = succ(n216); \
-    nat n218 = succ(n217); \
-    nat n219 = succ(n218); \
-    nat n220 = succ(n219); \
-    nat n221 = succ(n220); \
-    nat n222 = succ(n221); \
-    nat n223 = succ(n222); \
-    nat n224 = succ(n223); \
-    nat n225 = succ(n224); \
-    nat n226 = succ(n225); \
-    nat n227 = succ(n226); \
-    nat n228 = succ(n227); \
-    nat n229 = succ(n228); \
-    nat n230 = succ(n229); \
-    nat n231 = succ(n230); \
-    nat n232 = succ(n231); \
-    nat n233 = succ(n232); \
-    nat n234 = succ(n233); \
-    nat n235 = succ(n234); \
-    nat n236 = succ(n235); \
-    nat n237 = succ(n236); \
-    nat n238 = succ(n237); \
-    nat n239 = succ(n238); \
-    nat n240 = succ(n239); \
-    nat n241 = succ(n240); \
-    nat n242 = succ(n241); \
-    nat n243 = succ(n242); \
-    nat n244 = succ(n243); \
-    nat n245 = succ(n244); \
-    nat n246 = succ(n245); \
-    nat n247 = succ(n246); \
-    nat n248 = succ(n247); \
-    nat n249 = succ(n248); \
-    nat n250 = succ(n249); \
-    nat n251 = succ(n250); \
-    nat n252 = succ(n251); \
-    nat n253 = succ(n252); \
-    nat n254 = succ(n253); \
-    nat n255 = succ(n254); \
-    nat n256 = succ(n255);
+#define DECLARE_2_NATS(prev,pref) \
+    nat n##pref##0 = succ(prev); \
+    nat n##pref##1 = succ(n##pref##0);
 
+#define DECLARE_4_NATS(prev,pref) \
+    DECLARE_2_NATS(prev,pref##0) \
+    DECLARE_2_NATS(n##pref##0##1,pref##1)
+
+#define DECLARE_8_NATS(prev,pref) \
+    DECLARE_4_NATS(prev,pref##0) \
+    DECLARE_4_NATS(n##pref##0##11,pref##1)
+
+#define DECLARE_16_NATS(prev,pref) \
+    DECLARE_8_NATS(prev,pref##0) \
+    DECLARE_8_NATS(n##pref##0##111,pref##1)
+
+#define DECLARE_32_NATS(prev,pref) \
+    DECLARE_16_NATS(prev,pref##0) \
+    DECLARE_16_NATS(n##pref##0##1111,pref##1)
+
+#define DECLARE_64_NATS(prev,pref) \
+    DECLARE_32_NATS(prev,pref##0) \
+    DECLARE_32_NATS(n##pref##0##11111,pref##1)
+
+#define DECLARE_128_NATS(prev,pref) \
+    DECLARE_64_NATS(prev,pref##0) \
+    DECLARE_64_NATS(n##pref##0##111111,pref##1)
+
+#define DECLARE_256_NATS(prev,pref) \
+    DECLARE_128_NATS(prev,pref##0) \
+    DECLARE_128_NATS(n##pref##0##1111111,pref##1)
 
 #define MODPOW_STEP(P,g,e,n,acc,pow2,sofar) \
         modpow_step(P,g,e,n,acc,pow2,sofar); \
