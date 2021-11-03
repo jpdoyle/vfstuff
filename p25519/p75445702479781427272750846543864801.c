@@ -55,7 +55,6 @@ lemma pratt_cert p25519_75445702479781427272750846543864801_pratt()
     requires true;
     ensures  pratt_certificate(result,1,_,75445702479781427272750846543864801);
 {
-ALREADY_PROVEN()
     p25519_75445702479781427272750846543864801_7_generates();
     p25519_75445702479781427272750846543864801_1_factors();
     p25519_75445702479781427272750846543864801_7_exact_order();
@@ -63,79 +62,23 @@ ALREADY_PROVEN()
     int P = 75445702479781427272750846543864801;
     int g = 7;
 
-    int f;
-    pratt_cert ret;
-    pratt_cert cert;
-    list<pair<int,pratt_cert> > fact = nil;
+    PRATT_BUILD_PRELUDE(P,g)
 
-    f = 2;
-    cert = pratt_small(f);
-    fact = cons(pair(f,cert),fact);
-    close pratt_certificate(cert,1,zero,f);
-    close pratt_certificate(pratt_cert(g,fact),P/f,N1,P);
+    PRATT_BUILD_SMALL(P,g,2)
+    PRATT_BUILD_SMALL(P,g,2)
+    PRATT_BUILD_SMALL(P,g,2)
+    PRATT_BUILD_SMALL(P,g,2)
+    PRATT_BUILD_SMALL(P,g,2)
 
-    f = 2;
-    cert = pratt_small(f);
-    close pratt_certificate(cert,1,zero,f);
-    ret = pratt_certificate_build(g,fact,f,P);
-    fact = cons(pair(f,cert),fact);
+    PRATT_BUILD_SMALL(P,g,3)
+    PRATT_BUILD_SMALL(P,g,3)
 
-    f = 2;
-    cert = pratt_small(f);
-    close pratt_certificate(cert,1,zero,f);
-    ret = pratt_certificate_build(g,fact,f,P);
-    fact = cons(pair(f,cert),fact);
+    PRATT_BUILD_SMALL(P,g,5)
+    PRATT_BUILD_SMALL(P,g,5)
 
-    f = 2;
-    cert = pratt_small(f);
-    close pratt_certificate(cert,1,zero,f);
-    ret = pratt_certificate_build(g,fact,f,P);
-    fact = cons(pair(f,cert),fact);
-
-    f = 2;
-    cert = pratt_small(f);
-    close pratt_certificate(cert,1,zero,f);
-    ret = pratt_certificate_build(g,fact,f,P);
-    fact = cons(pair(f,cert),fact);
-
-    f = 3;
-    cert = pratt_small(f);
-    close pratt_certificate(cert,1,zero,f);
-    ret = pratt_certificate_build(g,fact,f,P);
-    fact = cons(pair(f,cert),fact);
-
-    f = 3;
-    cert = pratt_small(f);
-    close pratt_certificate(cert,1,zero,f);
-    ret = pratt_certificate_build(g,fact,f,P);
-    fact = cons(pair(f,cert),fact);
-
-    f = 5;
-    cert = pratt_small(f);
-    close pratt_certificate(cert,1,zero,f);
-    ret = pratt_certificate_build(g,fact,f,P);
-    fact = cons(pair(f,cert),fact);
-
-    f = 5;
-    cert = pratt_small(f);
-    close pratt_certificate(cert,1,zero,f);
-    ret = pratt_certificate_build(g,fact,f,P);
-    fact = cons(pair(f,cert),fact);
-
-    f = 75707;
-    cert = p25519_75707_pratt();
-    ret = pratt_certificate_build(g,fact,f,P);
-    fact = cons(pair(f,cert),fact);
-
-    f = 72106336199;
-    cert = p25519_72106336199_pratt();
-    ret = pratt_certificate_build(g,fact,f,P);
-    fact = cons(pair(f,cert),fact);
-
-    f = 1919519569386763;
-    cert = p25519_1919519569386763_pratt();
-    ret = pratt_certificate_build(g,fact,f,P);
-    fact = cons(pair(f,cert),fact);
+    PRATT_BUILD_BIG(P,g,75707)
+    PRATT_BUILD_BIG(P,g,72106336199)
+    PRATT_BUILD_BIG(P,g,1919519569386763)
 
     return ret;
 }

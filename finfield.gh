@@ -159,7 +159,7 @@ predicate pratt_certificate(pratt_cert cert, int rest_of_p_1, nat fuel; int p)
             &*& g > 1 &*& g < p &*& rest_of_p_1 >= 1
             &*& euclid_mod(pow_nat(g,nat_of_int(p-1)),p) == 1
             &*& switch(factors) {
-            case nil: return false;
+            case nil: return true;
             case cons(f0,fs0):
                 return switch(fuel) {
                 case zero: return false;
@@ -167,14 +167,9 @@ predicate pratt_certificate(pratt_cert cert, int rest_of_p_1, nat fuel; int p)
                     return switch(f0) {
                     case pair(q,qcert):
                         return  pratt_certificate(qcert,1,fuel0,q)
-                            &*& switch(fs0) {
-                            case nil:
-                                return true;
-                            case cons(f1,fs1):
-                                return pratt_certificate(
+                            &*& pratt_certificate(
                                         pratt_cert(g,fs0),
                                         q*rest_of_p_1,fuel0,p);
-                            };
                     };
                 };
             }

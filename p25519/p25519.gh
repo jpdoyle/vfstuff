@@ -356,8 +356,27 @@ lemma void p25519_is_prime();
         MODPOW_FULL(p,g,(p-1)/q,N_BITS) \
  \
         assert false; \
-    } \
+    }
 
+#define PRATT_BUILD_PRELUDE(P,g) \
+    int f; \
+    pratt_cert ret; \
+    pratt_cert cert; \
+    list<pair<int,pratt_cert> > fact = nil; \
+    close pratt_certificate(pratt_cert(g,fact),P-1,N0,P);
+
+#define PRATT_BUILD_SMALL(P,g,F) \
+    f = F; \
+    cert = pratt_small(f); \
+    close pratt_certificate(cert,1,zero,f); \
+    ret = pratt_certificate_build(g,fact,f,P); \
+    fact = cons(pair(f,cert),fact);
+
+#define PRATT_BUILD_BIG(P,g,F) \
+    f = F; \
+    cert = p25519_##F##_pratt(); \
+    ret = pratt_certificate_build(g,fact,f,P); \
+    fact = cons(pair(f,cert),fact);
 
 
 #endif

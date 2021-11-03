@@ -1723,13 +1723,12 @@ void pratt_certificate_raise_fuel(pratt_cert cert, nat f1, nat f2)
         &*&  int_of_nat(f1) <= int_of_nat(f2);
     ensures  [ fr]pratt_certificate(cert, rest,f2, p);
 {
-ALREADY_PROVEN()
     open pratt_certificate(cert,rest,f1,_);
     switch(cert) {
     case pratt_small(x):
     case pratt_cert(g,factors):
         switch(factors) {
-        case nil: assert false;
+        case nil:
         case cons(f,fs):
             switch(f1) {
             case zero: assert false;
@@ -1740,11 +1739,7 @@ ALREADY_PROVEN()
                     switch(f) {
                     case pair(q,qcert):
                         pratt_certificate_raise_fuel(qcert,f1_0,f2_0);
-                        switch(fs) {
-                        case nil:
-                        case cons(ff,ffs):
-                            pratt_certificate_raise_fuel(pratt_cert(g,fs),f1_0,f2_0);
-                        }
+                        pratt_certificate_raise_fuel(pratt_cert(g,fs),f1_0,f2_0);
                     }
                 }
             }
@@ -1771,7 +1766,6 @@ void pratt_certificate_prime_inner(int p, pratt_cert cert, nat fuel)
     ensures  [ fr]pratt_certificate(cert,1,fuel,p)
         &*&  !!is_prime(p);
 {
-ALREADY_PROVEN()
     switch(fuel) {
     case zero:
         if(!is_prime(p)) {
@@ -1811,19 +1805,16 @@ ALREADY_PROVEN()
                     case nil: assert false;
                     case cons(f,fs):
                         int rest = 1;
-                        if(fs != nil) {
-                            assert [fr]pratt_certificate(
-                                    pratt_cert(g, fs), ?rest1, fuel0,
-                                    p);
-                            rest = rest1;
-                        }
+                        assert [fr]pratt_certificate(
+                                pratt_cert(g, fs), ?rest_fs, fuel0,
+                                p);
+                        rest = rest_fs;
 
                         while(is_prime(fst(f)))
                             invariant !forall(map(fst,cons(f,fs)),is_prime)
                                 &*&    [fr]pratt_certificate(snd(f), 1,
                                         fuel0,fst(f))
-                                &*&    fs == nil ? true
-                                    : [fr]pratt_certificate(
+                                &*&    [fr]pratt_certificate(
                                             pratt_cert(g, fs), rest,
                                             fuel0, p);
                             decreases length(fs);
@@ -1840,15 +1831,13 @@ ALREADY_PROVEN()
                                 pratt_certificate_raise_fuel(
                                         snd(f0), fuel1, fuel0);
 
-                                if(fs0 != nil) {
-                                    pratt_certificate_raise_fuel(
-                                            pratt_cert(g,fs0), fuel1,
-                                            fuel0);
-                                    assert [fr]pratt_certificate(
-                                            pratt_cert(g, fs0), ?rest1, fuel0,
-                                            p);
-                                    rest = rest1;
-                                }
+                                pratt_certificate_raise_fuel(
+                                        pratt_cert(g,fs0), fuel1,
+                                        fuel0);
+                                assert [fr]pratt_certificate(
+                                        pratt_cert(g, fs0), ?rest1, fuel0,
+                                        p);
+                                rest = rest1;
 
                                 f  = f0;
                                 fs = fs0;
@@ -1885,7 +1874,6 @@ void pratt_certificate_prime()
     ensures  [ f]pratt_certificate(cert,1,fl,p)
         &*&  !!is_prime(p);
 {
-ALREADY_PROVEN()
     if(!is_prime(p)) {
         pratt_certificate_prime_inner(p, cert,fl);
         assert false;
@@ -1902,7 +1890,6 @@ pratt_cert pratt_certificate_build(int g,
     ensures  pratt_certificate(result, rest/q, _, p)
         &*& result == pratt_cert(g,cons(pair(q,qcert),factors));
 {
-    ALREADY_PROVEN()
     pratt_certificate_prime_inner(q,qcert,fq);
     assert !!is_prime(q);
     if(rest == 1) {
@@ -1929,7 +1916,7 @@ pratt_cert pratt_certificate_build(int g,
 
     if(product(map(fst,factors))*rest != p-1 || g <= 1 || g >= p ||
             euclid_mod(pow_nat(g,nat_of_int(p-1)),p) != 1 || rest < 1 ||
-            !forall(map(fst,factors),(pratt_pow_thing)(p,g)) || factors == nil
+            !forall(map(fst,factors),(pratt_pow_thing)(p,g))
             ) {
         open pratt_certificate(pratt_cert(g,factors),rest,fp,p);
         assert false;
