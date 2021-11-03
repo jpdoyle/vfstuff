@@ -310,17 +310,54 @@ lemma void p25519_is_prime();
         MODPOW_STEP16(P,g,e,n,acc,pow2,sofar) \
         MODPOW_STEP16(P,g,e,n,acc,pow2,sofar)
 
+#define MODPOW_STEP40(P,g,e,n,acc,pow2,sofar) \
+        MODPOW_STEP32(P,g,e,n,acc,pow2,sofar) \
+        MODPOW_STEP8(P,g,e,n,acc,pow2,sofar)
+
 #define MODPOW_STEP64(P,g,e,n,acc,pow2,sofar) \
         MODPOW_STEP32(P,g,e,n,acc,pow2,sofar) \
         MODPOW_STEP32(P,g,e,n,acc,pow2,sofar)
+
+#define MODPOW_STEP80(P,g,e,n,acc,pow2,sofar) \
+        MODPOW_STEP64(P,g,e,n,acc,pow2,sofar) \
+        MODPOW_STEP16(P,g,e,n,acc,pow2,sofar)
 
 #define MODPOW_STEP128(P,g,e,n,acc,pow2,sofar) \
         MODPOW_STEP64(P,g,e,n,acc,pow2,sofar) \
         MODPOW_STEP64(P,g,e,n,acc,pow2,sofar)
 
+#define MODPOW_STEP160(P,g,e,n,acc,pow2,sofar) \
+        MODPOW_STEP128(P,g,e,n,acc,pow2,sofar) \
+        MODPOW_STEP32(P,g,e,n,acc,pow2,sofar)
+
+#define MODPOW_STEP192(P,g,e,n,acc,pow2,sofar) \
+        MODPOW_STEP128(P,g,e,n,acc,pow2,sofar) \
+        MODPOW_STEP64(P,g,e,n,acc,pow2,sofar)
+
 #define MODPOW_STEP256(P,g,e,n,acc,pow2,sofar) \
         MODPOW_STEP128(P,g,e,n,acc,pow2,sofar) \
         MODPOW_STEP128(P,g,e,n,acc,pow2,sofar)
+
+#define MODPOW_FULL(p,g,E,N_BITS) { \
+        int e = E; \
+        int acc = g; \
+        int pow2 = 1; \
+        int sofar = 1; \
+        nat n = zero; \
+ \
+        MODPOW_STEP##N_BITS(p,g,e,n,acc,pow2,sofar) \
+        modpow_correct(p,g,e,n); \
+    }
+
+#define PRATT_FACTOR(p,g,q,N_BITS) \
+    if(!pratt_pow_thing(p,g,q)) { \
+        pratt_pow_thing_auto(p,g,q); \
+ \
+        MODPOW_FULL(p,g,(p-1)/q,N_BITS) \
+ \
+        assert false; \
+    } \
+
 
 
 #endif

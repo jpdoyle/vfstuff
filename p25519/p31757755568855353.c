@@ -13,17 +13,7 @@ lemma void p25519_31757755568855353_10_generates()
     int P = 31757755568855353;
     int g = 10;
 
-    int e = P-1;
-    int acc = g;
-    int pow2 = 1;
-    int sofar = 1;
-    nat n = zero;
-
-    MODPOW_STEP64(P,g,e,n,acc,pow2,sofar)
-
-    assert sofar == 1;
-    assert modpow(P,g,P-1,n) == 1;
-    modpow_correct(P,g,P-1,n);
+    MODPOW_FULL(P,g,P-1,64)
 }
 
 lemma void p25519_31757755568855353_1_factors()
@@ -38,125 +28,13 @@ lemma void p25519_31757755568855353_10_exact_order()
 {
     int g = 10; int p = 31757755568855353; int q;
 
-    q = 2;
-
-    if(!pratt_pow_thing(p,g,q)) {
-        pratt_pow_thing_auto(p,g,q);
-
-        int e = (p-1)/q;
-        int acc = g;
-        int pow2 = 1;
-        int sofar = 1;
-        nat n = zero;
-
-        MODPOW_STEP64(p,g,e,n,acc,pow2,sofar)
-        modpow_correct(p,g,e,n);
-
-        assert false;
-    }
-
-    q = 3;
-
-    if(!pratt_pow_thing(p,g,q)) {
-        pratt_pow_thing_auto(p,g,q);
-
-        int e = (p-1)/q;
-        int acc = g;
-        int pow2 = 1;
-        int sofar = 1;
-        nat n = zero;
-
-        MODPOW_STEP64(p,g,e,n,acc,pow2,sofar)
-        modpow_correct(p,g,e,n);
-
-        assert false;
-    }
-
-    q = 31;
-
-    if(!pratt_pow_thing(p,g,q)) {
-        pratt_pow_thing_auto(p,g,q);
-
-        int e = (p-1)/q;
-        int acc = g;
-        int pow2 = 1;
-        int sofar = 1;
-        nat n = zero;
-
-        MODPOW_STEP64(p,g,e,n,acc,pow2,sofar)
-        modpow_correct(p,g,e,n);
-
-        assert false;
-    }
-
-    q = 107;
-
-    if(!pratt_pow_thing(p,g,q)) {
-        pratt_pow_thing_auto(p,g,q);
-
-        int e = (p-1)/q;
-        int acc = g;
-        int pow2 = 1;
-        int sofar = 1;
-        nat n = zero;
-
-        MODPOW_STEP64(p,g,e,n,acc,pow2,sofar)
-        modpow_correct(p,g,e,n);
-
-        assert false;
-    }
-
-    q = 223;
-
-    if(!pratt_pow_thing(p,g,q)) {
-        pratt_pow_thing_auto(p,g,q);
-
-        int e = (p-1)/q;
-        int acc = g;
-        int pow2 = 1;
-        int sofar = 1;
-        nat n = zero;
-
-        MODPOW_STEP64(p,g,e,n,acc,pow2,sofar)
-        modpow_correct(p,g,e,n);
-
-        assert false;
-    }
-
-    q = 4153;
-
-    if(!pratt_pow_thing(p,g,q)) {
-        pratt_pow_thing_auto(p,g,q);
-
-        int e = (p-1)/q;
-        int acc = g;
-        int pow2 = 1;
-        int sofar = 1;
-        nat n = zero;
-
-        MODPOW_STEP64(p,g,e,n,acc,pow2,sofar)
-        modpow_correct(p,g,e,n);
-
-        assert false;
-    }
-
-    q = 430751;
-
-    if(!pratt_pow_thing(p,g,q)) {
-        pratt_pow_thing_auto(p,g,q);
-
-        int e = (p-1)/q;
-        int acc = g;
-        int pow2 = 1;
-        int sofar = 1;
-        nat n = zero;
-
-        MODPOW_STEP64(p,g,e,n,acc,pow2,sofar)
-        modpow_correct(p,g,e,n);
-
-        assert false;
-    }
-
+    PRATT_FACTOR(p,g,2,64)
+    PRATT_FACTOR(p,g,3,64)
+    PRATT_FACTOR(p,g,31,64)
+    PRATT_FACTOR(p,g,107,64)
+    PRATT_FACTOR(p,g,223,64)
+    PRATT_FACTOR(p,g,4153,64)
+    PRATT_FACTOR(p,g,430751,64)
 }
 
 lemma void p25519_430751_17_generates()
@@ -169,18 +47,7 @@ lemma void p25519_430751_17_generates()
 {
     int P = 430751;
     int g = 17;
-
-    int e = P-1;
-    int acc = g;
-    int pow2 = 1;
-    int sofar = 1;
-    nat n = zero;
-
-    MODPOW_STEP32(P,g,e,n,acc,pow2,sofar)
-
-    assert sofar == 1;
-    assert modpow(P,g,P-1,n) == 1;
-    modpow_correct(P,g,P-1,n);
+    MODPOW_FULL(P,g,P-1,32)
 }
 
 lemma void p25519_430751_1_factors()
@@ -195,56 +62,9 @@ lemma void p25519_430751_17_exact_order()
 {
     int g = 17; int p = 430751; int q;
 
-    q = 2;
-
-    if(!pratt_pow_thing(p,g,q)) {
-        pratt_pow_thing_auto(p,g,q);
-
-        int e = (p-1)/q;
-        int acc = g;
-        int pow2 = 1;
-        int sofar = 1;
-        nat n = zero;
-
-        MODPOW_STEP32(p,g,e,n,acc,pow2,sofar)
-        modpow_correct(p,g,e,n);
-
-        assert false;
-    }
-
-    q = 5;
-
-    if(!pratt_pow_thing(p,g,q)) {
-        pratt_pow_thing_auto(p,g,q);
-
-        int e = (p-1)/q;
-        int acc = g;
-        int pow2 = 1;
-        int sofar = 1;
-        nat n = zero;
-
-        MODPOW_STEP32(p,g,e,n,acc,pow2,sofar)
-        modpow_correct(p,g,e,n);
-
-        assert false;
-    }
-
-    q = 1723;
-
-    if(!pratt_pow_thing(p,g,q)) {
-        pratt_pow_thing_auto(p,g,q);
-
-        int e = (p-1)/q;
-        int acc = g;
-        int pow2 = 1;
-        int sofar = 1;
-        nat n = zero;
-
-        MODPOW_STEP32(p,g,e,n,acc,pow2,sofar)
-        modpow_correct(p,g,e,n);
-
-        assert false;
-    }
+    PRATT_FACTOR(p,g,2,32)
+    PRATT_FACTOR(p,g,5,32)
+    PRATT_FACTOR(p,g,1723,32)
 
 }
 
