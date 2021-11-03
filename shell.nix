@@ -6,8 +6,9 @@
 
 with nixpkgs;
 let
-  ocamlPackages = ocaml-ng.ocamlPackages_4_08;
-  ocaml = ocamlPackages.ocaml;
+  camlPackages = ocaml-ng.ocamlPackages_4_12;
+  caml = camlPackages.ocaml;
+
   z3WithOcaml = stdenv.mkDerivation rec {
       name = "z3-${version}";
       version = "4.8.5";
@@ -20,8 +21,8 @@ let
       };
 
       buildInputs = [ python fixDarwinDylibNames ]
-        ++ [ ocaml ]
-        ++ (with ocamlPackages; [ findlib num ])
+        ++ [ caml ]
+        ++ (with camlPackages; [ findlib num ])
         ;
       propagatedBuildInputs = [ python.pkgs.setuptools ];
       enableParallelBuilding = true;
@@ -53,44 +54,159 @@ let
       };
   };
 
-  verifast =
-      stdenv.mkDerivation rec {
-	name    = "verifast-${version}";
-	version = "11791726caa1f23f0fb8de42dc4d67a2ccd0a9a0";
+  res =  camlPackages.buildOasisPackage rec {
+    pname = "res";
+    version = "4.0.7";
 
-	src = fetchgit {
-            url = "https://github.com/jpdoyle/verifast.git";
-            #url = /home/joe/verifast.git;
-            rev   = "${version}";
-            sha256 =
-              "056q8vxxlhnc22lhsk2bj47zhbgp1gjkfl29ni971k00l5hfa9gy";
-	};
+    # release tarballs are missing some ekam rules
+    src = fetchFromGitHub {
+      owner = "mmottl";
+      repo = "res";
+      rev = "v${version}";
+      sha256 = "157y14d5v5vagj4c18p0f3g9vagbcshig7m7ck5sybzjr0mnw6l9";
+    };
 
-	dontStrip = true;
-        phases = "buildPhase";
+    nativeBuildInputs = [ caml ] ++
+    (with camlPackages; [
+      ocamlbuild
+    ]);
 
-        buildInputs = [
-          ocaml git coreutils which
+  };
 
-          z3WithOcaml
-          z3WithOcaml.ocaml
-          z3WithOcaml.lib
+  camlp4 = let
+    param = {
+      version = "4.12+1";
+      sha256 = "1cfk5ppnd511vzsr9gc0grxbafmh0m3m897aij198rppzxps5kyz";
+    };
+    in
+  stdenv.mkDerivation rec {
+    pname = "camlp4";
+    inherit (param) version;
 
-          glib
+    src = fetchzip {
+      url = "https://github.com/ocaml/camlp4/archive/${version}.tar.gz";
+      inherit (param) sha256;
+    };
 
-          pkgconfig
-          gnome2.gtksourceview
-          gtk2-x11
+    buildInputs = [ which caml camlPackages.ocamlbuild ];
 
-          gnumake
+    dontAddPrefix = true;
 
-        ] ++ (with ocamlPackages; [
-          num findlib camlp4
-          lablgtk
-        ]);
+    preConfigure = ''
+      # increase stack space for spacetime variant of the compiler
+      # https://github.com/ocaml/ocaml/issues/7435
+      # but disallowed by darwin sandbox
+      ulimit -s unlimited || true
+      configureFlagsArray=(
+        --bindir=$out/bin
+        --libdir=$out/lib/ocaml/${ocaml.version}/site-lib
+        --pkgdir=$out/lib/ocaml/${ocaml.version}/site-lib
+      )
+    '';
 
-        Z3_DLL_DIR="${z3WithOcaml.lib}/lib";
-        LD_LIBRARY_PATH = "${z3WithOcaml.lib}/lib";
+    postConfigure = ''
+      substituteInPlace camlp4/META.in \
+      --replace +camlp4 $out/lib/ocaml/${ocaml.version}/site-lib/camlp4
+    '';
+
+    makeFlags = [ "all" ];
+
+    installTargets = [ "install" "install-META" ];
+
+    dontStrip = true;
+
+    meta = with lib; {
+      description = "A software system for writing extensible parsers for programming languages";
+      homepage = "https://github.com/ocaml/camlp4";
+      platforms = ocaml.meta.platforms or [];
+    };
+  };
+
+  capnp-ocaml = camlPackages.buildDunePackage rec {
+    pname = "capnp";
+    version = "3.4.0";
+    useDune2 = true;
+
+    # release tarballs are missing some ekam rules
+    src = fetchFromGitHub {
+      owner = "capnproto";
+      repo = "capnp-ocaml";
+      rev = "v${version}";
+      sha256 = "16av6xhnpqljpr8nbd2i9ibrk91z3wafxaxvzgs86bzwwj9ankxc";
+    };
+
+    nativeBuildInputs = [ caml capnproto res ] ++
+    (with camlPackages; [
+      dune_2 findlib stdio ocplib-endian stdint result
+    ]);
+
+    meta = with lib; {
+      homepage    = "https://capnproto.org/";
+      description = "Cap'n Proto cerealization protocol (ocaml)";
+      longDescription = ''
+        Cap’n Proto is an insanely fast data interchange format and
+        capability-based RPC system. Think JSON, except binary. Or think Protocol
+        Buffers, except faster.
+      '';
+      license     = licenses.mit;
+      platforms   = platforms.all;
+      maintainers = with maintainers; [ cstrahan ];
+    };
+  };
+
+  verifast = stdenv.mkDerivation rec {
+    name    = "verifast-${version}";
+    version = "5710e5d010c1e54b33a4edc166892f97115335a1";
+
+    src = fetchgit {
+        url = "https://github.com/jpdoyle/verifast.git";
+        #url = /home/joe/verifast.git;
+        rev   = "${version}";
+        sha256 =
+          "1biq0rvfji38yihff9pkd5nsps7gzvj9n9yv2m29g4i8xl5cdijh";
+    };
+
+    dontStrip = true;
+    phases = "buildPhase";
+
+      buildInputs = [
+        cmake
+
+        caml git coreutils which
+
+        z3WithOcaml
+        z3WithOcaml.ocaml
+        z3WithOcaml.lib
+
+        glib
+
+        pkgconfig
+        gnome2.gtksourceview
+        gtk2-x11
+
+        gnumake
+
+        capnproto
+
+        capnp-ocaml
+        camlp4
+        res
+        llvm_13
+        llvmPackages_13.libclang
+        llvmPackages_13.clang
+
+      ] ++ (with camlPackages; [
+        num findlib
+        lablgtk ocplib-endian stdint result
+        base stdio
+      ]);
+
+
+      CLANG_DIR="${llvmPackages_13.clang}";
+      LLVM_INSTALL_DIR="${llvm_13}/lib";
+      Z3_DLL_DIR="${z3WithOcaml.lib}/lib";
+      LD_LIBRARY_PATH = "${z3WithOcaml.lib}/lib:${capnproto}/lib";
+      CAPNP_LIBS="${capnproto}/lib";
         VFVERSION = "${version}";
 
         buildCommand = ''
@@ -99,51 +215,15 @@ let
             cd $(basename $src)
             chmod -R +w .
             cd src
-            make NUMCPU=2 VERBOSE=1
+
+            pushd cxx_frontend/ast_exporter/build
+            CC=${CLANG_DIR}/bin/clang CXX=${CLANG_DIR}/bin/clang++ cmake -DLLVM_INSTALL_DIR=${LLVM_INSTALL_DIR} -DCMAKE_BUILD_TYPE=Debug -DCAPNP_LIBS=$CAPNP_LIBS ..
+            popd
+
+            make NUMCPU=3 VERBOSE=1
             mkdir -p $out
             mv ../bin $out/
         '';
-            #ls -laF
-            #cp -r $src .
-            #cd $(basename $src)
-            #chmod -R +w .
-            #cd src
-            #ls -laF
-            #pwd
-
-            #export VFVERSION="${version}"
-            ##export CAML_LD_LIBRARY_PATH="$CAML_LD_LIBRARY_PATH:${ocamlPackages.num}"
-            ##echo $CAML_LD_LIBRARY_PATH
-            #echo ${ocamlPackages.num}
-            #echo ${ocamlPackages.camlp4}
-            #echo ${z3WithOcaml}
-            #echo ${z3WithOcaml.lib}
-            #export Z3_DLL_DIR="${z3WithOcaml.lib}/lib"
-            #export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${z3WithOcaml.lib}/lib"
-            #echo ${z3WithOcaml.ocaml}
-
-            #echo
-            #echo -n "  Looking for num: "
-            #ocamlfind query -qe num
-
-            #echo
-            #echo -n "  Looking for z3: "
-            #ocamlfind query -qe z3 || true
-
-            #echo
-            #echo -n "  Looking for Z3: "
-            #ocamlfind query -qe Z3 || true
-
-            #ls -laF ${ocamlPackages.num}
-
-#             ocamlfind query num
-#             make NUMCPU=1 VERBOSE=1 || sleep 1h
-#             # make install --prefix $out
-#             mkdir -p $out
-#             mv ../bin $out/
-#             echo $out
-#             ls -laF $out
-#         '';
 
 	meta = {
 	  description = "Verification for C and Java programs via separation logic";
@@ -152,7 +232,7 @@ let
 	  platforms   = [ "x86_64-linux" ];
 	  maintainers = [ "joe" ];
 	};
-      };
+    };
 
 in
 stdenv.mkDerivation rec {

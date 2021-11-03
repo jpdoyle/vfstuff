@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include "b64.h"
+#include "../../b64.h"
 
 int main(void) {
     size_t ix = 0;
