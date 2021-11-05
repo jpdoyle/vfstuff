@@ -1628,6 +1628,22 @@ ALREADY_PROVEN()
 
 }
 
+lemma void square_roots_of_one_basic(int p, int x)
+    requires p > 1 &*& !!mem(euclid_mod(x,p), {p-1,1});
+    ensures  (euclid_mod(x*x,p) == 1);
+{
+    Zp_times(p,x,x);
+    if(euclid_mod(x,p) == 1) {
+        assert euclid_mod(x*x,p) == euclid_mod(1,p);
+        assert euclid_mod(x*x,p) == 1;
+    } else {
+        assert euclid_mod(x,p) == p-1;
+        assert euclid_mod(x*x,p) == euclid_mod((p-1)*(p-1),p);
+        assert euclid_mod(x*x,p) == euclid_mod(p*(p - 2)+1,p);
+        euclid_div_unique_intro(p*(p-2)+1,p,p-2,1);
+    }
+}
+
 lemma void pratt_order_check_lemma(int p, list<int> p_minus_1, int x)
     requires p > 1 &*& x > 1 &*& x < p
         &*&  !!forall(p_minus_1,is_prime)

@@ -54,17 +54,23 @@ lemma void p25519_is_prime();
     DECLARE_128_NATS(prev,pref##0) \
     DECLARE_128_NATS(n##pref##0##1111111,pref##1)
 
+#define DECLARE_512_NATS(prev,pref) \
+    DECLARE_256_NATS(prev,pref##0) \
+    DECLARE_256_NATS(n##pref##0##11111111,pref##1)
+
 #define MODPOW_STEP(P,g,e,n,acc,pow2,sofar) \
         modpow_step(P,g,e,n,acc,pow2,sofar); \
-        if((e/pow2)%2 == 1) { sofar = (acc*sofar)%P; } \
+        if((e/pow2)%2 != 0) { sofar = (acc*sofar)%P; } \
         acc = (acc*acc)%P; pow2 = 2*pow2; n = succ(n);
 
 #define MODPOW_STEP2(P,g,e,n,acc,pow2,sofar) \
-        modpow_step_by_2(P,g,e,n,acc,pow2,sofar); \
-        if((e/pow2)%2 == 1) { sofar = (acc*sofar)%P; } \
-        acc = (acc*acc)%P; pow2 = 2*pow2; n = succ(n); \
-        if((e/pow2)%2 == 1) { sofar = (acc*sofar)%P; } \
-        acc = (acc*acc)%P; pow2 = 2*pow2; n = succ(n);
+        if(e/pow2 != 0) { \
+            modpow_step_by_2(P,g,e,n,acc,pow2,sofar); \
+            if((e/pow2)%2 != 0) { sofar = (acc*sofar)%P; } \
+            acc = (acc*acc)%P; \
+            if((e/(2*pow2))%2 != 0) { sofar = (acc*sofar)%P; } \
+            acc = (acc*acc)%P; pow2 = 4*pow2; n = succ(succ(n)); \
+        }
 
 #define MODPOW_STEP4(P,g,e,n,acc,pow2,sofar) \
         MODPOW_STEP2(P,g,e,n,acc,pow2,sofar) \
@@ -110,6 +116,10 @@ lemma void p25519_is_prime();
         MODPOW_STEP128(P,g,e,n,acc,pow2,sofar) \
         MODPOW_STEP128(P,g,e,n,acc,pow2,sofar)
 
+#define MODPOW_STEP512(P,g,e,n,acc,pow2,sofar) \
+        MODPOW_STEP256(P,g,e,n,acc,pow2,sofar) \
+        MODPOW_STEP256(P,g,e,n,acc,pow2,sofar)
+
 #define MODPOW_FULL(p,g,E,N_BITS) { \
         int e = E; \
         int acc = g; \
@@ -123,9 +133,8 @@ lemma void p25519_is_prime();
 
 #define PRATT_FACTOR(p,g,q,N_BITS) \
     if(!pratt_pow_thing(p,g,q)) { \
-        pratt_pow_thing_auto(p,g,q); \
- \
         MODPOW_FULL(p,g,(p-1)/q,N_BITS) \
+        pratt_pow_thing_auto(p,g,q); \
  \
         assert false; \
     }

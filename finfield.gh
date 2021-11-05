@@ -126,7 +126,7 @@ fixpoint bool pratt_pow_thing(int p, int x, int q) {
     return euclid_mod(pow_nat(x,nat_of_int((p-1)/q)),p) != 1;
 }
 
-lemma_auto(pratt_pow_thing(p,x,q))
+lemma
 void pratt_pow_thing_auto(int p, int x, int q)
     requires !pratt_pow_thing(p,x,q);
     ensures  euclid_mod(pow_nat(x,nat_of_int((p-1)/q)),p) == 1;
@@ -150,9 +150,9 @@ predicate pratt_certificate(pratt_cert cert, int rest_of_p_1, nat fuel; int p)
     case pratt_small(x):
         // Bigger?
         return  x > 1 &*& x <= 100*100
-            &*& (mem(x,primes_below(nat_of_int(100))) ||
-                    (x > 100 &&
-                     all_no_divide(x,primes_below(nat_of_int(100)))))
+            &*& (x <= 100
+                ? !!mem(x,primes_below(nat_of_int(100)))
+                : !!all_no_divide(x,primes_below(nat_of_int(100))))
             &*& p == x &*& rest_of_p_1 == 1;
     case pratt_cert(g, factors):
         return  p == product(map(fst,factors))*rest_of_p_1 + 1
@@ -392,7 +392,7 @@ fixpoint int modpow(int p, int g, int e, nat bits) {
     switch(bits) {
     case zero: return 1;
     case succ(bits0):
-        return ((((e/pow_nat(2,bits0))%2 == 1) ? modpow2(p,g,bits0) : 1)
+        return ((((e/pow_nat(2,bits0))%2 != 0) ? modpow2(p,g,bits0) : 1)
             *modpow(p,g,e,bits0))%p;
     }
 }
@@ -417,7 +417,7 @@ lemma void modpow_step(int p, int g, int e, nat bits0, int acc, int pow2,
         &*&  pow2 == pow_nat(2,bits0)
         &*&  sofar == modpow(p,g,e,bits0);
     ensures  modpow2(p,g,succ(bits0)) == (acc*acc)%p
-        &*&  (e/pow2)%2 == 1
+        &*&  (e/pow2)%2 != 0
         ?    modpow(p,g,e,succ(bits0)) == (acc*sofar)%p
         :    modpow(p,g,e,succ(bits0)) == sofar
         ;
@@ -426,16 +426,15 @@ lemma void modpow_step_by_2(int p, int g, int e, nat bits0, int acc, int pow2,
         int sofar);
     requires p > 1 &*& g >= 0 && acc == modpow2(p,g,bits0) &*& e >= 0 &*& g < p
         &*&  pow2 == pow_nat(2,bits0)
-        &*&  sofar == modpow(p,g,e,bits0)
-        &*&  let((acc*acc)%p,?acc1);
-    ensures  modpow2(p,g,succ(succ(bits0))) == (acc1*acc1)%p
-        &*&  (e/pow2)%2 == 1
-        ?    ((e/(2*pow2))%2 == 1
-             ? modpow(p,g,e,succ(succ(bits0))) == (acc1*((acc*sofar)%p))%p
+        &*&  sofar == modpow(p,g,e,bits0);
+    ensures  modpow2(p,g,succ(succ(bits0))) == (((acc*acc)%p)*((acc*acc)%p))%p
+        &*&  (e/pow2)%2 != 0
+        ?    ((e/(2*pow2))%2 != 0
+             ? modpow(p,g,e,succ(succ(bits0))) == (((acc*acc)%p)*((acc*sofar)%p))%p
              : modpow(p,g,e,succ(succ(bits0))) == (acc*sofar)%p
              )
-        :    ((e/(2*pow2))%2 == 1
-             ? modpow(p,g,e,succ(succ(bits0))) == (acc1*sofar)%p
+        :    ((e/(2*pow2))%2 != 0
+             ? modpow(p,g,e,succ(succ(bits0))) == (((acc*acc)%p)*sofar)%p
              : modpow(p,g,e,succ(succ(bits0))) == sofar
              )
         ;

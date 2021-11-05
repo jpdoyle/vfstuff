@@ -6,7 +6,7 @@
 
 with nixpkgs;
 let
-  camlPackages = ocaml-ng.ocamlPackages_4_12;
+  camlPackages = ocaml-ng.ocamlPackages_4_12.overrideScope' (self: super: { ocaml = super.ocaml.override { flambdaSupport = true; }; });
   caml = camlPackages.ocaml;
 
   z3WithOcaml = stdenv.mkDerivation rec {
@@ -156,14 +156,14 @@ let
 
   verifast = stdenv.mkDerivation rec {
     name    = "verifast-${version}";
-    version = "5710e5d010c1e54b33a4edc166892f97115335a1";
+    version = "7b8443214eef4d1fdaec3608bce9cfeb3f491847";
 
     src = fetchgit {
         url = "https://github.com/jpdoyle/verifast.git";
         #url = /home/joe/verifast.git;
         rev   = "${version}";
         sha256 =
-          "1biq0rvfji38yihff9pkd5nsps7gzvj9n9yv2m29g4i8xl5cdijh";
+          "0iasx2zdii9r3yv2yf32s942807xf8g506j1hghv5ijfnpm1z6ls";
     };
 
     dontStrip = true;

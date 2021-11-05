@@ -55,7 +55,7 @@ ALREADY_PROVEN()
 
 }
 
-lemma void p25519_57896044618658097711785492504343953926634992332820282019728792003956564819949_g2_generates()
+lemma void p25519_0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed_g2_generates()
     requires true;
     ensures  euclid_mod(pow_nat(2,nat_of_int(P25519-1)),P25519) == 1;
 {
