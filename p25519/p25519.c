@@ -1,11 +1,6 @@
 /*@ #include "p25519.gh" @*/
-/*@ #include "p74058212732561358302231226437062788676166966415465897661863160754340907.gh" @*/
-
-#if 1
-#define ALREADY_PROVEN()
-#else
-#define ALREADY_PROVEN() assume(false);
-#endif
+/*@ #include "p25519_generated.gh" @*/
+/*@ #include "p448_generated.gh" @*/
 
 /*@
 
@@ -20,176 +15,10 @@ lemma void p25519_formula()
              - 19)
         ;
 {
-ALREADY_PROVEN()
     pow_plus(2,nat_of_int(240),15);
     assert pow_nat(2,nat_of_int(255))
         == pow_nat(2,nat_of_int(240))*pow_nat(2,N15);
     pow_times2(2,N15,16);
-}
-
-lemma void p25519_g2_generates()
-    requires true;
-    ensures  euclid_mod(pow_nat(2,nat_of_int(P25519-1)),P25519) == 1;
-{
-ALREADY_PROVEN()
-    p25519_formula();
-    int P = 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed;
-    int g = 2;
-
-    DECLARE_256_NATS(zero,0)
-    MODPOW_FULL(P,g,P-1,256)
-
-}
-
-lemma void p25519_2_generates()
-    requires true;
-    ensures  euclid_mod(pow_nat(2,nat_of_int(P25519-1)),P25519) == 1;
-{
-ALREADY_PROVEN()
-    p25519_formula();
-    int P = 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed;
-    int g = 2;
-
-    DECLARE_256_NATS(zero,0)
-    MODPOW_FULL(P,g,P-1,256)
-
-}
-
-lemma void p25519_0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed_g2_generates()
-    requires true;
-    ensures  euclid_mod(pow_nat(2,nat_of_int(P25519-1)),P25519) == 1;
-{
-ALREADY_PROVEN()
-    p25519_formula();
-    p25519_2_generates();
-}
-
-lemma void p25519_1_factors()
-    requires true;
-    ensures  product({2,2,3,65147,74058212732561358302231226437062788676166966415465897661863160754340907})
-             +1
-        ==   P25519;
-{ p25519_formula(); }
-
-lemma void
-p25519_0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed_1_factors()
-    requires true;
-    ensures  product({2,2,3,65147,74058212732561358302231226437062788676166966415465897661863160754340907})
-             +1
-        ==   57896044618658097711785492504343953926634992332820282019728792003956564819949;
-{}
-
-lemma void p25519_g2_exact_order()
-    requires true;
-    ensures  !!forall({2, 2, 3, 65147, 74058212732561358302231226437062788676166966415465897661863160754340907}, (pratt_pow_thing)(P25519, 2));
-{
-ALREADY_PROVEN()
-    p25519_formula();
-    int g = 2;
-    int p = 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed;
-    DECLARE_256_NATS(zero,0)
-
-    PRATT_FACTOR(p,g,2,256)
-    PRATT_FACTOR(p,g,3,256)
-    PRATT_FACTOR(p,g,65147,256)
-
-    PRATT_FACTOR(p,g,74058212732561358302231226437062788676166966415465897661863160754340907,32)
-}
-
-lemma void p25519_0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed_g2_exact_order()
-    requires true;
-    ensures  !!forall({2, 2, 3, 65147, 74058212732561358302231226437062788676166966415465897661863160754340907}, (pratt_pow_thing)(57896044618658097711785492504343953926634992332820282019728792003956564819949, 2));
-{
-ALREADY_PROVEN()
-    p25519_formula();
-    p25519_g2_exact_order();
-}
-
-lemma void p25519_65147_g2_generates()
-    requires true;
-    ensures  euclid_mod(pow_nat(2,nat_of_int(65147-1)),65147) == 1;
-{
-ALREADY_PROVEN()
-    int P = 0xfe7b;
-    int g = 2;
-
-    MODPOW_FULL(P,g,P-1,16)
-}
-
-lemma void p25519_65147_1_factors()
-    requires true;
-    ensures  product({2, 32573}) == 65147-1;
-{}
-
-lemma void p25519_65147_g2_exact_order()
-    requires true;
-    ensures  !!forall({2, 32573},(pratt_pow_thing)(65147,2));
-{
-    ALREADY_PROVEN()
-
-    int g = 2; int p = 65147; int q;
-
-    PRATT_FACTOR(p,g,2,16)
-
-    if(!pratt_pow_thing(p,g,32573)) {
-        pratt_pow_thing_auto(p,g,32573);
-
-        assert false;
-    }
-
-}
-
-lemma void p25519_32573_g2_generates()
-    requires true;
-    ensures  euclid_mod(pow_nat(2,nat_of_int(32573-1)),32573) == 1;
-{
-    ALREADY_PROVEN()
-    int P = 32573;
-    int g = 2;
-
-    MODPOW_FULL(P,g,P-1,16)
-}
-
-lemma void p25519_32573_1_factors()
-    requires true;
-    ensures  product({2, 2, 17, 479}) == 32573-1;
-{}
-
-lemma void p25519_32573_g2_exact_order()
-    requires true;
-    ensures  !!forall({2, 2, 17, 479},(pratt_pow_thing)(32573,2));
-{
-    ALREADY_PROVEN()
-    int g = 2; int p = 32573; int q;
-
-    PRATT_FACTOR(p,g,2,16)
-    PRATT_FACTOR(p,g,17,16)
-    PRATT_FACTOR(p,g,479,16)
-
-}
-
-lemma pratt_cert p25519_32573_pratt()
-    requires true;
-    ensures  pratt_certificate(result,1,_,32573);
-{
-    PRATT_BUILD_PRELUDE(32573,2)
-    PRATT_BUILD_SMALL(2)
-    PRATT_BUILD_SMALL(2)
-    PRATT_BUILD_SMALL(17)
-    PRATT_BUILD_SMALL(479)
-
-    return ret;
-}
-
-lemma pratt_cert p25519_65147_pratt()
-    requires true;
-    ensures  pratt_certificate(result,1,_,65147);
-{
-    PRATT_BUILD_PRELUDE(65147,2)
-    PRATT_BUILD_SMALL(2)
-    PRATT_BUILD_BIG(32573)
-
-    return ret;
 }
 
 lemma pratt_cert p25519_pratt()
@@ -197,26 +26,52 @@ lemma pratt_cert p25519_pratt()
     ensures  pratt_certificate(result,1,_,P25519);
 {
     p25519_formula();
-
-    PRATT_BUILD_PRELUDE(0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed,2)
-    PRATT_BUILD_SMALL(2)
-    PRATT_BUILD_SMALL(2)
-    PRATT_BUILD_SMALL(3)
-    PRATT_BUILD_BIG(65147)
-    PRATT_BUILD_BIG(74058212732561358302231226437062788676166966415465897661863160754340907)
-
-    return ret;
+    return p25519_57896044618658097711785492504343953926634992332820282019728792003956564819949_pratt();
 }
 
 lemma void p25519_is_prime()
     requires true;
     ensures  !!is_prime(P25519);
 {
-    ALREADY_PROVEN()
     p25519_pratt();
     leak pratt_certificate(_,_,_,_);
     pratt_certificate_prime();
 }
+
+lemma void p448_formula()
+    requires true;
+    ensures  P448
+        ==   pow_nat(pow_nat(pow_nat(2,N8),N8),N7)
+        -    pow_nat(pow_nat(pow_nat(2,N8),N4),N7)
+        -    1;
+{
+    pow_times2(2,N8,8);
+    assert pow_nat(2,nat_of_int(64))
+        == pow_nat(pow_nat(2,N8),N8);
+    pow_times2(2,nat_of_int(64),7);
+    assert pow_nat(2,nat_of_int(64*7))
+        == pow_nat(pow_nat(pow_nat(2,N8),N8),N7);
+    pow_times2(2,N8,4);
+    pow_times2(2,nat_of_int(32),7);
+}
+
+lemma pratt_cert p448_pratt()
+    requires true;
+    ensures  pratt_certificate(result,1,_,P448);
+{
+    p448_formula();
+    return p25519_726838724295606890549323807888004534353641360687318060281490199180612328166730772686396383698676545930088884461843637361053498018365439_pratt();
+}
+
+lemma void p448_is_prime()
+    requires true;
+    ensures  !!is_prime(P448);
+{
+    p448_pratt();
+    leak pratt_certificate(_,_,_,_);
+    pratt_certificate_prime();
+}
+
 
   @*/
 

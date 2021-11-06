@@ -9,6 +9,10 @@ fixpoint int P25519() {
     return pow_nat(2,nat_of_int(255)) - 19;
 }
 
+fixpoint int P448() {
+    return pow_nat(2,nat_of_int(448)) - pow_nat(2,nat_of_int(224)) - 1;
+}
+
 lemma void p25519_formula();
     requires true;
     ensures  P25519
@@ -21,6 +25,21 @@ lemma pratt_cert p25519_pratt();
 lemma void p25519_is_prime();
     requires true;
     ensures  !!is_prime(P25519);
+
+lemma void p448_formula();
+    requires true;
+    ensures  P448
+        ==   pow_nat(pow_nat(pow_nat(2,N8),N8),N7)
+        -    pow_nat(pow_nat(pow_nat(2,N8),N4),N7)
+        -    1;
+
+lemma pratt_cert p448_pratt();
+    requires true;
+    ensures  pratt_certificate(result,1,_,P448);
+
+lemma void p448_is_prime();
+    requires true;
+    ensures  !!is_prime(P448);
 
 #define DECLARE_2_NATS(prev,pref) \
     nat n##pref##0 = succ(prev); \
@@ -58,120 +77,72 @@ lemma void p25519_is_prime();
     DECLARE_256_NATS(prev,pref##0) \
     DECLARE_256_NATS(n##pref##0##11111111,pref##1)
 
-#define DECLARE_2_SQUARES(P,g,prev,pref) \
-    int pref##0 = ((prev)*(prev))%P; \
-    nat n_##pref##0 = succ(n_##prev); \
-    int p2_##pref##0 = 2*p2_##prev; \
-    int pref##1 = ((pref##0)*(pref##0))%P; \
-    nat n_##pref##1 = succ(n_##pref##0); \
-    int p2_##pref##1 = 2*p2_##pref##0;
-
-#define DECLARE_4_SQUARES(P,g,prev,pref) \
-    DECLARE_2_SQUARES(P,g,prev,pref##0) \
-    DECLARE_2_SQUARES(P,g,pref##01,pref##1)
-
-#define DECLARE_8_SQUARES(P,g,prev,pref) \
-    DECLARE_4_SQUARES(P,g,prev,pref##0) \
-    DECLARE_4_SQUARES(P,g,pref##011,pref##1)
-
-#define DECLARE_16_SQUARES(P,g,prev,pref) \
-    DECLARE_8_SQUARES(P,g,prev,pref##0) \
-    DECLARE_8_SQUARES(P,g,pref##0111,pref##1)
-
-#define DECLARE_32_SQUARES(P,g,prev,pref) \
-    DECLARE_16_SQUARES(P,g,prev,pref##0) \
-    DECLARE_16_SQUARES(P,g,pref##01111,pref##1)
-
-#define DECLARE_64_SQUARES(P,g,prev,pref) \
-    DECLARE_32_SQUARES(P,g,prev,pref##0) \
-    DECLARE_32_SQUARES(P,g,pref##011111,pref##1)
-
-#define DECLARE_128_SQUARES(P,g,prev,pref) \
-    DECLARE_64_SQUARES(P,g,prev,pref##0) \
-    DECLARE_64_SQUARES(P,g,pref##0111111,pref##1)
-
-#define DECLARE_256_SQUARES(P,g,prev,pref) \
-    DECLARE_128_SQUARES(P,g,prev,pref##0) \
-    DECLARE_128_SQUARES(P,g,pref##01111111,pref##1)
-
-#define DECLARE_512_SQUARES(P,g,prev,pref) \
-    DECLARE_256_SQUARES(P,g,prev,pref##0) \
-    DECLARE_256_SQUARES(P,g,pref##011111111,pref##1)
-
 #define MODPOW_STEP(P,g,e,n,acc,pow2,sofar) \
         modpow_step(P,g,e,n,acc,pow2,sofar); \
         if((e/pow2)%2 != 0) { sofar = (acc*sofar)%P; } \
-        pow2 = 2*pow2; n = succ(n);
+        acc = (acc*acc)%P; pow2 = 2*pow2; n = succ(n);
 
-#define MODPOW_STEP2(P,g,e,n,prev_acc,acc,pow2,sofar) \
-        modpow_step_by_2(P,g,e,n_##prev_acc,prev_acc,p2_##prev_acc,sofar); \
-        if((e/p2_##prev_acc)%2 != 0) { sofar = ((prev_acc)*sofar)%P; } \
-        if((e/(p2_##acc##0))%2 != 0) { sofar = ((acc##0)*sofar)%P; } \
-        n = n_##acc##1; \
+#define MODPOW_STEP2(P,g,e,n,acc,pow2,sofar) \
+        modpow_step_by_2(P,g,e,n,acc,pow2,sofar); \
+        if((e/pow2)%2 != 0) { sofar = (acc*sofar)%P; } \
+        acc = (acc*acc)%P; \
+        if((e/(2*pow2))%2 != 0) { sofar = (acc*sofar)%P; } \
+        acc = (acc*acc)%P; pow2 = 4*pow2; n = succ(succ(n)); \
 
-#define MODPOW_STEP4(P,g,e,n,prev_acc,acc,pow2,sofar) \
-        MODPOW_STEP2(P,g,e,n,prev_acc,acc##0,pow2,sofar) \
-        MODPOW_STEP2(P,g,e,n,acc##01, acc##1,pow2,sofar) \
+#define MODPOW_STEP4(P,g,e,n,acc,pow2,sofar) \
+        MODPOW_STEP2(P,g,e,n,acc,pow2,sofar) \
+        MODPOW_STEP2(P,g,e,n,acc,pow2,sofar)
 
-#define MODPOW_STEP8(P,g,e,n,prev_acc,acc,pow2,sofar) \
-        MODPOW_STEP4(P,g,e,n,prev_acc, acc##0,pow2,sofar) \
-        MODPOW_STEP4(P,g,e,n,acc##011, acc##1,pow2,sofar) \
+#define MODPOW_STEP8(P,g,e,n,acc,pow2,sofar) \
+        MODPOW_STEP4(P,g,e,n,acc,pow2,sofar) \
+        MODPOW_STEP4(P,g,e,n,acc,pow2,sofar)
 
-#define MODPOW_STEP16(P,g,e,n,prev_acc,acc,pow2,sofar) \
-        MODPOW_STEP8(P,g,e,n,prev_acc,  acc##0,pow2,sofar) \
-        MODPOW_STEP8(P,g,e,n,acc##0111, acc##1,pow2,sofar) \
+#define MODPOW_STEP16(P,g,e,n,acc,pow2,sofar) \
+        MODPOW_STEP8(P,g,e,n,acc,pow2,sofar) \
+        MODPOW_STEP8(P,g,e,n,acc,pow2,sofar)
 
-#define MODPOW_STEP32(P,g,e,n,prev_acc,acc,pow2,sofar) \
-        MODPOW_STEP16(P,g,e,n,prev_acc,   acc##0,pow2,sofar) \
-        if(e/(p2_##acc##01111) != 0) { \
-            MODPOW_STEP16(P,g,e,n,acc##01111, acc##1,pow2,sofar) \
+#define MODPOW_STEP32(P,g,e,n,acc,pow2,sofar) \
+        MODPOW_STEP16(P,g,e,n,acc,pow2,sofar) \
+        MODPOW_STEP16(P,g,e,n,acc,pow2,sofar)
+
+#define MODPOW_STEP64(P,g,e,n,acc,pow2,sofar) \
+        MODPOW_STEP32(P,g,e,n,acc,pow2,sofar) \
+        if(e/pow2 != 0) { \
+            MODPOW_STEP32(P,g,e,n,acc,pow2,sofar) \
         }
 
-#define MODPOW_STEP64(P,g,e,n,prev_acc,acc,pow2,sofar) \
-        MODPOW_STEP32(P,g,e,n,prev_acc,    acc##0,pow2,sofar) \
-        if(e/(p2_##acc##011111) != 0) { \
-            MODPOW_STEP32(P,g,e,n,acc##011111, acc##1,pow2,sofar) \
+#define MODPOW_STEP128(P,g,e,n,acc,pow2,sofar) \
+        MODPOW_STEP64(P,g,e,n,acc,pow2,sofar) \
+        if(e/pow2 != 0) { \
+            MODPOW_STEP64(P,g,e,n,acc,pow2,sofar) \
         }
 
-#define MODPOW_STEP128(P,g,e,n,prev_acc,acc,pow2,sofar) \
-        MODPOW_STEP64(P,g,e,n,prev_acc,     acc##0,pow2,sofar) \
-        if(e/(p2_##acc##0111111) != 0) { \
-            MODPOW_STEP64(P,g,e,n,acc##0111111, acc##1,pow2,sofar) \
+#define MODPOW_STEP256(P,g,e,n,acc,pow2,sofar) \
+        MODPOW_STEP128(P,g,e,n,acc,pow2,sofar) \
+        if(e/pow2 != 0) { \
+            MODPOW_STEP128(P,g,e,n,acc,pow2,sofar) \
         }
 
-#define MODPOW_STEP256(P,g,e,n,prev_acc,acc,pow2,sofar) \
-        MODPOW_STEP128(P,g,e,n,prev_acc,     acc##0,pow2,sofar) \
-        if(e/(p2_##acc##01111111) != 0) { \
-            MODPOW_STEP128(P,g,e,n,acc##01111111, acc##1,pow2,sofar) \
+#define MODPOW_STEP512(P,g,e,n,acc,pow2,sofar) \
+        MODPOW_STEP256(P,g,e,n,acc,pow2,sofar) \
+        if(e/pow2 != 0) { \
+            MODPOW_STEP256(P,g,e,n,acc,pow2,sofar) \
         }
-
-#define MODPOW_STEP512(P,g,e,n,prev_acc,acc,pow2,sofar) \
-        MODPOW_STEP256(P,g,e,n,prev_acc,      acc##0,pow2,sofar) \
-        if(e/(p2_##acc##011111111) != 0) { \
-            MODPOW_STEP256(P,g,e,n,acc##011111111, acc##1,pow2,sofar) \
-        }
-
-#define MODPOW_FULL_NO_SQUARES(p,g,E,N_BITS) { \
-        int e = E; \
-        int sofar = 1; \
-        int prev_sofar; \
-        nat n = zero; \
-        note_eq(sofar,modpow(p,g,e,n));\
- \
-        MODPOW_STEP##N_BITS(p,g,e,n,g,acc,pow2,sofar) \
-        modpowp_correct(p,g,e,n); \
-    }
 
 #define MODPOW_FULL(p,g,E,N_BITS) { \
-        nat n_##g = zero; \
-        int p2_##g = 1; \
-        DECLARE_##N_BITS##_SQUARES(p,g,g,acc) \
-        MODPOW_FULL_NO_SQUARES(p,g,E,N_BITS) \
+        int e = E; \
+        int acc = g; \
+        int pow2 = 1; \
+        int sofar = 1; \
+        nat n = zero; \
+ \
+        MODPOW_STEP##N_BITS(p,g,e,n,acc,pow2,sofar) \
+        modpowp_correct(p,g,e,n); \
     }
 
 #define PRATT_FACTOR(p,g,q,N_BITS) \
     if(!pratt_pow_thing(p,g,q)) { \
-        MODPOW_FULL_NO_SQUARES(p,g,(p-1)/q,N_BITS) \
+        MODPOW_FULL(p,g,(p-1)/q,N_BITS) \
         pratt_pow_thing_auto(p,g,q); \
  \
         assert false; \
