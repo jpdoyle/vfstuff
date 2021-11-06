@@ -407,7 +407,7 @@ lemma void modpow_correct(int p, int g, int e, nat bits);
     ensures  modpow(p,g,e,bits) == euclid_mod(pow_nat(g,nat_of_int(e)),p);
 
 lemma void modpow2_step(int p, int g, nat bits, int acc);
-    requires p > 1 &*& acc == modpow2(p,g,bits) &*& g < p;
+    requires p > 1 &*& acc == modpow2(p,g,bits);
     ensures  modpow2(p,g,succ(bits))
         ==  (acc*acc)%p;
 
@@ -427,8 +427,7 @@ lemma void modpow_step_by_2(int p, int g, int e, nat bits0, int acc, int pow2,
     requires p > 1 &*& g >= 0 && acc == modpow2(p,g,bits0) &*& e >= 0 &*& g < p
         &*&  pow2 == pow_nat(2,bits0)
         &*&  sofar == modpow(p,g,e,bits0);
-    ensures  modpow2(p,g,succ(succ(bits0))) == (((acc*acc)%p)*((acc*acc)%p))%p
-        &*&  (e/pow2)%2 != 0
+    ensures  (e/pow2)%2 != 0
         ?    ((e/(2*pow2))%2 != 0
              ? modpow(p,g,e,succ(succ(bits0))) == (((acc*acc)%p)*((acc*sofar)%p))%p
              : modpow(p,g,e,succ(succ(bits0))) == (acc*sofar)%p
