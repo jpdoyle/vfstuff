@@ -2714,7 +2714,7 @@ lemma void modpow_step(int p, int g, int e, nat bits0, int acc, int pow2,
         &*&  pow2 == pow_nat(2,bits0)
         &*&  sofar == modpow(p,g,e,bits0);
     ensures  modpow2(p,g,succ(bits0)) == (acc*acc)%p
-        &*&  (e/pow2)%2 == 1
+        &*&  (e/pow2)%2 != 0
         ?    modpow(p,g,e,succ(bits0)) == (acc*sofar)%p
         :    modpow(p,g,e,succ(bits0)) == sofar
         ;
@@ -2723,7 +2723,7 @@ lemma void modpow_step(int p, int g, int e, nat bits0, int acc, int pow2,
     modpow_correct_general(p,g,e,succ(bits0));
     division_unique(p,p,1,0);
 
-    if((e/pow2)%2 == 1) {
+    if((e/pow2)%2 != 0) {
         assert modpow(p,g,e,succ(bits0))
             == (acc*sofar)%p;
     } else {
@@ -2735,19 +2735,19 @@ lemma void modpow_step(int p, int g, int e, nat bits0, int acc, int pow2,
     }
 }
 
-lemma void modpow_step_by_2(int p, int g, int e, nat bits0, int acc, int pow2,
+lemma void modpow_step_by_2_inner(int p, int g, int e, nat bits0, int acc, int pow2,
         int sofar)
     requires p > 1 &*& g >= 0 &*& acc == modpow2(p,g,bits0) &*& e >= 0
         &*&  pow2 == pow_nat(2,bits0)
         &*&  sofar == modpow(p,g,e,bits0)
         &*&  let((acc*acc)%p,?acc1);
     ensures  modpow2(p,g,succ(succ(bits0))) == (acc1*acc1)%p
-        &*&  (e/pow2)%2 == 1
-        ?    ((e/(2*pow2))%2 == 1
+        &*&  (e/pow2)%2 != 0
+        ?    ((e/(2*pow2))%2 != 0
              ? modpow(p,g,e,succ(succ(bits0))) == (acc1*((acc*sofar)%p))%p
              : modpow(p,g,e,succ(succ(bits0))) == (acc*sofar)%p
              )
-        :    ((e/(2*pow2))%2 == 1
+        :    ((e/(2*pow2))%2 != 0
              ? modpow(p,g,e,succ(succ(bits0))) == (acc1*sofar)%p
              : modpow(p,g,e,succ(succ(bits0))) == sofar
              )
@@ -2757,9 +2757,9 @@ lemma void modpow_step_by_2(int p, int g, int e, nat bits0, int acc, int pow2,
     int next_sofar = sofar;
     note_eq(acc1,(acc*acc)%p);
 
-    if((e/pow2)%2 == 1) {
+    if((e/pow2)%2 != 0) {
         modpow_step(p,g,e,succ(bits0),(acc*acc)%p,2*pow2,(acc*sofar)%p);
-        if((e/(2*pow2))%2 == 1) {
+        if((e/(2*pow2))%2 != 0) {
             if(modpow(p,g,e,succ(succ(bits0))) !=
                 (acc1*((acc*sofar)%p))%p) { assert false; }
         } else {
@@ -2768,7 +2768,7 @@ lemma void modpow_step_by_2(int p, int g, int e, nat bits0, int acc, int pow2,
         }
     } else {
         modpow_step(p,g,e,succ(bits0),(acc*acc)%p,2*pow2,sofar);
-        if((e/(2*pow2))%2 == 1) {
+        if((e/(2*pow2))%2 != 0) {
             if(modpow(p,g,e,succ(succ(bits0))) !=
                 (acc1*sofar)%p) { assert false; }
         } else {
@@ -2776,6 +2776,49 @@ lemma void modpow_step_by_2(int p, int g, int e, nat bits0, int acc, int pow2,
                 sofar) { assert false; }
         }
     }
+}
+
+lemma void modpowp_correct(int p, int g, int e, nat bits)
+    requires modpowp(p,g,e,bits,_,?p2,?x)
+        &*&  p2 > e;
+    ensures  x == euclid_mod(pow_nat(g,nat_of_int(e)),p);
+{
+    open modpowp(_,_,_,_,_,_,_);
+    modpow_correct(p,g,e,bits);
+}
+
+lemma void modpow_step_by_2(int p, int g, int e, nat bits0, int acc, int pow2, int sofar)
+    requires modpowp(p,g,e,bits0,acc,pow2,sofar);
+    ensures  (e/pow2)%2 != 0
+        ?    ((e/(2*pow2))%2 != 0
+             ? modpowp(p, g, e, succ(succ(bits0)),
+                 (((acc*acc)%p)*((acc*acc)%p))%p,
+                 4*pow2,
+                 (((acc*acc)%p)*((acc*sofar)%p))%p)
+             : modpowp(p, g, e, succ(succ(bits0)),
+                 (((acc*acc)%p)*((acc*acc)%p))%p,
+                 4*pow2,
+                 (acc*sofar)%p)
+             )
+        :    ((e/(2*pow2))%2 != 0
+             ? modpowp(p,g,e,succ(succ(bits0)),
+                 (((acc*acc)%p)*((acc*acc)%p))%p,
+                 4*pow2,
+                 (((acc*acc)%p)*sofar)%p)
+             : modpowp(p,g,e,succ(succ(bits0)),
+                 (((acc*acc)%p)*((acc*acc)%p))%p,
+                 4*pow2,
+                 sofar)
+             )
+        ;
+{
+    open modpowp(p,g,e,bits0,acc,pow2,sofar);
+    modpow_step_by_2_inner(p,g,e,bits0,acc,pow2,sofar);
+    if((e/pow2)%2 != 0) { sofar = (acc*sofar)%p; }
+    pow2 = 2*pow2; bits0 = succ(bits0); acc = (acc*acc)%p;
+    if((e/pow2)%2 != 0) { sofar = (acc*sofar)%p; }
+    pow2 = 2*pow2; bits0 = succ(bits0); acc = (acc*acc)%p;
+    close modpowp(p,g,e,bits0,acc,pow2,sofar);
 }
 
 

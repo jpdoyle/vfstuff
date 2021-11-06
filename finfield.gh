@@ -422,19 +422,40 @@ lemma void modpow_step(int p, int g, int e, nat bits0, int acc, int pow2,
         :    modpow(p,g,e,succ(bits0)) == sofar
         ;
 
-lemma void modpow_step_by_2(int p, int g, int e, nat bits0, int acc, int pow2,
-        int sofar);
-    requires p > 1 &*& g >= 0 && acc == modpow2(p,g,bits0) &*& e >= 0 &*& g < p
+predicate modpowp(int p,int g,int e,nat bits0;int acc, int pow2, int sofar) =
+    p > 1 &*& e >= 0  &*& g >= 0 &*& g < p
+        &*&  acc == modpow2(p,g,bits0)
         &*&  pow2 == pow_nat(2,bits0)
         &*&  sofar == modpow(p,g,e,bits0);
+
+lemma void modpowp_correct(int p, int g, int e, nat bits);
+    requires modpowp(p,g,e,bits,_,?p2,?x)
+        &*&  p2 > e;
+    ensures  x == euclid_mod(pow_nat(g,nat_of_int(e)),p);
+
+lemma void modpow_step_by_2(int p, int g, int e, nat bits0, int acc, int pow2,
+        int sofar);
+    requires modpowp(p,g,e,bits0,acc,pow2,sofar);
     ensures  (e/pow2)%2 != 0
         ?    ((e/(2*pow2))%2 != 0
-             ? modpow(p,g,e,succ(succ(bits0))) == (((acc*acc)%p)*((acc*sofar)%p))%p
-             : modpow(p,g,e,succ(succ(bits0))) == (acc*sofar)%p
+             ? modpowp(p, g, e, succ(succ(bits0)),
+                 (((acc*acc)%p)*((acc*acc)%p))%p,
+                 4*pow2,
+                 (((acc*acc)%p)*((acc*sofar)%p))%p)
+             : modpowp(p, g, e, succ(succ(bits0)),
+                 (((acc*acc)%p)*((acc*acc)%p))%p,
+                 4*pow2,
+                 (acc*sofar)%p)
              )
         :    ((e/(2*pow2))%2 != 0
-             ? modpow(p,g,e,succ(succ(bits0))) == (((acc*acc)%p)*sofar)%p
-             : modpow(p,g,e,succ(succ(bits0))) == sofar
+             ? modpowp(p,g,e,succ(succ(bits0)),
+                 (((acc*acc)%p)*((acc*acc)%p))%p,
+                 4*pow2,
+                 (((acc*acc)%p)*sofar)%p)
+             : modpowp(p,g,e,succ(succ(bits0)),
+                 (((acc*acc)%p)*((acc*acc)%p))%p,
+                 4*pow2,
+                 sofar)
              )
         ;
 
