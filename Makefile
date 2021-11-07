@@ -34,7 +34,7 @@ core_lib: ${CORE_LIB}
 demos: ${DEMOS} ${CORE_LIB}
 	${VF} ${CORE_LIB} ${DEMOS}
 
-P25519_LIB = p25519/p25519_generated.vfmanifest p25519/p448_generated.vfmanifest p25519/p25519.vfmanifest
+P25519_LIB = p25519/p25519_generated.vfmanifest p25519/p448_generated.vfmanifest p25519/p569_generated.vfmanifest p25519/p25519.vfmanifest
 
 p25519_lib: ${P25519_LIB} ${CORE_LIB}
 	${VF} ${CORE_LIB} ${P25519_LIB}
