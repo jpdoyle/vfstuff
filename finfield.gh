@@ -128,8 +128,9 @@ fixpoint bool pratt_pow_thing(int p, int x, int q) {
 
 lemma
 void pratt_pow_thing_auto(int p, int x, int q)
-    requires !pratt_pow_thing(p,x,q);
-    ensures  euclid_mod(pow_nat(x,nat_of_int((p-1)/q)),p) == 1;
+    requires !pratt_pow_thing(p,x,q)
+        &*&  euclid_mod(pow_nat(x,nat_of_int((p-1)/q)),p) != 1;
+    ensures  false;
 {}
 
 lemma void pratt_order_check_lemma(int p, list<int> p_minus_1, int x);
@@ -422,42 +423,114 @@ lemma void modpow_step(int p, int g, int e, nat bits0, int acc, int pow2,
         :    modpow(p,g,e,succ(bits0)) == sofar
         ;
 
-predicate modpowp(int p,int g,int e,nat bits0;int acc, int pow2, int sofar) =
+predicate modpowp(int p,int g,int e,nat bits0,int ediv,int acc, int acc1,
+        int acc2, int acc3, int sofar) =
     p > 1 &*& e >= 0  &*& g >= 0 &*& g < p
         &*&  acc == modpow2(p,g,bits0)
-        &*&  pow2 == pow_nat(2,bits0)
+        &*&  acc1 == (acc*acc)%p
+        &*&  acc2 == (acc1*acc1)%p &*& acc3 == (acc2*acc2)%p
+        &*&  ediv == (e/pow_nat(2,bits0))
         &*&  sofar == modpow(p,g,e,bits0);
 
-lemma void modpowp_correct(int p, int g, int e, nat bits);
-    requires modpowp(p,g,e,bits,_,?p2,?x)
-        &*&  p2 > e;
-    ensures  x == euclid_mod(pow_nat(g,nat_of_int(e)),p);
+lemma void modpowp_correct(int p, int g, int e);
+    requires modpowp(p,g,e,_,0,_,_,_,_,?x);
+    ensures  euclid_mod(pow_nat(g,nat_of_int(e)),p) == x;
 
-lemma void modpow_step_by_2(int p, int g, int e, nat bits0, int acc, int pow2,
-        int sofar);
-    requires modpowp(p,g,e,bits0,acc,pow2,sofar);
-    ensures  (e/pow2)%2 != 0
-        ?    ((e/(2*pow2))%2 != 0
-             ? modpowp(p, g, e, succ(succ(bits0)),
-                 (((acc*acc)%p)*((acc*acc)%p))%p,
-                 4*pow2,
-                 (((acc*acc)%p)*((acc*sofar)%p))%p)
-             : modpowp(p, g, e, succ(succ(bits0)),
-                 (((acc*acc)%p)*((acc*acc)%p))%p,
-                 4*pow2,
+lemma
+void pratt_pow_thing_modpowp(int p, int x, int q);
+    requires modpowp(p,x,(p-1)/q,_,0,_,_,_,_,?y)
+        &*&  !pratt_pow_thing(p,x,q);
+    ensures  y == 1;
+
+lemma void modpow_step_by_2(int p, int g, int e, int acc, int acc1, int sofar);
+    requires modpowp(p,g,e,_,?ediv,acc,acc1,?acc2,?acc3,sofar)
+        &*&  let((acc3*acc3)%p,?acc4)
+        &*&  let((acc4*acc4)%p,?acc5);
+    ensures  ediv%2 != 0
+        ?    ((ediv/2)%2 != 0
+             ? modpowp(p, g, e, _, ediv/4, acc2, acc3, acc4, acc5,
+                 (acc1*((acc*sofar)%p))%p)
+             : modpowp(p, g, e, _, ediv/4, acc2, acc3, acc4, acc5,
                  (acc*sofar)%p)
              )
-        :    ((e/(2*pow2))%2 != 0
-             ? modpowp(p,g,e,succ(succ(bits0)),
-                 (((acc*acc)%p)*((acc*acc)%p))%p,
-                 4*pow2,
-                 (((acc*acc)%p)*sofar)%p)
-             : modpowp(p,g,e,succ(succ(bits0)),
-                 (((acc*acc)%p)*((acc*acc)%p))%p,
-                 4*pow2,
-                 sofar)
+        :    ((ediv/2)%2 != 0
+             ? modpowp(p,g,e,_, ediv/4, acc2, acc3, acc4, acc5,
+                 (acc1*sofar)%p)
+             : modpowp(p,g,e,_, ediv/4, acc2, acc3, acc4, acc5, sofar)
              )
         ;
+
+lemma void modpow_step_by_4(int p, int g, int e, int acc, int acc1, int
+        acc2, int acc3, int sofar);
+    requires modpowp(p,g,e,_,?ediv,acc,acc1,acc2,acc3,sofar)
+
+        &*&  let((acc3*acc3)%p,?acc4)
+        &*&  let((acc4*acc4)%p,?acc5)
+        &*&  let((acc5*acc5)%p,?acc6)
+        &*&  let((acc6*acc6)%p,?acc7);
+    ensures  ediv%2 != 0
+        ?    ((ediv/2)%2 != 0
+             ? ((ediv/4)%2 != 0
+                ? ((ediv/8)%2 != 0
+                    ? modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
+                        (acc3*((acc2*((acc1*((acc*sofar)%p))%p))%p))%p)
+                    : modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
+                        (acc2*((acc1*((acc*sofar)%p))%p))%p)
+                    )
+                : ((ediv/8)%2 != 0
+                    ? modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
+                        (acc3*((acc1*((acc*sofar)%p))%p))%p)
+                    : modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
+                        (acc1*((acc*sofar)%p))%p)
+                    )
+                )
+             : ((ediv/4)%2 != 0
+                ? ((ediv/8)%2 != 0
+                    ? modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
+                        (acc3*((acc2*((acc*sofar)%p))%p))%p)
+                    : modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
+                        (acc2*((acc*sofar)%p))%p)
+                    )
+                : ((ediv/8)%2 != 0
+                    ? modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
+                        (acc3*((acc*sofar)%p))%p)
+                    : modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
+                        (acc*sofar)%p)
+                    )
+                )
+             )
+        :    ((ediv/2)%2 != 0
+             ? ((ediv/4)%2 != 0
+                ? ((ediv/8)%2 != 0
+                    ? modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
+                        (acc3*((acc2*((acc1*sofar)%p))%p))%p)
+                    : modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
+                        (acc2*((acc1*sofar)%p))%p)
+                    )
+                : ((ediv/8)%2 != 0
+                    ? modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
+                        (acc3*((acc1*sofar)%p))%p)
+                    : modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
+                        (acc1*sofar)%p)
+                    )
+                )
+             : ((ediv/4)%2 != 0
+                ? ((ediv/8)%2 != 0
+                    ? modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
+                        (acc3*((acc2*sofar)%p))%p)
+                    : modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
+                        (acc2*sofar)%p)
+                    )
+                : ((ediv/8)%2 != 0
+                    ? modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
+                        (acc3*sofar)%p)
+                    : modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
+                        sofar)
+                    )
+                )
+             )
+        ;
+
 
 //lemma pratt_cert build_pratt_cert(int p, int g, int e, int e_factor)
 //    requires pratt_certificate(_,1,_,e_factor)
