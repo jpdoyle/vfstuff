@@ -2975,8 +2975,6 @@ lemma void modpow_step_by_4(int p, int g, int e, int acc, int acc1, int
         mod_sign(acc1*acc1,p);
         my_mul_mono_l(0,acc2,acc2);
         mod_sign(acc2*acc2,p);
-        my_mul_mono_l(0,acc3,acc3);
-        mod_sign(acc3*acc3,p);
         assert false;
     }
 
