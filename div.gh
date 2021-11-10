@@ -68,6 +68,10 @@ lemma void mod_twice(int x, int d1, int d2);
     requires d1 > 0 &*& x >= 0 &*& d2 > 0 &*& d1%d2 == 0;
     ensures  (x%d1)%d2 == x%d2;
 
+lemma void mod_2(int x);
+    requires x >= 0;
+    ensures  x%2 == 0 ? true : x%2 == 1;
+
 fixpoint pair<int,int> euclid_div_inner(nat f, int D, int d, int q) {
     switch(f) {
     case zero:

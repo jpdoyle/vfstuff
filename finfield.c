@@ -2569,7 +2569,7 @@ lemma void modpow2_correct(int p, int g, nat bits)
         ==   euclid_mod(pow_nat(g%p,
                             nat_of_int(pow_nat(2,bits))),
                         p);
-{
+{ ALREADY_PROVEN()
     switch(bits) {
     case zero:
         euclid_mod_nonneg_auto(g, p);
@@ -2586,7 +2586,7 @@ lemma void modpow_correct_general(int p, int g, int e, nat bits)
     requires p > 1 &*& g >= 0 &*& e >= 0;
     ensures  modpow(p,g,e,bits)
         ==   euclid_mod(pow_nat(g,nat_of_int(e%pow_nat(2,bits))),p);
-{
+{ ALREADY_PROVEN()
     switch(bits) {
     case zero:
         assert pow_nat(2,bits) == 1;
@@ -2697,7 +2697,7 @@ lemma void modpow_correct_general(int p, int g, int e, nat bits)
 lemma void modpow_correct(int p, int g, int e, nat bits)
     requires p > 1 &*& g >= 0 &*& pow_nat(2,bits) > e &*& e >= 0;
     ensures  modpow(p,g,e,bits) == euclid_mod(pow_nat(g,nat_of_int(e)),p);
-{
+{ ALREADY_PROVEN()
     division_unique(e,pow_nat(2,bits),0,e);
     modpow_correct_general(p,g,e,bits);
 }
@@ -2718,7 +2718,7 @@ lemma void modpow_step(int p, int g, int e, nat bits0, int acc, int pow2,
         ?    modpow(p,g,e,succ(bits0)) == (acc*sofar)%p
         :    modpow(p,g,e,succ(bits0)) == sofar
         ;
-{
+{ ALREADY_PROVEN()
     modpow_correct_general(p,g,e,bits0);
     modpow_correct_general(p,g,e,succ(bits0));
     division_unique(p,p,1,0);
@@ -2752,7 +2752,7 @@ lemma void modpow_step_by_2_inner(int p, int g, int e, nat bits0, int acc, int p
              : modpow(p,g,e,succ(succ(bits0))) == sofar
              )
         ;
-{
+{ ALREADY_PROVEN()
     modpow_step(p,g,e,bits0,acc,pow2,sofar);
     int next_sofar = sofar;
     note_eq(acc1,(acc*acc)%p);
@@ -2781,7 +2781,7 @@ lemma void modpow_step_by_2_inner(int p, int g, int e, nat bits0, int acc, int p
 lemma void modpowp_correct(int p, int g, int e)
     requires modpowp(p,g,e,?bits,0,_,_,_,_,?x);
     ensures  x == euclid_mod(pow_nat(g,nat_of_int(e)),p);
-{
+{ ALREADY_PROVEN()
     open modpowp(_,_,_,_,_,_,_,_,_,_);
     assert 0 == e/pow_nat(2,bits);
     div_rem(e,pow_nat(2,bits));
@@ -2807,7 +2807,7 @@ lemma void modpow_step_by_2(int p, int g, int e, int acc, int acc1, int sofar)
              : modpowp(p,g,e,succ(succ(bits0)), ediv/4, acc2, acc3, acc4, acc5, sofar)
              )
         ;
-{
+{ ALREADY_PROVEN()
     open modpowp(p,g,e,bits0,ediv,acc,acc1,acc2,acc3,sofar);
     modpow_step_by_2_inner(p,g,e,bits0,acc,pow_nat(2,bits0),sofar);
     int orig_ediv = ediv;
@@ -2933,6 +2933,7 @@ lemma void modpow_step_by_2(int p, int g, int e, int acc, int acc1, int sofar)
 }
 
 
+
 lemma void modpow_step_by_4(int p, int g, int e, int acc, int acc1, int
         acc2, int acc3, int sofar)
     requires modpowp(p,g,e,?bits0,?ediv,acc,acc1,acc2,acc3,sofar)
@@ -2940,97 +2941,77 @@ lemma void modpow_step_by_4(int p, int g, int e, int acc, int acc1, int
         &*&  let((acc3*acc3)%p,?acc4)
         &*&  let((acc4*acc4)%p,?acc5)
         &*&  let((acc5*acc5)%p,?acc6)
-        &*&  let((acc6*acc6)%p,?acc7);
-    ensures  ediv%2 != 0
-        ?    ((ediv/2)%2 != 0
-             ? ((ediv/4)%2 != 0
-                ? ((ediv/8)%2 != 0
-                    ? modpowp(p, g, e, succ(succ(succ(succ(bits0)))),
-                        ediv/16, acc4, acc5, acc6,acc7,
-                        (acc3*((acc2*((acc1*((acc*sofar)%p))%p))%p))%p)
-                    : modpowp(p, g, e, succ(succ(succ(succ(bits0)))),
-                        ediv/16, acc4, acc5, acc6,acc7,
-                        (acc2*((acc1*((acc*sofar)%p))%p))%p)
-                    )
-                : ((ediv/8)%2 != 0
-                    ? modpowp(p, g, e, succ(succ(succ(succ(bits0)))),
-                        ediv/16, acc4, acc5, acc6,acc7,
-                        (acc3*((acc1*((acc*sofar)%p))%p))%p)
-                    : modpowp(p, g, e, succ(succ(succ(succ(bits0)))),
-                        ediv/16, acc4, acc5, acc6,acc7,
-                        (acc1*((acc*sofar)%p))%p)
-                    )
-                )
-             : ((ediv/4)%2 != 0
-                ? ((ediv/8)%2 != 0
-                    ? modpowp(p, g, e, succ(succ(succ(succ(bits0)))),
-                        ediv/16, acc4, acc5, acc6,acc7,
-                        (acc3*((acc2*((acc*sofar)%p))%p))%p)
-                    : modpowp(p, g, e, succ(succ(succ(succ(bits0)))),
-                        ediv/16, acc4, acc5, acc6,acc7,
-                        (acc2*((acc*sofar)%p))%p)
-                    )
-                : ((ediv/8)%2 != 0
-                    ? modpowp(p, g, e, succ(succ(succ(succ(bits0)))),
-                        ediv/16, acc4, acc5, acc6,acc7,
-                        (acc3*((acc*sofar)%p))%p)
-                    : modpowp(p, g, e, succ(succ(succ(succ(bits0)))),
-                        ediv/16, acc4, acc5, acc6,acc7,
-                        (acc*sofar)%p)
-                    )
-                )
-             )
-        :    ((ediv/2)%2 != 0
-             ? ((ediv/4)%2 != 0
-                ? ((ediv/8)%2 != 0
-                    ? modpowp(p, g, e, succ(succ(succ(succ(bits0)))),
-                        ediv/16, acc4, acc5, acc6,acc7,
-                        (acc3*((acc2*((acc1*sofar)%p))%p))%p)
-                    : modpowp(p, g, e, succ(succ(succ(succ(bits0)))),
-                        ediv/16, acc4, acc5, acc6,acc7,
-                        (acc2*((acc1*sofar)%p))%p)
-                    )
-                : ((ediv/8)%2 != 0
-                    ? modpowp(p, g, e, succ(succ(succ(succ(bits0)))),
-                        ediv/16, acc4, acc5, acc6,acc7,
-                        (acc3*((acc1*sofar)%p))%p)
-                    : modpowp(p, g, e, succ(succ(succ(succ(bits0)))),
-                        ediv/16, acc4, acc5, acc6,acc7,
-                        (acc1*sofar)%p)
-                    )
-                )
-             : ((ediv/4)%2 != 0
-                ? ((ediv/8)%2 != 0
-                    ? modpowp(p, g, e, succ(succ(succ(succ(bits0)))),
-                        ediv/16, acc4, acc5, acc6,acc7,
-                        (acc3*((acc2*sofar)%p))%p)
-                    : modpowp(p, g, e, succ(succ(succ(succ(bits0)))),
-                        ediv/16, acc4, acc5, acc6,acc7,
-                        (acc2*sofar)%p)
-                    )
-                : ((ediv/8)%2 != 0
-                    ? modpowp(p, g, e, succ(succ(succ(succ(bits0)))),
-                        ediv/16, acc4, acc5, acc6,acc7,
-                        (acc3*sofar)%p)
-                    : modpowp(p, g, e, succ(succ(succ(succ(bits0)))),
-                        ediv/16, acc4, acc5, acc6,acc7,
-                        sofar)
-                    )
-                )
-             )
+        &*&  let((acc6*acc6)%p,?acc7)
+        &*&  let(MULT_SELECT( ediv   %2, acc *sofar , sofar )%p, ?sofar1)
+        &*&  let(MULT_SELECT((ediv/2)%2, acc1*sofar1, sofar1)%p, ?sofar2)
+        &*&  let(MULT_SELECT((ediv/4)%2, acc2*sofar2, sofar2)%p, ?sofar3)
+        &*&  let(MULT_SELECT((ediv/8)%2, acc3*sofar3, sofar3)%p, ?sofar4)
         ;
+
+    ensures  modpowp(p, g, e, succ(succ(succ(succ(bits0)))), ediv/16, acc4, acc5, acc6,acc7, sofar4);
 {
     div_twice(ediv,4,2);
     div_twice(ediv,4,4);
 
+    if(ediv < 0 || p <= 0) {
+        open modpowp(_,_,_,_,_,_,_,_,_,_);
+        assert e >= 0;
+        div_sign(e,pow_nat(2,bits0));
+        assert false;
+    }
+
+    if(sofar < 0 || sofar >= p) {
+        open modpowp(_,_,_,_,_,_,_,_,_,_);
+        modpow_range(p,g,e,bits0);
+        assert false;
+    }
+
+    if(acc < 0 || acc1 < 0 || acc2 < 0 || acc3 < 0) {
+        open modpowp(_,_,_,_,_,_,_,_,_,_);
+        modpow2_correct(p,g,bits0);
+        my_mul_mono_l(0,acc,acc);
+        mod_sign(acc*acc,p);
+        my_mul_mono_l(0,acc1,acc1);
+        mod_sign(acc1*acc1,p);
+        my_mul_mono_l(0,acc2,acc2);
+        mod_sign(acc2*acc2,p);
+        my_mul_mono_l(0,acc3,acc3);
+        mod_sign(acc3*acc3,p);
+        assert false;
+    }
+
+    mod_2(ediv);
+    div_sign(ediv,2);
+    mod_2(ediv/2);
+    div_sign(ediv,4);
+    mod_2(ediv/4);
+    div_sign(ediv/4,2);
+    mod_2(ediv/8);
+
     modpow_step_by_2(p,g,e,acc,acc1,sofar);
-    if((ediv)%2 != 0) { sofar = (acc*sofar)%p; }
-    if((ediv/2)%2 != 0) { sofar = (acc1*sofar)%p; }
+    division_unique(sofar,p,0,sofar);
+    my_mul_mono_l(0,acc,sofar);
+    div_rem(acc*sofar,p);
+    mod_sign(acc*sofar,p);
+    if((ediv)%2 != 0) { assert ediv%2 == 1; sofar = (acc*sofar)%p; }
+    division_unique(sofar,p,0,sofar);
+    my_mul_mono_l(0,acc1,sofar);
+    div_rem(acc1*sofar,p);
+    mod_sign(acc1*sofar,p);
+    if((ediv/2)%2 != 0) { assert (ediv/2)%2 == 1; sofar = (acc1*sofar)%p; }
     ediv /= 4;
 
     modpow_step_by_2(p,g,e,acc2,acc3,sofar);
-    if((ediv)%2 != 0) { sofar = (acc2*sofar)%p; }
-    if((ediv/2)%2 != 0) { sofar = (acc3*sofar)%p; }
+    division_unique(sofar,p,0,sofar);
+    my_mul_mono_l(0,acc2,sofar);
+    div_rem(acc2*sofar,p);
+    mod_sign(acc2*sofar,p);
+    if((ediv)%2 != 0) { assert (ediv)%2 == 1; sofar = (acc2*sofar)%p; }
+    division_unique(sofar,p,0,sofar);
+    my_mul_mono_l(0,acc3,sofar);
+    div_rem(acc3*sofar,p);
+    mod_sign(acc3*sofar,p);
+    if((ediv/2)%2 != 0) { assert (ediv/2)%2 == 1; sofar = (acc3*sofar)%p; }
     ediv /= 4;
 }
 

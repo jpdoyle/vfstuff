@@ -23,10 +23,12 @@ clean:
 %.vfmanifest: %.c %.gh %.h
 	${VF} -c $<
 
-CORE_LIB  = axioms/prelude.vfmanifest nats.vfmanifest core.vfmanifest mul.vfmanifest div.vfmanifest util.vfmanifest
-CORE_LIB += lists.vfmanifest poly.vfmanifest axioms/bitops_axioms.vfmanifest bitops.vfmanifest
-CORE_LIB += axioms/call_perms.vfmanifest termination.vfmanifest numtheo.vfmanifest
-CORE_LIB += finfield.vfmanifest
+CORE_LIB  = axioms/prelude.vfmanifest nats.vfmanifest core.vfmanifest
+CROE_LIB += mul.vfmanifest div.vfmanifest util.vfmanifest
+CORE_LIB += lists.vfmanifest poly.vfmanifest
+CORE_LIB += axioms/bitops_axioms.vfmanifest bitops.vfmanifest
+CORE_LIB += axioms/call_perms.vfmanifest termination.vfmanifest
+CORE_LIB += numtheo.vfmanifest finfield.vfmanifest
 
 core_lib: ${CORE_LIB}
 	${VF} ${CORE_LIB}

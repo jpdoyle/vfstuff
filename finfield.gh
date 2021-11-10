@@ -398,6 +398,12 @@ fixpoint int modpow(int p, int g, int e, nat bits) {
     }
 }
 
+lemma_auto(modpow(p,g,e,bits))
+void modpow_range(int p, int g, int e, nat bits);
+    requires p >= 0 && g >= 0;
+    ensures  modpow(p,g,e,bits) >= 0 && modpow(p,g,e,bits) < p;
+
+
 lemma void modpow_correct_general(int p, int g, int e, nat bits);
     requires p > 1 &*& g >= 0 &*& e >= 0;
     ensures  modpow(p,g,e,bits)
@@ -460,6 +466,8 @@ lemma void modpow_step_by_2(int p, int g, int e, int acc, int acc1, int sofar);
              )
         ;
 
+#define MULT_SELECT(p,a,b) ((p)*(a) + (1-(p))*(b))
+
 lemma void modpow_step_by_4(int p, int g, int e, int acc, int acc1, int
         acc2, int acc3, int sofar);
     requires modpowp(p,g,e,_,?ediv,acc,acc1,acc2,acc3,sofar)
@@ -467,69 +475,14 @@ lemma void modpow_step_by_4(int p, int g, int e, int acc, int acc1, int
         &*&  let((acc3*acc3)%p,?acc4)
         &*&  let((acc4*acc4)%p,?acc5)
         &*&  let((acc5*acc5)%p,?acc6)
-        &*&  let((acc6*acc6)%p,?acc7);
-    ensures  ediv%2 != 0
-        ?    ((ediv/2)%2 != 0
-             ? ((ediv/4)%2 != 0
-                ? ((ediv/8)%2 != 0
-                    ? modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
-                        (acc3*((acc2*((acc1*((acc*sofar)%p))%p))%p))%p)
-                    : modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
-                        (acc2*((acc1*((acc*sofar)%p))%p))%p)
-                    )
-                : ((ediv/8)%2 != 0
-                    ? modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
-                        (acc3*((acc1*((acc*sofar)%p))%p))%p)
-                    : modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
-                        (acc1*((acc*sofar)%p))%p)
-                    )
-                )
-             : ((ediv/4)%2 != 0
-                ? ((ediv/8)%2 != 0
-                    ? modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
-                        (acc3*((acc2*((acc*sofar)%p))%p))%p)
-                    : modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
-                        (acc2*((acc*sofar)%p))%p)
-                    )
-                : ((ediv/8)%2 != 0
-                    ? modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
-                        (acc3*((acc*sofar)%p))%p)
-                    : modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
-                        (acc*sofar)%p)
-                    )
-                )
-             )
-        :    ((ediv/2)%2 != 0
-             ? ((ediv/4)%2 != 0
-                ? ((ediv/8)%2 != 0
-                    ? modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
-                        (acc3*((acc2*((acc1*sofar)%p))%p))%p)
-                    : modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
-                        (acc2*((acc1*sofar)%p))%p)
-                    )
-                : ((ediv/8)%2 != 0
-                    ? modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
-                        (acc3*((acc1*sofar)%p))%p)
-                    : modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
-                        (acc1*sofar)%p)
-                    )
-                )
-             : ((ediv/4)%2 != 0
-                ? ((ediv/8)%2 != 0
-                    ? modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
-                        (acc3*((acc2*sofar)%p))%p)
-                    : modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
-                        (acc2*sofar)%p)
-                    )
-                : ((ediv/8)%2 != 0
-                    ? modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
-                        (acc3*sofar)%p)
-                    : modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7,
-                        sofar)
-                    )
-                )
-             )
+        &*&  let((acc6*acc6)%p,?acc7)
+        &*&  let(MULT_SELECT( ediv   %2, acc *sofar , sofar )%p, ?sofar1)
+        &*&  let(MULT_SELECT((ediv/2)%2, acc1*sofar1, sofar1)%p, ?sofar2)
+        &*&  let(MULT_SELECT((ediv/4)%2, acc2*sofar2, sofar2)%p, ?sofar3)
+        &*&  let(MULT_SELECT((ediv/8)%2, acc3*sofar3, sofar3)%p, ?sofar4)
         ;
+
+    ensures  modpowp(p, g, e, _, ediv/16, acc4, acc5, acc6,acc7, sofar4);
 
 
 //lemma pratt_cert build_pratt_cert(int p, int g, int e, int e_factor)

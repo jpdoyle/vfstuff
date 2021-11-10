@@ -6,7 +6,8 @@
 
 with nixpkgs;
 let
-  camlPackages = ocaml-ng.ocamlPackages_4_12.overrideScope' (self: super: { ocaml = super.ocaml.override { flambdaSupport = true; }; });
+  # camlPackages = ocaml-ng.ocamlPackages_4_12.overrideScope' (self: super: { ocaml = super.ocaml.override { flambdaSupport = true; }; });
+  camlPackages = ocaml-ng.ocamlPackages_4_12;
   caml = camlPackages.ocaml;
 
   z3WithOcaml = stdenv.mkDerivation rec {
