@@ -398,10 +398,10 @@ fixpoint int modpow(int p, int g, int e, nat bits) {
     }
 }
 
-lemma_auto(modpow(p,g,e,bits))
+lemma
 void modpow_range(int p, int g, int e, nat bits);
-    requires p >= 0 && g >= 0;
-    ensures  modpow(p,g,e,bits) >= 0 && modpow(p,g,e,bits) < p;
+    requires p > 1 && g >= 0 &*& e >= 0;
+    ensures  modpow(p,g,e,bits) >= 0 &*& modpow(p,g,e,bits) < p;
 
 
 lemma void modpow_correct_general(int p, int g, int e, nat bits);

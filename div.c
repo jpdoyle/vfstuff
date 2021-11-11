@@ -194,6 +194,17 @@ lemma void mod_twice(int x, int d1, int d2)
     division_unique(x,d2,(d1/d2)*(x/d1) + (x%d1)/d2,(x%d1)%d2);
 }
 
+lemma void mod_2(int x)
+    requires x >= 0;
+    ensures  x%2 == 0 ? true : x%2 == 1;
+{
+    div_rem(x,2);
+    mod_sign(x,2);
+    if(x%2 <= 0) {}
+    else if(x%2 <= 1) {}
+    else { assert false; }
+}
+
 
 lemma void euclid_div_zero(int d, int q, int r)
     requires d > 0 &*& r >= 0 &*& r < d &*& 0 == q*d + r;

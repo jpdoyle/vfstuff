@@ -2702,6 +2702,47 @@ lemma void modpow_correct(int p, int g, int e, nat bits)
     modpow_correct_general(p,g,e,bits);
 }
 
+lemma
+void modpow_range(int p, int g, int e, nat bits)
+    requires p > 1 && g >= 0 &*& e >= 0;
+    ensures  modpow(p,g,e,bits) >= 0 &*& modpow(p,g,e,bits) < p;
+{
+    switch(bits) {
+    case zero:
+    case succ(bits0):
+        modpow_range(p,g,e,bits0);
+        note_eq(modpow(p,g,e,bits),
+            ((((e/pow_nat(2,bits0))%2 != 0) ? modpow2(p,g,bits0) : 1)
+             *modpow(p,g,e,bits0))%p);
+
+        div_rem((((e/pow_nat(2,bits0))%2 != 0) ? modpow2(p,g,bits0) : 1)
+                *modpow(p,g,e,bits0),
+             p);
+
+        if((((e/pow_nat(2,bits0))%2 != 0) ? modpow2(p,g,bits0) : 1)
+                < 0) {
+            if((e/pow_nat(2,bits0))%2 != 0) {
+                div_sign(e,pow_nat(2,bits0));
+                div_rem(e/pow_nat(2,bits0),2);
+                note_eq( (((e/pow_nat(2,bits0))%2 != 0) ? modpow2(p,g,bits0) : 1)
+                    ,  modpow2(p,g,bits0));
+                modpow2_correct(p,g,bits0);
+            }
+            assert false;
+        }
+
+        my_mul_mono_l(0,
+                (((e/pow_nat(2,bits0))%2 != 0) ? modpow2(p,g,bits0) : 1),
+                modpow(p,g,e,bits0));
+
+        mod_sign((((e/pow_nat(2,bits0))%2 != 0) ? modpow2(p,g,bits0) : 1)
+                *modpow(p,g,e,bits0),
+             p);
+
+    }
+}
+
+
 lemma void modpow2_step(int p, int g, nat bits, int acc)
     requires p > 1 &*& acc == modpow2(p,g,bits);
     ensures  modpow2(p,g,succ(bits))
@@ -2788,6 +2829,16 @@ lemma void modpowp_correct(int p, int g, int e)
     mod_sign(e,pow_nat(2,bits));
 
     modpow_correct(p,g,e,bits);
+}
+
+lemma
+void pratt_pow_thing_modpowp(int p, int x, int q)
+    requires modpowp(p,x,(p-1)/q,_,0,_,_,_,_,?y)
+        &*&  !pratt_pow_thing(p,x,q);
+    ensures  y == 1;
+{
+    modpowp_correct(p,x,(p-1)/q);
+    if(y != 1) {}
 }
 
 lemma void modpow_step_by_2(int p, int g, int e, int acc, int acc1, int sofar)
