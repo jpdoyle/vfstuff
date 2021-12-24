@@ -29,7 +29,9 @@ let
       enableParallelBuilding = true;
 
       configurePhase = ''
+        export OCAMLFIND_DESTDIR=$out/lib/ocaml/4.12.0/site-lib
         ocamlfind query num # && sleep 1m
+        ocamlfind printconf destdir
         mkdir -p $(ocamlfind printconf destdir)
 	${python.interpreter} scripts/mk_make.py --prefix=$out --python --ml --pypkgdir=$out/${python.sitePackages}
 	cd build
@@ -49,9 +51,9 @@ let
       meta = {
 	description = "A high-performance theorem prover and SMT solver";
 	homepage    = "https://github.com/Z3Prover/z3";
-	license     = stdenv.lib.licenses.mit;
-	platforms   = stdenv.lib.platforms.unix;
-	maintainers = [ stdenv.lib.maintainers.thoughtpolice ];
+	license     = lib.licenses.mit;
+	platforms   = lib.platforms.unix;
+	maintainers = [ lib.maintainers.thoughtpolice ];
       };
   };
 
@@ -229,7 +231,7 @@ let
 	meta = {
 	  description = "Verification for C and Java programs via separation logic";
 	  homepage    = "http://people.cs.kuleuven.be/~bart.jacobs/verifast/";
-	  license     = stdenv.lib.licenses.mit;
+	  license     = lib.licenses.mit;
 	  platforms   = [ "x86_64-linux" ];
 	  maintainers = [ "joe" ];
 	};
