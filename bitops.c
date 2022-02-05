@@ -36,28 +36,28 @@ void Z_neg_auto(Z z)
 lemma_auto(Z_size(z))
 void Z_size_bound_pos(Z z)
     requires !Z_is_neg(z);
-    ensures  int_of_Z(z) < pow_nat(2,nat_of_int(Z_size(z)));
+    ensures  int_of_Z(z) < pow_nat(2,noi(Z_size(z)));
 {
     ALREADY_PROVEN()
     switch(z) {
     case Zsign(b):
     case Zdigit(z0,b0):
         Z_size_bound_pos(z0);
-        assert nat_of_int(Z_size(z)) == succ(nat_of_int(Z_size(z0)));
+        assert noi(Z_size(z)) == succ(noi(Z_size(z0)));
     }
 }
 
 lemma_auto(Z_size(z))
 void Z_size_bound_neg(Z z)
     requires !!Z_is_neg(z);
-    ensures  -int_of_Z(z) <= pow_nat(2,nat_of_int(Z_size(z)));
+    ensures  -int_of_Z(z) <= pow_nat(2,noi(Z_size(z)));
 {
     ALREADY_PROVEN()
     switch(z) {
     case Zsign(b):
     case Zdigit(z0,b0):
         Z_size_bound_neg(z0);
-        assert nat_of_int(Z_size(z)) == succ(nat_of_int(Z_size(z0)));
+        assert noi(Z_size(z)) == succ(noi(Z_size(z0)));
     }
 }
 
@@ -186,7 +186,7 @@ lemma void bitor_no_overlap_inner(int x, Z x_Z, int y, Z y_Z, nat n)
 
 lemma_auto(npow2_inner(x,n))
 void npow2_prop_inner(int x, nat n)
-    requires abs(x) <= int_of_nat(n);
+    requires abs(x) <= ion(n);
     ensures  pow_nat(2,npow2_inner(x,n)) > abs(x);
 {
         ALREADY_PROVEN()
@@ -207,11 +207,11 @@ lemma_auto(npow2(x))
 void npow2_prop(int x)
     requires true;
     ensures  pow_nat(2,npow2(x)) > abs(x);
-{ npow2_prop_inner(x,nat_of_int(abs(x))); }
+{ npow2_prop_inner(x,noi(abs(x))); }
 
 lemma void npow2_minimal_inner(int x,nat n, nat m)
     requires pow_nat(2,n) > abs(x);
-    ensures  int_of_nat(n) >= int_of_nat(npow2_inner(x,m));
+    ensures  ion(n) >= ion(npow2_inner(x,m));
 {
     switch(m) {
     case zero:
@@ -228,14 +228,14 @@ lemma void npow2_minimal_inner(int x,nat n, nat m)
 
 lemma void npow2_minimal(int x,nat n)
     requires pow_nat(2,n) > abs(x);
-    ensures  int_of_nat(n) >= int_of_nat(npow2(x));
-{ npow2_minimal_inner(x,n,nat_of_int(abs(x))); }
+    ensures  ion(n) >= ion(npow2(x));
+{ npow2_minimal_inner(x,n,noi(abs(x))); }
 
 
 
 lemma
 void log_ceil_prop_inner(int x, nat n, nat sofar)
-    requires abs(x)-pow_nat(2,sofar) <= int_of_nat(n);
+    requires abs(x)-pow_nat(2,sofar) <= ion(n);
     ensures  pow_nat(2,log_ceil_inner(x,n,sofar)) >= abs(x);
 {
     switch(n) {
@@ -252,12 +252,12 @@ lemma_auto(log_ceil(x))
 void log_ceil_prop(int x)
     requires true;
     ensures  pow_nat(2,log_ceil(x)) >= abs(x);
-{ log_ceil_prop_inner(x,nat_of_int(abs(x)),zero); }
+{ log_ceil_prop_inner(x,noi(abs(x)),zero); }
 
 lemma void log_ceil_minimal_inner(int x,nat n, nat m, nat sofar)
     requires pow_nat(2,n)*pow_nat(2,sofar) >= abs(x);
-    ensures  int_of_nat(n) + int_of_nat(sofar)
-        >= int_of_nat(log_ceil_inner(x,m,sofar));
+    ensures  ion(n) + ion(sofar)
+        >= ion(log_ceil_inner(x,m,sofar));
 {
     switch(m) {
     case zero:
@@ -273,8 +273,8 @@ lemma void log_ceil_minimal_inner(int x,nat n, nat m, nat sofar)
 
 lemma void log_ceil_minimal(int x,nat n)
     requires pow_nat(2,n) >= abs(x);
-    ensures  int_of_nat(n) >= int_of_nat(log_ceil(x));
-{ log_ceil_minimal_inner(x,n,nat_of_int(abs(x)),zero); }
+    ensures  ion(n) >= ion(log_ceil(x));
+{ log_ceil_minimal_inner(x,n,noi(abs(x)),zero); }
 
 lemma_auto(x|y)
 void bitor_commutes(int x, int y)
@@ -631,7 +631,7 @@ lemma void shiftright_div_inner(Z x_Z, nat n)
 
 lemma void shiftright_div(int x, nat n)
     requires x >= 0;
-    ensures  x>>int_of_nat(n) == x/pow_nat(2,n);
+    ensures  x>>ion(n) == x/pow_nat(2,n);
 {
         ALREADY_PROVEN()
     Z x_Z = Z_of_uintN(x,npow2(x));
@@ -641,19 +641,19 @@ lemma void shiftright_div(int x, nat n)
 
 lemma void ashr_euclid(int x,nat n)
     requires true;
-    ensures  [_]euclid_div_sol(x,pow_nat(2,n),ASHR(x,int_of_nat(n)),_);
+    ensures  [_]euclid_div_sol(x,pow_nat(2,n),ASHR(x,ion(n)),_);
 {
         ALREADY_PROVEN()
     if(x >= 0) {
         shiftright_div(x,n);
         div_rem(x,pow_nat(2,n));
-        euclid_div_unique_intro(x,pow_nat(2,n),x>>int_of_nat(n),x%pow_nat(2,n));
+        euclid_div_unique_intro(x,pow_nat(2,n),x>>ion(n),x%pow_nat(2,n));
     } else {
         shiftright_div(-(x+1),n);
         div_rem(-(x+1),pow_nat(2,n));
 
         euclid_div_unique_intro(x,pow_nat(2,n),
-                -((-(x+1))>>int_of_nat(n))-1,
+                -((-(x+1))>>ion(n))-1,
                 -((-(x+1))%pow_nat(2,n)) + pow_nat(2,n) - 1);
     }
 }

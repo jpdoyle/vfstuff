@@ -17,7 +17,7 @@
 //#define CARRY_BITS 3
 #define CARRY_BITS 7
 #define CHUNK_BITS ((int)31-(int)CARRY_BITS)
-#define CHUNK_BASE (pow_nat(2,nat_of_int(CHUNK_BITS)))
+#define CHUNK_BASE (pow_nat(2,noi(CHUNK_BITS)))
 
 typedef struct big_int_block {
     struct big_int_block* prev;
@@ -129,7 +129,7 @@ predicate bi_big_int(big_int* b, int free_carries, bool underflow; int i)
     &*& b->is_pos |-> ?is_pos
     &*& free_carries >= 0
     &*& bi_block(first,last,0,0,_,?chunks)
-    &*& let(pow_nat(2,nat_of_int(31-free_carries))-1,?upper)
+    &*& let(pow_nat(2,noi(31-free_carries))-1,?upper)
     &*& !!forall(chunks, (bounded)(-upper,upper))
     &*& let(underflow ? -upper : 0,?lower)
     &*& free_carries <= CARRY_BITS
@@ -186,7 +186,7 @@ lemma void bi_block_rend(big_int_block* b, big_int_block* i);
 big_int_block* new_block();
     /*@ requires true; @*/
     /*@ ensures  bi_block(result, result, 0,0,
-                    _, repeat(0,nat_of_int(N_INTS))); @*/
+                    _, repeat(0,noi(N_INTS))); @*/
     /*@ terminates; @*/
 
 big_int* new_big_int_zero();

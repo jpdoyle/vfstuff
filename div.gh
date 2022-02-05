@@ -4,11 +4,11 @@
 #include "mul.gh"
 
 lemma void division_zero_unique(int d, int q, int r);
-    requires d != 0 &*& abs(r) < abs(d) &*& 0 == d*q + r;
+    requires d != 0 &*& abs_of(r) < abs_of(d) &*& 0 == d*q + r;
     ensures  q == (0/d) &*& q == 0 &*& r == (0%d) &*& r == 0;
 
 lemma void division_unique(int D, int d, int q, int r);
-    requires d != 0 &*& abs(r) < abs(d) &*& abs(d*q) <= abs(D)
+    requires d != 0 &*& abs_of(r) < abs_of(d) &*& abs_of(d*q) <= abs_of(D)
         &*&  D == d*q + r;
     ensures  q == (D/d) &*& r == (D%d);
 
@@ -30,7 +30,7 @@ lemma void div_twice(int x, int y, int z);
 
 lemma void mod_shrinks(int x, int d);
     requires d != 0;
-    ensures  abs(x%d) <= abs(x);
+    ensures  abs_of(x%d) <= abs_of(x);
 
 lemma void into_numerator(int x, int y, int d);
     requires d > 0 &*& x >= 0 &*& y >= 0;
@@ -42,7 +42,7 @@ lemma void mod_sign(int x, int d);
 
 lemma void mod_abs(int x, int d);
     requires d > 0;
-    ensures  abs(x%d) == abs(x)%d;
+    ensures  abs_of(x%d) == abs_of(x)%d;
 
 lemma void div_sign(int x, int d);
     requires d > 0;
@@ -84,12 +84,12 @@ fixpoint pair<int,int> euclid_div_inner(nat f, int D, int d, int q) {
 }
 
 fixpoint pair<int,int> euclid_div(int D, int d) {
-    return euclid_div_inner(nat_of_int(abs(D)),D,d,0);
+    return euclid_div_inner(noi(abs_of(D)),D,d,0);
 }
 
 lemma void euclid_div_fuel(nat f1, nat f0, int D, int d, int q)
-    requires int_of_nat(f1) >= int_of_nat(f0)
-        &*&  int_of_nat(f0) >= abs(D)
+    requires ion(f1) >= ion(f0)
+        &*&  ion(f0) >= abs_of(D)
         &*&  d > 0;
     ensures  euclid_div_inner(f1,D,d,q) == euclid_div_inner(f0,D,d,q);
 {
@@ -112,7 +112,7 @@ lemma void euclid_div_fuel(nat f1, nat f0, int D, int d, int q)
 }
 
 lemma void euclid_div_correct(nat f, int D, int d, int q)
-    requires int_of_nat(f) >= abs(D) &*& d > 0;
+    requires ion(f) >= abs_of(D) &*& d > 0;
     ensures  switch(euclid_div_inner(f,D,d,q)) {
         case pair(qv,rv):
             return  0 <= rv &*& rv < d &*& D + q*d == qv*d + rv;

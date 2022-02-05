@@ -60,14 +60,14 @@ big_int* big_int_from_hex(const char* s)
     /*@ close exists<list<int32_t> >(nil); @*/
     /*@ close exists<int32_t>(0); @*/
     /*@ int32_t ghost_block_shift = 0; @*/
-    /*@ note_eq(nat_of_int(N_INTS),succ(nat_of_int(N_INTS-1))); @*/
+    /*@ note_eq(noi(N_INTS),succ(noi(N_INTS-1))); @*/
 
     for(s_i = strlen(s),block_i = 0,block_shift = 0; s_i > 0; --s_i)
         /*@ requires [?lf]ret->first |-> ?first
                 &*&  [f]s[..s_i] |-> ?loop_cs
                 &*&  ret->last |-> ?last
                 &*&  bi_block(last,last,?l_prev,0,_,?chunks)
-                &*&  let(pow_nat(2,nat_of_int(CHUNK_BITS))-1, ?upper)
+                &*&  let(pow_nat(2,noi(CHUNK_BITS))-1, ?upper)
                 &*&  !!forall(chunks, (bounded)(0,upper))
                 &*&  !!forall(chunks, (bounded)(-upper,upper))
 
@@ -75,14 +75,14 @@ big_int* big_int_from_hex(const char* s)
 
                 &*&  exists<list<int32_t> >(?pref)
                 &*&  exists<int32_t>(?blk)
-                &*&  let(repeat(0,nat_of_int(N_INTS-1-block_i)),?suff)
+                &*&  let(repeat(0,noi(N_INTS-1-block_i)),?suff)
                 &*&  chunks
                     == append(pref, cons(blk,suff))
                 &*&  block_i == length(pref)
                 &*&  0 <= block_shift &*& block_shift <= CHUNK_BITS-4
                 &*&  block_shift == ghost_block_shift*4
                 &*&  blk >= 0
-                &*&  blk < pow_nat(2,nat_of_int(block_shift))
+                &*&  blk < pow_nat(2,noi(block_shift))
                 ; @*/
         /*@ ensures  [ lf]ret->first |->  first
                 &*&  [f]s[..old_s_i] |-> loop_cs
@@ -96,7 +96,7 @@ big_int* big_int_from_hex(const char* s)
                     == poly_eval(chunks,
                             CHUNK_BASE)
                         + loop_val*pow_nat(2,
-                            nat_of_int(old_block_i*CHUNK_BITS
+                            noi(old_block_i*CHUNK_BITS
                                 +old_block_shift))
                 ; @*/
         /*@ decreases s_i; @*/
@@ -137,66 +137,66 @@ big_int* big_int_from_hex(const char* s)
         /*@ {
             assert N_INTS-block_i >= 1;
             assert block_i >= 0;
-            assert nib >= 0 &*& nib < pow_nat(2,nat_of_int(4));
-            pow_plus(2,nat_of_int(4),block_shift);
-            assert pow_nat(2,nat_of_int(4))
-                    *pow_nat(2,nat_of_int(block_shift))
-                == pow_nat(2,nat_of_int(4+block_shift));
-            my_mul_mono_r(nib,0,pow_nat(2,nat_of_int(block_shift)));
-            assert nib*pow_nat(2,nat_of_int(block_shift)) >= 0;
-            my_mul_strict_mono_l(nib,pow_nat(2,nat_of_int(4)),pow_nat(2,nat_of_int(block_shift)));
-            assert nib*pow_nat(2,nat_of_int(block_shift))
-                <  pow_nat(2,nat_of_int(4+block_shift));
+            assert nib >= 0 &*& nib < pow_nat(2,noi(4));
+            pow_plus(2,noi(4),block_shift);
+            assert pow_nat(2,noi(4))
+                    *pow_nat(2,noi(block_shift))
+                == pow_nat(2,noi(4+block_shift));
+            my_mul_mono_r(nib,0,pow_nat(2,noi(block_shift)));
+            assert nib*pow_nat(2,noi(block_shift)) >= 0;
+            my_mul_strict_mono_l(nib,pow_nat(2,noi(4)),pow_nat(2,noi(block_shift)));
+            assert nib*pow_nat(2,noi(block_shift))
+                <  pow_nat(2,noi(4+block_shift));
 
-            shiftleft_def(nib,nat_of_int(block_shift));
-            bitor_no_overlap(nib,blk,nat_of_int(block_shift));
+            shiftleft_def(nib,noi(block_shift));
+            bitor_no_overlap(nib,blk,noi(block_shift));
 
             ints_split_as(&last->chunks[0],pref,cons(blk,suff));
             ints_limits2((&last->chunks[0]) + block_i);
             assert (&last->chunks[0])[block_i] |-> blk;
-            pow_monotonic(2,nat_of_int(4+block_shift),
+            pow_monotonic(2,noi(4+block_shift),
                 N32);
-            pow_monotonic(2,nat_of_int(4+block_shift),
-                nat_of_int(30));
-            pow_monotonic(2,nat_of_int(block_shift),
-                nat_of_int(30));
+            pow_monotonic(2,noi(4+block_shift),
+                noi(30));
+            pow_monotonic(2,noi(block_shift),
+                noi(30));
 
-            note( blk+nib*pow_nat(2,nat_of_int(block_shift))
+            note( blk+nib*pow_nat(2,noi(block_shift))
                 >= 0);
 
-            //assert blk+nib*pow_nat(2,nat_of_int(block_shift))
-            //    <= pow_nat(2,nat_of_int(30)) +
-            //    pow_nat(2,nat_of_int(30));
-            //assert blk+nib*pow_nat(2,nat_of_int(block_shift))
-            //    <= pow_nat(2,nat_of_int(31));
+            //assert blk+nib*pow_nat(2,noi(block_shift))
+            //    <= pow_nat(2,noi(30)) +
+            //    pow_nat(2,noi(30));
+            //assert blk+nib*pow_nat(2,noi(block_shift))
+            //    <= pow_nat(2,noi(31));
 
-            assert blk < pow_nat(2,nat_of_int(block_shift));
-            assert nib < pow_nat(2,nat_of_int(4));
-            note( nib <= pow_nat(2,nat_of_int(4))-1);
-            my_mul_mono_l(nib, pow_nat(2,nat_of_int(4))-1,
-                pow_nat(2,nat_of_int(4)));
-            assert nib*pow_nat(2,nat_of_int(block_shift))
-                <= pow_nat(2,nat_of_int(block_shift+4))
-                - pow_nat(2,nat_of_int(block_shift));
+            assert blk < pow_nat(2,noi(block_shift));
+            assert nib < pow_nat(2,noi(4));
+            note( nib <= pow_nat(2,noi(4))-1);
+            my_mul_mono_l(nib, pow_nat(2,noi(4))-1,
+                pow_nat(2,noi(4)));
+            assert nib*pow_nat(2,noi(block_shift))
+                <= pow_nat(2,noi(block_shift+4))
+                - pow_nat(2,noi(block_shift));
 
-            pow_soft_monotonic(2,nat_of_int(block_shift+4),nat_of_int(CHUNK_BITS));
-            assert pow_nat(2,nat_of_int(block_shift+4))
-                <= pow_nat(2,nat_of_int(CHUNK_BITS));
+            pow_soft_monotonic(2,noi(block_shift+4),noi(CHUNK_BITS));
+            assert pow_nat(2,noi(block_shift+4))
+                <= pow_nat(2,noi(CHUNK_BITS));
 
-            assert blk+nib*pow_nat(2,nat_of_int(block_shift))
-                < pow_nat(2,nat_of_int(CHUNK_BITS));
+            assert blk+nib*pow_nat(2,noi(block_shift))
+                < pow_nat(2,noi(CHUNK_BITS));
 
-            assert blk+nib*pow_nat(2,nat_of_int(block_shift))
+            assert blk+nib*pow_nat(2,noi(block_shift))
                 <  pow_nat(2,N32);
             assert (nib<<block_shift)
-                == nib*pow_nat(2,nat_of_int(block_shift));
+                == nib*pow_nat(2,noi(block_shift));
             bitor_commutes(blk,(nib<<block_shift));
             assert (blk|(nib<<block_shift))
                 == ((nib<<block_shift)|blk);
             assert (blk|(nib<<block_shift))
-                == ((nib*pow_nat(2,nat_of_int(block_shift)))|blk);
+                == ((nib*pow_nat(2,noi(block_shift)))|blk);
             assert (blk|(nib<<block_shift))
-                == blk+nib*pow_nat(2,nat_of_int(block_shift));
+                == blk+nib*pow_nat(2,noi(block_shift));
             note( (blk|(nib<<block_shift)) >= 0);
             close exists<int32_t>(blk|(nib<<block_shift));
         } @*/
@@ -233,7 +233,7 @@ big_int* big_int_from_hex(const char* s)
 
             assert poly_eval(next_chunks,CHUNK_BASE)
                 == poly_eval(pref,CHUNK_BASE)
-                +  pow_nat(CHUNK_BASE,nat_of_int(block_i))
+                +  pow_nat(CHUNK_BASE,noi(block_i))
                     *poly_eval(cons(blk|(nib<<block_shift),suff),
                         CHUNK_BASE);
 
@@ -249,53 +249,53 @@ big_int* big_int_from_hex(const char* s)
 
             assert poly_eval(next_chunks,CHUNK_BASE)
                 == poly_eval(pref,CHUNK_BASE)
-                +  pow_nat(CHUNK_BASE,nat_of_int(block_i))
+                +  pow_nat(CHUNK_BASE,noi(block_i))
                     *(blk|(nib<<block_shift));
 
-            pow_times2(2,nat_of_int(CHUNK_BITS),block_i);
+            pow_times2(2,noi(CHUNK_BITS),block_i);
             mul_commutes(CHUNK_BITS,block_i);
 
             assert poly_eval(next_chunks,CHUNK_BASE)
                 == poly_eval(pref,CHUNK_BASE)
-                +  pow_nat(2,nat_of_int(block_i*CHUNK_BITS))
+                +  pow_nat(2,noi(block_i*CHUNK_BITS))
                     *(blk|(nib<<block_shift));
 
             note_eq( poly_eval(next_chunks,CHUNK_BASE)
                 ,  poly_eval(pref,CHUNK_BASE)
-                +  pow_nat(2,nat_of_int(block_i*CHUNK_BITS))
-                    *(blk+(nib*pow_nat(2,nat_of_int(block_shift)))));
+                +  pow_nat(2,noi(block_i*CHUNK_BITS))
+                    *(blk+(nib*pow_nat(2,noi(block_shift)))));
 
             assert poly_eval(next_chunks,CHUNK_BASE)
                 == poly_eval(pref,CHUNK_BASE)
-                +  pow_nat(2,nat_of_int(block_i*CHUNK_BITS))*blk
-                +  pow_nat(2,nat_of_int(block_i*CHUNK_BITS))
-                    *(nib*pow_nat(2,nat_of_int(block_shift)));
+                +  pow_nat(2,noi(block_i*CHUNK_BITS))*blk
+                +  pow_nat(2,noi(block_i*CHUNK_BITS))
+                    *(nib*pow_nat(2,noi(block_shift)));
 
             assert poly_eval(next_chunks,CHUNK_BASE)
                 == poly_eval(pref,CHUNK_BASE)
-                + pow_nat(2,nat_of_int(block_i*CHUNK_BITS))
+                + pow_nat(2,noi(block_i*CHUNK_BITS))
                     *poly_eval(cons(blk,suff),CHUNK_BASE)
-                +  pow_nat(2,nat_of_int(block_i*CHUNK_BITS))
-                    *(nib*pow_nat(2,nat_of_int(block_shift)));
+                +  pow_nat(2,noi(block_i*CHUNK_BITS))
+                    *(nib*pow_nat(2,noi(block_shift)));
 
-            mul_3var(pow_nat(2,nat_of_int(block_i*CHUNK_BITS)),
-                    nib,pow_nat(2,nat_of_int(block_shift)));
-            pow_plus(2,nat_of_int(block_i*CHUNK_BITS),block_shift);
-
-            assert poly_eval(next_chunks,CHUNK_BASE)
-                == poly_eval(chunks,CHUNK_BASE)
-                +  pow_nat(2,nat_of_int(block_i*CHUNK_BITS))
-                    *(nib*pow_nat(2,nat_of_int(block_shift)));
+            mul_3var(pow_nat(2,noi(block_i*CHUNK_BITS)),
+                    nib,pow_nat(2,noi(block_shift)));
+            pow_plus(2,noi(block_i*CHUNK_BITS),block_shift);
 
             assert poly_eval(next_chunks,CHUNK_BASE)
                 == poly_eval(chunks,CHUNK_BASE)
-                +  pow_nat(2,nat_of_int(block_i*CHUNK_BITS+block_shift))
+                +  pow_nat(2,noi(block_i*CHUNK_BITS))
+                    *(nib*pow_nat(2,noi(block_shift)));
+
+            assert poly_eval(next_chunks,CHUNK_BASE)
+                == poly_eval(chunks,CHUNK_BASE)
+                +  pow_nat(2,noi(block_i*CHUNK_BITS+block_shift))
                     *nib;
 
             assert poly_eval(next_chunks, CHUNK_BASE)
                 == poly_eval(chunks, CHUNK_BASE)
                     + nib*pow_nat(2,
-                        nat_of_int(block_i*CHUNK_BITS
+                        noi(block_i*CHUNK_BITS
                             +block_shift));
             note_eq(loop_val , nib + 16*rest_val);
         } @*/
@@ -362,7 +362,7 @@ big_int* big_int_from_hex(const char* s)
                     == next_chunks;
                 assert append(append(pref,cons(v,nil)),
                               cons(0,repeat(0,
-                                nat_of_int(N_INTS-1-block_i))))
+                                noi(N_INTS-1-block_i))))
                     == next_chunks;
             } @*/ }
         }
@@ -395,10 +395,10 @@ big_int* big_int_from_hex(const char* s)
                 bi_block_extend(last);
                 assert poly_eval(rest_chunks, CHUNK_BASE)
                     == rest_val*pow_nat(2,
-                            nat_of_int(next_block_i*CHUNK_BITS
+                            noi(next_block_i*CHUNK_BITS
                                 +next_block_shift));
                 assert poly_eval(rest_chunks, CHUNK_BASE)
-                    == rest_val*pow_nat(2, nat_of_int(0));
+                    == rest_val*pow_nat(2, noi(0));
                 note_eq( poly_eval(rest_chunks, CHUNK_BASE)
                     ,  rest_val);
 
@@ -406,78 +406,78 @@ big_int* big_int_from_hex(const char* s)
                         CHUNK_BASE)
                     == poly_eval(next_chunks, CHUNK_BASE)
                         + rest_val*pow_nat(CHUNK_BASE,
-                            nat_of_int(N_INTS));
+                            noi(N_INTS));
 
                 assert poly_eval(append(next_chunks,rest_chunks),
                         CHUNK_BASE)
                     == poly_eval(next_chunks, CHUNK_BASE)
-                        + rest_val*pow_nat(pow_nat(2,nat_of_int(CHUNK_BITS)),
-                            nat_of_int(N_INTS));
+                        + rest_val*pow_nat(pow_nat(2,noi(CHUNK_BITS)),
+                            noi(N_INTS));
 
-                pow_times2(2,nat_of_int(CHUNK_BITS),N_INTS);
+                pow_times2(2,noi(CHUNK_BITS),N_INTS);
 
                 assert poly_eval(append(next_chunks,rest_chunks),
                         CHUNK_BASE)
                     == poly_eval(next_chunks, CHUNK_BASE)
                         + rest_val*pow_nat(2,
-                            nat_of_int(N_INTS*CHUNK_BITS));
+                            noi(N_INTS*CHUNK_BITS));
 
                 assert poly_eval(append(next_chunks,rest_chunks),
                         CHUNK_BASE)
                     == poly_eval(chunks, CHUNK_BASE)
                         + nib*pow_nat(2,
-                            nat_of_int(old_block_i*CHUNK_BITS
+                            noi(old_block_i*CHUNK_BITS
                                 +old_block_shift))
                         + rest_val*pow_nat(2,
-                            nat_of_int(N_INTS*CHUNK_BITS));
+                            noi(N_INTS*CHUNK_BITS));
 
                 assert poly_eval(append(next_chunks,rest_chunks),
                         CHUNK_BASE)
                     == poly_eval(chunks, CHUNK_BASE)
                         + nib*pow_nat(2,
-                            nat_of_int((N_INTS-1)*CHUNK_BITS
+                            noi((N_INTS-1)*CHUNK_BITS
                                 +(CHUNK_BITS-4)))
                         + rest_val*pow_nat(2,
-                            nat_of_int(N_INTS*CHUNK_BITS));
+                            noi(N_INTS*CHUNK_BITS));
 
                 assert poly_eval(append(next_chunks,rest_chunks),
                         CHUNK_BASE)
                     == poly_eval(chunks, CHUNK_BASE)
                         + nib*pow_nat(2,
-                            nat_of_int((N_INTS-1)*CHUNK_BITS
+                            noi((N_INTS-1)*CHUNK_BITS
                                 +(CHUNK_BITS-4)))
                         + rest_val
                             *(pow_nat(2,
-                                nat_of_int((N_INTS-1)*CHUNK_BITS
+                                noi((N_INTS-1)*CHUNK_BITS
                                     +(CHUNK_BITS-4)))
-                                *pow_nat(2, nat_of_int(4)));
+                                *pow_nat(2, noi(4)));
 
                 mul_commutes(nib,pow_nat(2,
-                            nat_of_int((N_INTS-1)*CHUNK_BITS
+                            noi((N_INTS-1)*CHUNK_BITS
                                 +(CHUNK_BITS-4))));
                 mul_3var(rest_val,
                     pow_nat(2,
-                        nat_of_int((N_INTS-1)*CHUNK_BITS
+                        noi((N_INTS-1)*CHUNK_BITS
                             +(CHUNK_BITS-4))),
-                    pow_nat(2, nat_of_int(4)));
+                    pow_nat(2, noi(4)));
 
                 note_eq( poly_eval(append(next_chunks,rest_chunks),
                         CHUNK_BASE)
                     ,  poly_eval(chunks, CHUNK_BASE)
                         + pow_nat(2,
-                            nat_of_int((N_INTS-1)*CHUNK_BITS
+                            noi((N_INTS-1)*CHUNK_BITS
                                 +(CHUNK_BITS-4)))
                             *(nib + rest_val*pow_nat(2,
-                                    nat_of_int(4))));
-                note_eq(pow_nat(2, nat_of_int(4)), 16);
+                                    noi(4))));
+                note_eq(pow_nat(2, noi(4)), 16);
                 note_eq(nib + rest_val*pow_nat(2,
-                            nat_of_int(4)), loop_val);
+                            noi(4)), loop_val);
 
                 assert poly_eval(append(next_chunks,rest_chunks),
                         CHUNK_BASE)
                     == poly_eval(chunks, CHUNK_BASE)
                         + pow_nat(2,
-                            nat_of_int((N_INTS-1)*CHUNK_BITS
+                            noi((N_INTS-1)*CHUNK_BITS
                                 +(CHUNK_BITS-4)))
                             *(loop_val);
 
@@ -485,7 +485,7 @@ big_int* big_int_from_hex(const char* s)
                         CHUNK_BASE)
                     == poly_eval(chunks, CHUNK_BASE)
                         + loop_val*pow_nat(2,
-                            nat_of_int((N_INTS-1)*CHUNK_BITS
+                            noi((N_INTS-1)*CHUNK_BITS
                                 +(CHUNK_BITS-4)));
 
             } else {
@@ -499,23 +499,23 @@ big_int* big_int_from_hex(const char* s)
                         == poly_eval(next_chunks,
                                 CHUNK_BASE)
                             + rest_val*pow_nat(2,
-                                nat_of_int((old_block_i+1)*CHUNK_BITS));
+                                noi((old_block_i+1)*CHUNK_BITS));
                     assert  poly_eval(new_chunks,
                             CHUNK_BASE)
                         == poly_eval(chunks, CHUNK_BASE)
                             + nib*pow_nat(2,
-                                nat_of_int(old_block_i*CHUNK_BITS
+                                noi(old_block_i*CHUNK_BITS
                                     +old_block_shift))
                             + rest_val*pow_nat(2,
-                                nat_of_int((old_block_i+1)*CHUNK_BITS));
+                                noi((old_block_i+1)*CHUNK_BITS));
                     assert  poly_eval(new_chunks,
                             CHUNK_BASE)
                         == poly_eval(chunks, CHUNK_BASE)
                             + nib*pow_nat(2,
-                                nat_of_int(old_block_i*CHUNK_BITS
+                                noi(old_block_i*CHUNK_BITS
                                     +old_block_shift))
                             + rest_val*pow_nat(2,
-                                nat_of_int(old_block_i*CHUNK_BITS
+                                noi(old_block_i*CHUNK_BITS
                                             + CHUNK_BITS));
                 } else {
                     assert  poly_eval(new_chunks,
@@ -523,55 +523,55 @@ big_int* big_int_from_hex(const char* s)
                         == poly_eval(next_chunks,
                                 CHUNK_BASE)
                             + rest_val*pow_nat(2,
-                                nat_of_int(old_block_i*CHUNK_BITS
+                                noi(old_block_i*CHUNK_BITS
                                     + old_block_shift + 4));
                 }
                 assert  poly_eval(new_chunks,
                         CHUNK_BASE)
                     == poly_eval(chunks, CHUNK_BASE)
                         + nib*pow_nat(2,
-                            nat_of_int(old_block_i*CHUNK_BITS
+                            noi(old_block_i*CHUNK_BITS
                                 +old_block_shift))
                         + rest_val*pow_nat(2,
-                            nat_of_int(old_block_i*CHUNK_BITS
+                            noi(old_block_i*CHUNK_BITS
                                         + old_block_shift+4));
-                pow_plus(2,nat_of_int(4),
+                pow_plus(2,noi(4),
                     old_block_i*CHUNK_BITS +old_block_shift);
                 assert  poly_eval(new_chunks,
                         CHUNK_BASE)
                     == poly_eval(chunks, CHUNK_BASE)
                         + nib*pow_nat(2,
-                            nat_of_int(old_block_i*CHUNK_BITS
+                            noi(old_block_i*CHUNK_BITS
                                 +old_block_shift))
-                        + rest_val*(pow_nat(2,nat_of_int(4))
-                            *pow_nat(2,nat_of_int(old_block_i*CHUNK_BITS
+                        + rest_val*(pow_nat(2,noi(4))
+                            *pow_nat(2,noi(old_block_i*CHUNK_BITS
                                     + old_block_shift)));
-                mul_assoc(rest_val,pow_nat(2,nat_of_int(4)),
-                    pow_nat(2,nat_of_int(old_block_i*CHUNK_BITS
+                mul_assoc(rest_val,pow_nat(2,noi(4)),
+                    pow_nat(2,noi(old_block_i*CHUNK_BITS
                                 + old_block_shift)));
                 assert  poly_eval(new_chunks,
                         CHUNK_BASE)
                     == poly_eval(chunks, CHUNK_BASE)
                         + (nib+16*rest_val)*pow_nat(2,
-                            nat_of_int(old_block_i*CHUNK_BITS
+                            noi(old_block_i*CHUNK_BITS
                                 +old_block_shift));
                 note_eq((nib+16*rest_val)*pow_nat(2,
-                            nat_of_int(old_block_i*CHUNK_BITS
+                            noi(old_block_i*CHUNK_BITS
                                 +old_block_shift)),
                         loop_val*pow_nat(2,
-                            nat_of_int(old_block_i*CHUNK_BITS
+                            noi(old_block_i*CHUNK_BITS
                                 +old_block_shift)));
 
                 assert  poly_eval(new_chunks,
                         CHUNK_BASE)
                     == poly_eval(chunks, CHUNK_BASE)
                         + loop_val*pow_nat(2,
-                            nat_of_int(old_block_i*CHUNK_BITS
+                            noi(old_block_i*CHUNK_BITS
                                 +old_block_shift));
                 assert poly_eval(next_chunks, CHUNK_BASE)
                     == poly_eval(chunks, CHUNK_BASE)
                         + nib*pow_nat(2,
-                            nat_of_int(old_block_i*CHUNK_BITS
+                            noi(old_block_i*CHUNK_BITS
                                 +old_block_shift));
             }
         } @*/

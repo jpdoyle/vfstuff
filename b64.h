@@ -156,7 +156,7 @@ lemma void base_n_split(list<char> symbs_l,list<char> symbs_r);
         &*&  seq == append(seq_l,seq_r)
         &*&  val == v_l
                     + pow_nat(length(place_vals),
-                              nat_of_int(length(symbs_l)))*v_r;
+                              noi(length(symbs_l)))*v_r;
 
 lemma void base_n_append(list<char> symbs_l,list<char> symbs_r);
     requires [?f1]base_n(?place_vals,symbs_l,?seq_l,?val_l)
@@ -165,7 +165,7 @@ lemma void base_n_append(list<char> symbs_l,list<char> symbs_r);
                     append(seq_l,seq_r),
                     val_l
                     + val_r*pow_nat(length(place_vals),
-                                    nat_of_int(length(symbs_l))));
+                                    noi(length(symbs_l))));
 
 lemma void base_n_nonzero(char p0, list<char> ps, list<char> symbs,
                        char witness);
@@ -305,7 +305,7 @@ lemma_auto b64_string_inv()
         &*&  length(b64_str) == length(b64_seq)
         &*&  3*length(bytes) == 4*length(s)
         &*&  length(s)%3 == 0
-        &*&  int_of_nat(n_padding) < 3
+        &*&  ion(n_padding) < 3
         &*&  s == append(b64_str,repeat('=',n_padding))
         &*&  val == poly_eval(reverse(b64_seq),64)
         &*&  val == poly_eval(reverse(bytes),256)

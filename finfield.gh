@@ -51,23 +51,23 @@ lemma void Zp_recip_unique(int p, int x, int r1, int r2);
 
 lemma void fermat_little(int p, int x);
     requires !!is_prime(p) &*& euclid_mod(x,p) != 0;
-    ensures  euclid_mod(pow_nat(x,nat_of_int(p-1)),p) == 1;
+    ensures  euclid_mod(pow_nat(x,noi(p-1)),p) == 1;
 
 lemma void root_of_unity_loops(int n, int g, nat a, nat b);
-    requires n > 1 &*& int_of_nat(a) > 0
+    requires n > 1 &*& ion(a) > 0
         &*&  euclid_mod(pow_nat(g,a),n) == 1;
     ensures  euclid_mod(pow_nat(g,b),n)
         ==   euclid_mod(pow_nat(g,
-                    nat_of_int(euclid_mod(int_of_nat(b),
-                                          int_of_nat(a)))),n);
+                    noi(euclid_mod(ion(b),
+                                          ion(a)))),n);
 
 lemma void order_gcd(int n, int g, nat a, nat b);
-    requires n > 1 &*& int_of_nat(a) > 0 &*& int_of_nat(b) > 0
-        &*&  int_of_nat(a) <= int_of_nat(b)
+    requires n > 1 &*& ion(a) > 0 &*& ion(b) > 0
+        &*&  ion(a) <= ion(b)
         &*&  euclid_mod(pow_nat(g,a),n) == 1
         &*&  euclid_mod(pow_nat(g,b),n) == 1;
-    ensures  let(gcd(int_of_nat(a),int_of_nat(b)),?d)
-        &*&  euclid_mod(pow_nat(g,nat_of_int(d)),n) == 1;
+    ensures  let(gcd(ion(a),ion(b)),?d)
+        &*&  euclid_mod(pow_nat(g,noi(d)),n) == 1;
 
 fixpoint option<nat> order_mod_n_fueled(nat f, int n, int x,
         option<nat> best_so_far) {
@@ -82,12 +82,12 @@ fixpoint option<nat> order_mod_n_fueled(nat f, int n, int x,
 
 fixpoint option<nat> order_mod_n(int n, int x) {
     return n <= 1 ? none
-        : order_mod_n_fueled(nat_of_int(n-1), n, x, none);
+        : order_mod_n_fueled(noi(n-1), n, x, none);
 }
 
 lemma void order_mod_n_bounded(int n, int x, nat o);
     requires n > 1 &*&  order_mod_n(n,x) == some(o);
-    ensures  0 < int_of_nat(o) &*& int_of_nat(o) < n;
+    ensures  0 < ion(o) &*& ion(o) < n;
 
 lemma void order_mod_n_correct(int n, int x);
     requires n > 1 &*& x >= 1;
@@ -105,31 +105,31 @@ lemma void order_mod_n_minimal(int n, int x, nat o);
     ensures  switch(order_mod_n(n,x)) {
         case none: return false;
         case some(my_o):
-            return  int_of_nat(my_o) <= int_of_nat(o)+1;
+            return  ion(my_o) <= ion(o)+1;
     };
 
 lemma int orders_mod_n_divides(int n, int x, nat o1, nat o2);
     requires n > 1 &*& x >= 1
         &*&  order_mod_n(n,x) == some(o1)
         &*&  euclid_mod(pow_nat(x,succ(o2)), n) == 1;
-    ensures  int_of_nat(o1) <= int_of_nat(succ(o2))
-        &*&  result*int_of_nat(o1) == int_of_nat(succ(o2));
+    ensures  ion(o1) <= ion(succ(o2))
+        &*&  result*ion(o1) == ion(succ(o2));
 
 lemma void pratt_core_lemma(int p, int x);
     requires p > 1 &*& x > 1
-        &*&  order_mod_n(p,x) == some(nat_of_int(p-1));
+        &*&  order_mod_n(p,x) == some(noi(p-1));
     ensures  !!is_prime(p);
 
 
 
 fixpoint bool pratt_pow_thing(int p, int x, int q) {
-    return euclid_mod(pow_nat(x,nat_of_int((p-1)/q)),p) != 1;
+    return euclid_mod(pow_nat(x,noi((p-1)/q)),p) != 1;
 }
 
 lemma
 void pratt_pow_thing_auto(int p, int x, int q)
     requires !pratt_pow_thing(p,x,q)
-        &*&  euclid_mod(pow_nat(x,nat_of_int((p-1)/q)),p) != 1;
+        &*&  euclid_mod(pow_nat(x,noi((p-1)/q)),p) != 1;
     ensures  false;
 {}
 
@@ -137,10 +137,10 @@ lemma void pratt_order_check_lemma(int p, list<int> p_minus_1, int x);
     requires p > 1 &*& x > 1 &*& x < p
         &*&  !!forall(p_minus_1,is_prime)
         &*&  product(p_minus_1)+1 == p
-        &*&  euclid_mod(pow_nat(x,nat_of_int(p-1)),p) == 1
+        &*&  euclid_mod(pow_nat(x,noi(p-1)),p) == 1
         &*&  !!forall(p_minus_1,(pratt_pow_thing)(p,x))
         ;
-    ensures  order_mod_n(p,x) == some(nat_of_int(p-1));
+    ensures  order_mod_n(p,x) == some(noi(p-1));
 
 inductive pratt_cert = pratt_small(int)
                      | pratt_cert(int, list<pair<int,pratt_cert> >);
@@ -152,13 +152,13 @@ predicate pratt_certificate(pratt_cert cert, int rest_of_p_1, nat fuel; int p)
         // Bigger?
         return  x > 1 &*& x <= 100*100
             &*& (x <= 100
-                ? !!mem(x,primes_below(nat_of_int(100)))
-                : !!all_no_divide(x,primes_below(nat_of_int(100))))
+                ? !!mem(x,primes_below(noi(100)))
+                : !!all_no_divide(x,primes_below(noi(100))))
             &*& p == x &*& rest_of_p_1 == 1;
     case pratt_cert(g, factors):
         return  p == product(map(fst,factors))*rest_of_p_1 + 1
             &*& g > 1 &*& g < p &*& rest_of_p_1 >= 1
-            &*& euclid_mod(pow_nat(g,nat_of_int(p-1)),p) == 1
+            &*& euclid_mod(pow_nat(g,noi(p-1)),p) == 1
             &*& switch(factors) {
             case nil: return true;
             case cons(f0,fs0):
@@ -180,7 +180,7 @@ predicate pratt_certificate(pratt_cert cert, int rest_of_p_1, nat fuel; int p)
 lemma
 void pratt_certificate_raise_fuel(pratt_cert cert, nat f1, nat f2);
     requires [?fr]pratt_certificate(cert,?rest,f1,?p)
-        &*&  int_of_nat(f1) <= int_of_nat(f2);
+        &*&  ion(f1) <= ion(f2);
     ensures  [ fr]pratt_certificate(cert, rest,f2, p);
 
 lemma
@@ -241,7 +241,7 @@ void all_no_divide_def(int n, list<int> l)
 
 lemma_auto(prime_up_to(n,x))
 void prime_up_to_no_divide(nat n, int x)
-    requires int_of_nat(n) < x;
+    requires ion(n) < x;
     ensures  prime_up_to(n,x) == all_no_divide(x,primes_below(n));
 {
     switch(n) {
@@ -253,37 +253,37 @@ void prime_up_to_no_divide(nat n, int x)
 
 lemma
 void prime_no_divide_sqrt(nat n, int x);
-    requires x > 1 &*& int_of_nat(n) < x &*& int_of_nat(n)*int_of_nat(n) >= x;
+    requires x > 1 &*& ion(n) < x &*& ion(n)*ion(n) >= x;
     ensures  is_prime(x) == all_no_divide(x,primes_below(n));
 
 lemma
 void primes_below_step(int n);
     requires n >= 1;
-    ensures  int_of_nat(nat_of_int(n)) == n
-        &*&  int_of_nat(succ(nat_of_int(n))) == n+1
+    ensures  ion(noi(n)) == n
+        &*&  ion(succ(noi(n))) == n+1
         &*&  is_prime(n+1)
-        ==   all_no_divide(n+1,primes_below(nat_of_int(n)));
+        ==   all_no_divide(n+1,primes_below(noi(n)));
 
 lemma
 void primes_below_fast_step(int lo, int hi, int m);
     requires lo >= m &*& lo <= hi &*& m >= 1 &*& hi <= m*m;
-    //ensures  primes_below(nat_of_int(n+1))
-    //    ==   (all_no_divide(n+1,reverse(primes_below(nat_of_int(m))))
-    //         ? cons(n+1,primes_below(nat_of_int(n)))
-    //         : primes_below(nat_of_int(n)));
-    ensures  primes_below(nat_of_int(hi))
+    //ensures  primes_below(noi(n+1))
+    //    ==   (all_no_divide(n+1,reverse(primes_below(noi(m))))
+    //         ? cons(n+1,primes_below(noi(n)))
+    //         : primes_below(noi(n)));
+    ensures  primes_below(noi(hi))
         ==   append(
-                filter((flip)(all_no_divide,primes_below(nat_of_int(m))),
+                filter((flip)(all_no_divide,primes_below(noi(m))),
                         reverse(range(lo+1,hi+1))),
-                primes_below(nat_of_int(lo)));
+                primes_below(noi(lo)));
 
-    //all_no_divide(n+1,reverse(primes_below(nat_of_int(m))))
+    //all_no_divide(n+1,reverse(primes_below(noi(m))))
     //    ?    !!is_prime(n+1)
-    //    &*&  primes_below(nat_of_int(n+1))
-    //    ==   cons(n+1,primes_below(nat_of_int(n)))
+    //    &*&  primes_below(noi(n+1))
+    //    ==   cons(n+1,primes_below(noi(n)))
     //    :    !is_prime(n+1)
-    //    &*&  primes_below(nat_of_int(n+1))
-    //    ==   primes_below(nat_of_int(n));
+    //    &*&  primes_below(noi(n+1))
+    //    ==   primes_below(noi(n));
 
 lemma_auto(is_prime(3))
 void is_prime_3();
@@ -311,14 +311,14 @@ fixpoint list<int> all_multiples(nat n, list<int> l) {
 lemma
 void primes_below_sieve_v2(nat n);
     requires true;
-    ensures  primes_below(nat_of_int(int_of_nat(n)*int_of_nat(n)))
+    ensures  primes_below(noi(ion(n)*ion(n)))
         ==   append(
                 reverse(filter((notf)(
                     (flip)(mem,
-                        all_multiples(nat_of_int(int_of_nat(n)*int_of_nat(n)),
+                        all_multiples(noi(ion(n)*ion(n)),
                             reverse(primes_below(n))))),
-                    range(int_of_nat(n)+1,
-                                  int_of_nat(n)*int_of_nat(n)+1))),
+                    range(ion(n)+1,
+                                  ion(n)*ion(n)+1))),
                 primes_below(n));
 
 
@@ -336,7 +336,7 @@ void primes_below_16_correct();
 lemma_auto
 void primes_below_100();
     requires true;
-    ensures  primes_below(nat_of_int(100)) == {97,89,83,79,73,71,67,61,59,53,47,43,41,37,31,29,23,19,17,13,11,7,5,3,2};
+    ensures  primes_below(noi(100)) == {97,89,83,79,73,71,67,61,59,53,47,43,41,37,31,29,23,19,17,13,11,7,5,3,2};
 
 // predicate fast_pow_mod(int p, int x, bool e_odd, nat e_over_2;
 //                        nat e, int result);
@@ -345,33 +345,33 @@ void primes_below_100();
 //     requires [?f]fast_pow_mod(?p,?x,?e_odd,?e_over_2,?e,?res);
 //     ensures  [ f]fast_pow_mod( p, x, e_odd, e_over_2, e, res)
 //         &*&  p > 1 &*& res == euclid_mod(pow_nat(x,e),p)
-//         &*&  int_of_nat(e) == 2*int_of_nat(e_over_2) + (e_odd ? 1 : 0);
+//         &*&  ion(e) == 2*ion(e_over_2) + (e_odd ? 1 : 0);
 // 
 // lemma void fast_pow_base(int p, int x, bool e_odd, int e, int result);
 //     requires p > 1
 //         &*&  e_odd ? e == 1 &*& result == euclid_mod(x,p)
 //                    : e == 0 &*& result == 1;
 //     ensures  e_odd
-//             ? fast_pow_mod(p,x,e_odd,_,nat_of_int(e),result)
-//             : fast_pow_mod(p,x,e_odd,_,nat_of_int(e),1);
+//             ? fast_pow_mod(p,x,e_odd,_,noi(e),result)
+//             : fast_pow_mod(p,x,e_odd,_,noi(e),1);
 // 
 // lemma void fast_pow_step(int p, int x, bool e_odd, nat e_over_2,
 //             int e, int result);
 //     requires p > 1 &*& fast_pow_mod(p,x,_,_,e_over_2,?prev)
-//         &*&  e_odd ?   e == 2*int_of_nat(e_over_2) + 1
+//         &*&  e_odd ?   e == 2*ion(e_over_2) + 1
 //                    &*& result == euclid_mod((prev*prev)*x,p)
-//                    :   e == 2*int_of_nat(e_over_2)
+//                    :   e == 2*ion(e_over_2)
 //                    &*& result == euclid_mod(prev*prev,p);
-//     ensures  fast_pow_mod(p,x,e_odd,e_over_2,nat_of_int(e),result);
+//     ensures  fast_pow_mod(p,x,e_odd,e_over_2,noi(e),result);
 
 
 lemma void exp_by_sq(int p, int g, int e, int g_p_e);
     requires p > 1 &*& e >= 0
         &*&  g >= 0 &*& g < p
-        &*&  g_p_e == euclid_mod(pow_nat(g,nat_of_int(e)),p);
-    ensures  euclid_mod(pow_nat(g,nat_of_int(2*e)),p)
+        &*&  g_p_e == euclid_mod(pow_nat(g,noi(e)),p);
+    ensures  euclid_mod(pow_nat(g,noi(2*e)),p)
         ==   (g_p_e*g_p_e)%p
-        &*&  euclid_mod(pow_nat(g,nat_of_int(2*e+1)),p)
+        &*&  euclid_mod(pow_nat(g,noi(2*e+1)),p)
         ==   (g*g_p_e*g_p_e)%p;
 
 fixpoint int modpow2(int p, int g, nat bits) {
@@ -386,7 +386,7 @@ lemma void modpow2_correct(int p, int g, nat bits);
     requires p > 1 &*& g >= 0;
     ensures  modpow2(p,g,bits)
         ==   euclid_mod(pow_nat(g%p,
-                            nat_of_int(pow_nat(2,bits))),
+                            noi(pow_nat(2,bits))),
                         p);
 
 fixpoint int modpow(int p, int g, int e, nat bits) {
@@ -407,11 +407,11 @@ void modpow_range(int p, int g, int e, nat bits);
 lemma void modpow_correct_general(int p, int g, int e, nat bits);
     requires p > 1 &*& g >= 0 &*& e >= 0;
     ensures  modpow(p,g,e,bits)
-        ==   euclid_mod(pow_nat(g,nat_of_int(e%pow_nat(2,bits))),p);
+        ==   euclid_mod(pow_nat(g,noi(e%pow_nat(2,bits))),p);
 
 lemma void modpow_correct(int p, int g, int e, nat bits);
     requires p > 1 &*& g >= 0 &*& pow_nat(2,bits) > e &*& e >= 0 &*& g < p;
-    ensures  modpow(p,g,e,bits) == euclid_mod(pow_nat(g,nat_of_int(e)),p);
+    ensures  modpow(p,g,e,bits) == euclid_mod(pow_nat(g,noi(e)),p);
 
 lemma void modpow2_step(int p, int g, nat bits, int acc);
     requires p > 1 &*& acc == modpow2(p,g,bits);
@@ -440,7 +440,7 @@ predicate modpowp(int p,int g,int e,nat bits0,int ediv,int acc, int acc1,
 
 lemma void modpowp_correct(int p, int g, int e);
     requires modpowp(p,g,e,_,0,_,_,_,_,?x);
-    ensures  euclid_mod(pow_nat(g,nat_of_int(e)),p) == x;
+    ensures  euclid_mod(pow_nat(g,noi(e)),p) == x;
 
 lemma
 void pratt_pow_thing_modpowp(int p, int x, int q);
@@ -497,8 +497,8 @@ lemma void modpow_step_by_4(int p, int g, int e, int acc, int acc1, int
 //            return (e_odd ? e == N1   &*& result == euclid_mod(x,p)
 //                          : e == zero &*& result == 1);
 //        case succ(e_over_2_0):
-//            return fast_pow_mod(p,x,int_of_nat(e_over_2)%2 == 1,
-//                    nat_of_int(int_of_nat(e_over_2)/2), e_over_2, ?x_p_e_2)
+//            return fast_pow_mod(p,x,ion(e_over_2)%2 == 1,
+//                    noi(ion(e_over_2)/2), e_over_2, ?x_p_e_2)
 //            &*& let(euclid_mod(x_p_e_2*x_p_e_2,p), ?x_even)
 //            &*& (e_odd ? e == succ(nat_double(e_over_2))
 //                        &*& result == euclid_mod(x_even * x,p)

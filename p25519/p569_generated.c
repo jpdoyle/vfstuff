@@ -5,9 +5,9 @@
 
 lemma void p25519_796177_g10_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(10,nat_of_int(796176)),796177) == 1;
+    ensures  euclid_mod(pow_nat(10,noi(796176)),796177) == 1;
 {
-    if(euclid_mod(pow_nat(10,nat_of_int(796176)),796177) != 1) {
+    if(euclid_mod(pow_nat(10,noi(796176)),796177) != 1) {
         MODPOW_FULL(796177,10,796176,32)
         assert false;
     }
@@ -51,9 +51,9 @@ lemma pratt_cert p25519_796177_pratt()
 
 lemma void p25519_4777063_g5_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(5,nat_of_int(4777062)),4777063) == 1;
+    ensures  euclid_mod(pow_nat(5,noi(4777062)),4777063) == 1;
 {
-    if(euclid_mod(pow_nat(5,nat_of_int(4777062)),4777063) != 1) {
+    if(euclid_mod(pow_nat(5,noi(4777062)),4777063) != 1) {
         MODPOW_FULL(4777063,5,4777062,32)
         assert false;
     }
@@ -90,9 +90,9 @@ lemma pratt_cert p25519_4777063_pratt()
 
 lemma void p25519_105095387_g2_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(2,nat_of_int(105095386)),105095387) == 1;
+    ensures  euclid_mod(pow_nat(2,noi(105095386)),105095387) == 1;
 {
-    if(euclid_mod(pow_nat(2,nat_of_int(105095386)),105095387) != 1) {
+    if(euclid_mod(pow_nat(2,noi(105095386)),105095387) != 1) {
         MODPOW_FULL(105095387,2,105095386,32)
         assert false;
     }
@@ -129,9 +129,9 @@ lemma pratt_cert p25519_105095387_pratt()
 
 lemma void p25519_12653_g2_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(2,nat_of_int(12652)),12653) == 1;
+    ensures  euclid_mod(pow_nat(2,noi(12652)),12653) == 1;
 {
-    if(euclid_mod(pow_nat(2,nat_of_int(12652)),12653) != 1) {
+    if(euclid_mod(pow_nat(2,noi(12652)),12653) != 1) {
         MODPOW_FULL(12653,2,12652,16)
         assert false;
     }
@@ -170,9 +170,9 @@ lemma pratt_cert p25519_12653_pratt()
 
 lemma void p25519_24317_g2_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(2,nat_of_int(24316)),24317) == 1;
+    ensures  euclid_mod(pow_nat(2,noi(24316)),24317) == 1;
 {
-    if(euclid_mod(pow_nat(2,nat_of_int(24316)),24317) != 1) {
+    if(euclid_mod(pow_nat(2,noi(24316)),24317) != 1) {
         MODPOW_FULL(24317,2,24316,16)
         assert false;
     }
@@ -211,9 +211,9 @@ lemma pratt_cert p25519_24317_pratt()
 
 lemma void p25519_71089_g11_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(11,nat_of_int(71088)),71089) == 1;
+    ensures  euclid_mod(pow_nat(11,noi(71088)),71089) == 1;
 {
-    if(euclid_mod(pow_nat(11,nat_of_int(71088)),71089) != 1) {
+    if(euclid_mod(pow_nat(11,noi(71088)),71089) != 1) {
         MODPOW_FULL(71089,11,71088,32)
         assert false;
     }
@@ -253,9 +253,9 @@ lemma pratt_cert p25519_71089_pratt()
 
 lemma void p25519_284357_g2_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(2,nat_of_int(284356)),284357) == 1;
+    ensures  euclid_mod(pow_nat(2,noi(284356)),284357) == 1;
 {
-    if(euclid_mod(pow_nat(2,nat_of_int(284356)),284357) != 1) {
+    if(euclid_mod(pow_nat(2,noi(284356)),284357) != 1) {
         MODPOW_FULL(284357,2,284356,32)
         assert false;
     }
@@ -294,9 +294,9 @@ lemma pratt_cert p25519_284357_pratt()
 
 lemma void p25519_119610639205363_g2_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(2,nat_of_int(119610639205362)),119610639205363) == 1;
+    ensures  euclid_mod(pow_nat(2,noi(119610639205362)),119610639205363) == 1;
 {
-    if(euclid_mod(pow_nat(2,nat_of_int(119610639205362)),119610639205363) != 1) {
+    if(euclid_mod(pow_nat(2,noi(119610639205362)),119610639205363) != 1) {
         MODPOW_FULL(119610639205363,2,119610639205362,64)
         assert false;
     }
@@ -339,9 +339,9 @@ lemma pratt_cert p25519_119610639205363_pratt()
 
 lemma void p25519_45130584520747958722981_g6_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(6,nat_of_int(45130584520747958722980)),45130584520747958722981) == 1;
+    ensures  euclid_mod(pow_nat(6,noi(45130584520747958722980)),45130584520747958722981) == 1;
 {
-    if(euclid_mod(pow_nat(6,nat_of_int(45130584520747958722980)),45130584520747958722981) != 1) {
+    if(euclid_mod(pow_nat(6,noi(45130584520747958722980)),45130584520747958722981) != 1) {
         MODPOW_FULL(45130584520747958722981,6,45130584520747958722980,128)
         assert false;
     }
@@ -387,9 +387,9 @@ lemma pratt_cert p25519_45130584520747958722981_pratt()
 
 lemma void p25519_56713_g5_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(5,nat_of_int(56712)),56713) == 1;
+    ensures  euclid_mod(pow_nat(5,noi(56712)),56713) == 1;
 {
-    if(euclid_mod(pow_nat(5,nat_of_int(56712)),56713) != 1) {
+    if(euclid_mod(pow_nat(5,noi(56712)),56713) != 1) {
         MODPOW_FULL(56713,5,56712,16)
         assert false;
     }
@@ -430,9 +430,9 @@ lemma pratt_cert p25519_56713_pratt()
 
 lemma void p25519_522744931663_g3_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(3,nat_of_int(522744931662)),522744931663) == 1;
+    ensures  euclid_mod(pow_nat(3,noi(522744931662)),522744931663) == 1;
 {
-    if(euclid_mod(pow_nat(3,nat_of_int(522744931662)),522744931663) != 1) {
+    if(euclid_mod(pow_nat(3,noi(522744931662)),522744931663) != 1) {
         MODPOW_FULL(522744931663,3,522744931662,64)
         assert false;
     }
@@ -475,9 +475,9 @@ lemma pratt_cert p25519_522744931663_pratt()
 
 lemma void p25519_564643_g5_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(5,nat_of_int(564642)),564643) == 1;
+    ensures  euclid_mod(pow_nat(5,noi(564642)),564643) == 1;
 {
-    if(euclid_mod(pow_nat(5,nat_of_int(564642)),564643) != 1) {
+    if(euclid_mod(pow_nat(5,noi(564642)),564643) != 1) {
         MODPOW_FULL(564643,5,564642,32)
         assert false;
     }
@@ -519,9 +519,9 @@ lemma pratt_cert p25519_564643_pratt()
 
 lemma void p25519_28097_g3_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(3,nat_of_int(28096)),28097) == 1;
+    ensures  euclid_mod(pow_nat(3,noi(28096)),28097) == 1;
 {
-    if(euclid_mod(pow_nat(3,nat_of_int(28096)),28097) != 1) {
+    if(euclid_mod(pow_nat(3,noi(28096)),28097) != 1) {
         MODPOW_FULL(28097,3,28096,16)
         assert false;
     }
@@ -561,9 +561,9 @@ lemma pratt_cert p25519_28097_pratt()
 
 lemma void p25519_10327726679_g7_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(7,nat_of_int(10327726678)),10327726679) == 1;
+    ensures  euclid_mod(pow_nat(7,noi(10327726678)),10327726679) == 1;
 {
-    if(euclid_mod(pow_nat(7,nat_of_int(10327726678)),10327726679) != 1) {
+    if(euclid_mod(pow_nat(7,noi(10327726678)),10327726679) != 1) {
         MODPOW_FULL(10327726679,7,10327726678,64)
         assert false;
     }
@@ -604,9 +604,9 @@ lemma pratt_cert p25519_10327726679_pratt()
 
 lemma void p25519_83775021211475436503_g5_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(5,nat_of_int(83775021211475436502)),83775021211475436503) == 1;
+    ensures  euclid_mod(pow_nat(5,noi(83775021211475436502)),83775021211475436503) == 1;
 {
-    if(euclid_mod(pow_nat(5,nat_of_int(83775021211475436502)),83775021211475436503) != 1) {
+    if(euclid_mod(pow_nat(5,noi(83775021211475436502)),83775021211475436503) != 1) {
         MODPOW_FULL(83775021211475436503,5,83775021211475436502,128)
         assert false;
     }
@@ -647,9 +647,9 @@ lemma pratt_cert p25519_83775021211475436503_pratt()
 
 lemma void p25519_350343741906072820209310645555913_g3_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(3,nat_of_int(350343741906072820209310645555912)),350343741906072820209310645555913) == 1;
+    ensures  euclid_mod(pow_nat(3,noi(350343741906072820209310645555912)),350343741906072820209310645555913) == 1;
 {
-    if(euclid_mod(pow_nat(3,nat_of_int(350343741906072820209310645555912)),350343741906072820209310645555913) != 1) {
+    if(euclid_mod(pow_nat(3,noi(350343741906072820209310645555912)),350343741906072820209310645555913) != 1) {
         MODPOW_FULL(350343741906072820209310645555913,3,350343741906072820209310645555912,128)
         assert false;
     }
@@ -688,9 +688,9 @@ lemma pratt_cert p25519_350343741906072820209310645555913_pratt()
 
 lemma void p25519_582271299047893027187874292913927407_g3_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(3,nat_of_int(582271299047893027187874292913927406)),582271299047893027187874292913927407) == 1;
+    ensures  euclid_mod(pow_nat(3,noi(582271299047893027187874292913927406)),582271299047893027187874292913927407) == 1;
 {
-    if(euclid_mod(pow_nat(3,nat_of_int(582271299047893027187874292913927406)),582271299047893027187874292913927407) != 1) {
+    if(euclid_mod(pow_nat(3,noi(582271299047893027187874292913927406)),582271299047893027187874292913927407) != 1) {
         MODPOW_FULL(582271299047893027187874292913927407,3,582271299047893027187874292913927406,128)
         assert false;
     }
@@ -729,9 +729,9 @@ lemma pratt_cert p25519_582271299047893027187874292913927407_pratt()
 
 lemma void p25519_19571_g2_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(2,nat_of_int(19570)),19571) == 1;
+    ensures  euclid_mod(pow_nat(2,noi(19570)),19571) == 1;
 {
-    if(euclid_mod(pow_nat(2,nat_of_int(19570)),19571) != 1) {
+    if(euclid_mod(pow_nat(2,noi(19570)),19571) != 1) {
         MODPOW_FULL(19571,2,19570,16)
         assert false;
     }
@@ -770,9 +770,9 @@ lemma pratt_cert p25519_19571_pratt()
 
 lemma void p25519_64231_g12_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(12,nat_of_int(64230)),64231) == 1;
+    ensures  euclid_mod(pow_nat(12,noi(64230)),64231) == 1;
 {
-    if(euclid_mod(pow_nat(12,nat_of_int(64230)),64231) != 1) {
+    if(euclid_mod(pow_nat(12,noi(64230)),64231) != 1) {
         MODPOW_FULL(64231,12,64230,16)
         assert false;
     }
@@ -811,9 +811,9 @@ lemma pratt_cert p25519_64231_pratt()
 
 lemma void p25519_52757_g2_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(2,nat_of_int(52756)),52757) == 1;
+    ensures  euclid_mod(pow_nat(2,noi(52756)),52757) == 1;
 {
-    if(euclid_mod(pow_nat(2,nat_of_int(52756)),52757) != 1) {
+    if(euclid_mod(pow_nat(2,noi(52756)),52757) != 1) {
         MODPOW_FULL(52757,2,52756,16)
         assert false;
     }
@@ -852,9 +852,9 @@ lemma pratt_cert p25519_52757_pratt()
 
 lemma void p25519_1055141_g2_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(2,nat_of_int(1055140)),1055141) == 1;
+    ensures  euclid_mod(pow_nat(2,noi(1055140)),1055141) == 1;
 {
-    if(euclid_mod(pow_nat(2,nat_of_int(1055140)),1055141) != 1) {
+    if(euclid_mod(pow_nat(2,noi(1055140)),1055141) != 1) {
         MODPOW_FULL(1055141,2,1055140,32)
         assert false;
     }
@@ -892,9 +892,9 @@ lemma pratt_cert p25519_1055141_pratt()
 
 lemma void p25519_18992539_g2_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(2,nat_of_int(18992538)),18992539) == 1;
+    ensures  euclid_mod(pow_nat(2,noi(18992538)),18992539) == 1;
 {
-    if(euclid_mod(pow_nat(2,nat_of_int(18992538)),18992539) != 1) {
+    if(euclid_mod(pow_nat(2,noi(18992538)),18992539) != 1) {
         MODPOW_FULL(18992539,2,18992538,32)
         assert false;
     }
@@ -932,9 +932,9 @@ lemma pratt_cert p25519_18992539_pratt()
 
 lemma void p25519_51461_g2_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(2,nat_of_int(51460)),51461) == 1;
+    ensures  euclid_mod(pow_nat(2,noi(51460)),51461) == 1;
 {
-    if(euclid_mod(pow_nat(2,nat_of_int(51460)),51461) != 1) {
+    if(euclid_mod(pow_nat(2,noi(51460)),51461) != 1) {
         MODPOW_FULL(51461,2,51460,16)
         assert false;
     }
@@ -974,9 +974,9 @@ lemma pratt_cert p25519_51461_pratt()
 
 lemma void p25519_377723741_g3_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(3,nat_of_int(377723740)),377723741) == 1;
+    ensures  euclid_mod(pow_nat(3,noi(377723740)),377723741) == 1;
 {
-    if(euclid_mod(pow_nat(3,nat_of_int(377723740)),377723741) != 1) {
+    if(euclid_mod(pow_nat(3,noi(377723740)),377723741) != 1) {
         MODPOW_FULL(377723741,3,377723740,32)
         assert false;
     }
@@ -1016,9 +1016,9 @@ lemma pratt_cert p25519_377723741_pratt()
 
 lemma void p25519_547831_g3_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(3,nat_of_int(547830)),547831) == 1;
+    ensures  euclid_mod(pow_nat(3,noi(547830)),547831) == 1;
 {
-    if(euclid_mod(pow_nat(3,nat_of_int(547830)),547831) != 1) {
+    if(euclid_mod(pow_nat(3,noi(547830)),547831) != 1) {
         MODPOW_FULL(547831,3,547830,32)
         assert false;
     }
@@ -1059,9 +1059,9 @@ lemma pratt_cert p25519_547831_pratt()
 
 lemma void p25519_660684187_g2_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(2,nat_of_int(660684186)),660684187) == 1;
+    ensures  euclid_mod(pow_nat(2,noi(660684186)),660684187) == 1;
 {
-    if(euclid_mod(pow_nat(2,nat_of_int(660684186)),660684187) != 1) {
+    if(euclid_mod(pow_nat(2,noi(660684186)),660684187) != 1) {
         MODPOW_FULL(660684187,2,660684186,32)
         assert false;
     }
@@ -1101,9 +1101,9 @@ lemma pratt_cert p25519_660684187_pratt()
 
 lemma void p25519_2440563294432588452310063876982204011061_g2_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(2,nat_of_int(2440563294432588452310063876982204011060)),2440563294432588452310063876982204011061) == 1;
+    ensures  euclid_mod(pow_nat(2,noi(2440563294432588452310063876982204011060)),2440563294432588452310063876982204011061) == 1;
 {
-    if(euclid_mod(pow_nat(2,nat_of_int(2440563294432588452310063876982204011060)),2440563294432588452310063876982204011061) != 1) {
+    if(euclid_mod(pow_nat(2,noi(2440563294432588452310063876982204011060)),2440563294432588452310063876982204011061) != 1) {
         MODPOW_FULL(2440563294432588452310063876982204011061,2,2440563294432588452310063876982204011060,256)
         assert false;
     }
@@ -1153,9 +1153,9 @@ lemma pratt_cert p25519_2440563294432588452310063876982204011061_pratt()
 
 lemma void p25519_10163_g2_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(2,nat_of_int(10162)),10163) == 1;
+    ensures  euclid_mod(pow_nat(2,noi(10162)),10163) == 1;
 {
-    if(euclid_mod(pow_nat(2,nat_of_int(10162)),10163) != 1) {
+    if(euclid_mod(pow_nat(2,noi(10162)),10163) != 1) {
         MODPOW_FULL(10163,2,10162,16)
         assert false;
     }
@@ -1193,9 +1193,9 @@ lemma pratt_cert p25519_10163_pratt()
 
 lemma void p25519_14879_g7_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(7,nat_of_int(14878)),14879) == 1;
+    ensures  euclid_mod(pow_nat(7,noi(14878)),14879) == 1;
 {
-    if(euclid_mod(pow_nat(7,nat_of_int(14878)),14879) != 1) {
+    if(euclid_mod(pow_nat(7,noi(14878)),14879) != 1) {
         MODPOW_FULL(14879,7,14878,16)
         assert false;
     }
@@ -1232,9 +1232,9 @@ lemma pratt_cert p25519_14879_pratt()
 
 lemma void p25519_29759_g7_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(7,nat_of_int(29758)),29759) == 1;
+    ensures  euclid_mod(pow_nat(7,noi(29758)),29759) == 1;
 {
-    if(euclid_mod(pow_nat(7,nat_of_int(29758)),29759) != 1) {
+    if(euclid_mod(pow_nat(7,noi(29758)),29759) != 1) {
         MODPOW_FULL(29759,7,29758,16)
         assert false;
     }
@@ -1272,9 +1272,9 @@ lemma pratt_cert p25519_29759_pratt()
 
 lemma void p25519_535663_g3_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(3,nat_of_int(535662)),535663) == 1;
+    ensures  euclid_mod(pow_nat(3,noi(535662)),535663) == 1;
 {
-    if(euclid_mod(pow_nat(3,nat_of_int(535662)),535663) != 1) {
+    if(euclid_mod(pow_nat(3,noi(535662)),535663) != 1) {
         MODPOW_FULL(535663,3,535662,32)
         assert false;
     }
@@ -1312,9 +1312,9 @@ lemma pratt_cert p25519_535663_pratt()
 
 lemma void p25519_21426521_g6_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(6,nat_of_int(21426520)),21426521) == 1;
+    ensures  euclid_mod(pow_nat(6,noi(21426520)),21426521) == 1;
 {
-    if(euclid_mod(pow_nat(6,nat_of_int(21426520)),21426521) != 1) {
+    if(euclid_mod(pow_nat(6,noi(21426520)),21426521) != 1) {
         MODPOW_FULL(21426521,6,21426520,32)
         assert false;
     }
@@ -1353,9 +1353,9 @@ lemma pratt_cert p25519_21426521_pratt()
 
 lemma void p25519_42853043_g2_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(2,nat_of_int(42853042)),42853043) == 1;
+    ensures  euclid_mod(pow_nat(2,noi(42853042)),42853043) == 1;
 {
-    if(euclid_mod(pow_nat(2,nat_of_int(42853042)),42853043) != 1) {
+    if(euclid_mod(pow_nat(2,noi(42853042)),42853043) != 1) {
         MODPOW_FULL(42853043,2,42853042,32)
         assert false;
     }
@@ -1393,9 +1393,9 @@ lemma pratt_cert p25519_42853043_pratt()
 
 lemma void p25519_518580685877_g2_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(2,nat_of_int(518580685876)),518580685877) == 1;
+    ensures  euclid_mod(pow_nat(2,noi(518580685876)),518580685877) == 1;
 {
-    if(euclid_mod(pow_nat(2,nat_of_int(518580685876)),518580685877) != 1) {
+    if(euclid_mod(pow_nat(2,noi(518580685876)),518580685877) != 1) {
         MODPOW_FULL(518580685877,2,518580685876,64)
         assert false;
     }
@@ -1439,9 +1439,9 @@ lemma pratt_cert p25519_518580685877_pratt()
 
 lemma void p25519_168601_g14_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(14,nat_of_int(168600)),168601) == 1;
+    ensures  euclid_mod(pow_nat(14,noi(168600)),168601) == 1;
 {
-    if(euclid_mod(pow_nat(14,nat_of_int(168600)),168601) != 1) {
+    if(euclid_mod(pow_nat(14,noi(168600)),168601) != 1) {
         MODPOW_FULL(168601,14,168600,32)
         assert false;
     }
@@ -1483,9 +1483,9 @@ lemma pratt_cert p25519_168601_pratt()
 
 lemma void p25519_149521_g17_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(17,nat_of_int(149520)),149521) == 1;
+    ensures  euclid_mod(pow_nat(17,noi(149520)),149521) == 1;
 {
-    if(euclid_mod(pow_nat(17,nat_of_int(149520)),149521) != 1) {
+    if(euclid_mod(pow_nat(17,noi(149520)),149521) != 1) {
         MODPOW_FULL(149521,17,149520,32)
         assert false;
     }
@@ -1529,9 +1529,9 @@ lemma pratt_cert p25519_149521_pratt()
 
 lemma void p25519_3289463_g5_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(5,nat_of_int(3289462)),3289463) == 1;
+    ensures  euclid_mod(pow_nat(5,noi(3289462)),3289463) == 1;
 {
-    if(euclid_mod(pow_nat(5,nat_of_int(3289462)),3289463) != 1) {
+    if(euclid_mod(pow_nat(5,noi(3289462)),3289463) != 1) {
         MODPOW_FULL(3289463,5,3289462,32)
         assert false;
     }
@@ -1568,9 +1568,9 @@ lemma pratt_cert p25519_3289463_pratt()
 
 lemma void p25519_6578927_g5_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(5,nat_of_int(6578926)),6578927) == 1;
+    ensures  euclid_mod(pow_nat(5,noi(6578926)),6578927) == 1;
 {
-    if(euclid_mod(pow_nat(5,nat_of_int(6578926)),6578927) != 1) {
+    if(euclid_mod(pow_nat(5,noi(6578926)),6578927) != 1) {
         MODPOW_FULL(6578927,5,6578926,32)
         assert false;
     }
@@ -1608,9 +1608,9 @@ lemma pratt_cert p25519_6578927_pratt()
 
 lemma void p25519_86518666347907_g5_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(5,nat_of_int(86518666347906)),86518666347907) == 1;
+    ensures  euclid_mod(pow_nat(5,noi(86518666347906)),86518666347907) == 1;
 {
-    if(euclid_mod(pow_nat(5,nat_of_int(86518666347906)),86518666347907) != 1) {
+    if(euclid_mod(pow_nat(5,noi(86518666347906)),86518666347907) != 1) {
         MODPOW_FULL(86518666347907,5,86518666347906,64)
         assert false;
     }
@@ -1651,9 +1651,9 @@ lemma pratt_cert p25519_86518666347907_pratt()
 
 lemma void p25519_2987936166061269764733822017919288608395313_g3_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(3,nat_of_int(2987936166061269764733822017919288608395312)),2987936166061269764733822017919288608395313) == 1;
+    ensures  euclid_mod(pow_nat(3,noi(2987936166061269764733822017919288608395312)),2987936166061269764733822017919288608395313) == 1;
 {
-    if(euclid_mod(pow_nat(3,nat_of_int(2987936166061269764733822017919288608395312)),2987936166061269764733822017919288608395313) != 1) {
+    if(euclid_mod(pow_nat(3,noi(2987936166061269764733822017919288608395312)),2987936166061269764733822017919288608395313) != 1) {
         MODPOW_FULL(2987936166061269764733822017919288608395313,3,2987936166061269764733822017919288608395312,256)
         assert false;
     }
@@ -1701,9 +1701,9 @@ lemma pratt_cert p25519_2987936166061269764733822017919288608395313_pratt()
 
 lemma void p25519_13407807929942597099574024998205846127479365820592393377723561443721764030073546976801874298166903427690031858186486050853753882811946569946433649006083527_g7_generates()
     requires true;
-    ensures  euclid_mod(pow_nat(7,nat_of_int(13407807929942597099574024998205846127479365820592393377723561443721764030073546976801874298166903427690031858186486050853753882811946569946433649006083526)),13407807929942597099574024998205846127479365820592393377723561443721764030073546976801874298166903427690031858186486050853753882811946569946433649006083527) == 1;
+    ensures  euclid_mod(pow_nat(7,noi(13407807929942597099574024998205846127479365820592393377723561443721764030073546976801874298166903427690031858186486050853753882811946569946433649006083526)),13407807929942597099574024998205846127479365820592393377723561443721764030073546976801874298166903427690031858186486050853753882811946569946433649006083527) == 1;
 {
-    if(euclid_mod(pow_nat(7,nat_of_int(13407807929942597099574024998205846127479365820592393377723561443721764030073546976801874298166903427690031858186486050853753882811946569946433649006083526)),13407807929942597099574024998205846127479365820592393377723561443721764030073546976801874298166903427690031858186486050853753882811946569946433649006083527) != 1) {
+    if(euclid_mod(pow_nat(7,noi(13407807929942597099574024998205846127479365820592393377723561443721764030073546976801874298166903427690031858186486050853753882811946569946433649006083526)),13407807929942597099574024998205846127479365820592393377723561443721764030073546976801874298166903427690031858186486050853753882811946569946433649006083527) != 1) {
         MODPOW_FULL(13407807929942597099574024998205846127479365820592393377723561443721764030073546976801874298166903427690031858186486050853753882811946569946433649006083527,7,13407807929942597099574024998205846127479365820592393377723561443721764030073546976801874298166903427690031858186486050853753882811946569946433649006083526,512)
         assert false;
     }

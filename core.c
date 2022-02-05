@@ -143,11 +143,11 @@ lemma void nth_of_mem<t>(int n, list<t> l, t v)
     ensures  !!mem(v,l);
 { LIST_INDUCTION(l,xs,if(n != 0) nth_of_mem(n-1,xs,v)) }
 
-lemma_auto(int_of_nat(nat_minus(n,m)))
+lemma_auto(ion(nat_minus(n,m)))
 void nat_minus_int(nat n, nat m)
     requires true;
-    ensures  int_of_nat(nat_minus(n,m))
-        ==   max_of(0,int_of_nat(n)-int_of_nat(m));
+    ensures  ion(nat_minus(n,m))
+        ==   max_of(0,ion(n)-ion(m));
 {
     switch(n) {
     case zero:

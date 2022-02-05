@@ -385,7 +385,7 @@ lemma_auto(all_eq(repeat(v,n),v)) void repeat_all_eq<t>(t v, nat n)
 
 lemma_auto(length(repeat(v,n))) void repeat_len<t>(t v, nat n)
     requires true;
-    ensures  length(repeat(v,n)) == int_of_nat(n);
+    ensures  length(repeat(v,n)) == ion(n);
 { NAT_INDUCTION(n,n0,repeat_len(v,n0)) }
 
 lemma_auto(mem(x,repeat(v,n))) void mem_repeat<t>(t x, t v, nat n);
@@ -396,7 +396,7 @@ lemma_auto(append(repeat(v,n),repeat(v,m)))
 void append_repeat<t>(t v, nat n, nat m);
     requires true;
     ensures  append(repeat(v,n),repeat(v,m))
-        ==   repeat(v,nat_of_int(int_of_nat(n)+int_of_nat(m)));
+        ==   repeat(v,noi(ion(n)+ion(m)));
 
 lemma_auto(forall(repeat(v,n),(bounded)(lo,hi)))
 void repeat_bounded(int v, nat n, int lo, int hi);
@@ -642,13 +642,13 @@ fixpoint list<t> ntake<t>(nat n,list<t> l) {
 lemma_auto(ndrop(n,l))
 void ndrop_nil<t>(nat n,list<t> l)
     requires true;
-    ensures  (ndrop(n,l) == nil) == (int_of_nat(n) >= length(l));
+    ensures  (ndrop(n,l) == nil) == (ion(n) >= length(l));
 { NAT_LIST_INDUCTION(n,n0,l,xs,ndrop_nil(n0,xs)) }
 
 lemma_auto(ndrop(n,l))
 void ntake_l<t>(nat n,list<t> l)
     requires true;
-    ensures  (ntake(n,l) == l) == (int_of_nat(n) >= length(l));
+    ensures  (ntake(n,l) == l) == (ion(n) >= length(l));
 { NAT_LIST_INDUCTION(n,n0,l,xs,ntake_l(n0,xs)) }
 
 lemma_auto(append(ntake(n,l),ndrop(n,l)))

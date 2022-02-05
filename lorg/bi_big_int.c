@@ -282,7 +282,7 @@ big_int_block* new_block()
     /*@ requires true; @*/
     /*@ ensures  bi_block(result, result, 0,0,
                     _,
-                    repeat(0,nat_of_int(N_INTS))); @*/
+                    repeat(0,noi(N_INTS))); @*/
     /*@ terminates; @*/
 {
     /*@ ALREADY_PROVEN() @*/
@@ -294,7 +294,7 @@ big_int_block* new_block()
     for(i=0;i < N_INTS; ++i)
         /*@ requires i >= 0 &*& ret->chunks[i..N_INTS] |-> _; @*/
         /*@ ensures  ret->chunks[old_i..N_INTS] |->
-                        repeat(0,nat_of_int(N_INTS-old_i)); @*/
+                        repeat(0,noi(N_INTS-old_i)); @*/
         /*@ decreases N_INTS-i; @*/
     {
         ret->chunks[i] = 0;
@@ -324,11 +324,11 @@ void big_int_set(big_int* x,int32_t v)
     /*@ ALREADY_PROVEN() @*/
     uint64_t abs_v = v < 0 ? (uint64_t)-(int64_t)v : (uint64_t)(int64_t)v;
     /*@ {
-        shiftleft_def(1,nat_of_int(CHUNK_BITS));
-        shiftright_div(abs_v,nat_of_int(CHUNK_BITS));
-        pow_monotonic(2,nat_of_int(CHUNK_BITS),N31);
-        bitand_pow_2(abs_v,nat_of_int(CHUNK_BITS));
-        div_rem(abs_v,pow_nat(2,nat_of_int(CHUNK_BITS)));
+        shiftleft_def(1,noi(CHUNK_BITS));
+        shiftright_div(abs_v,noi(CHUNK_BITS));
+        pow_monotonic(2,noi(CHUNK_BITS),N31);
+        bitand_pow_2(abs_v,noi(CHUNK_BITS));
+        div_rem(abs_v,pow_nat(2,noi(CHUNK_BITS)));
     } @*/
     int32_t v1 = (int32_t)(abs_v&((((uint64_t)1)<<CHUNK_BITS)-1));
     int32_t v2 = (int32_t)(abs_v >> CHUNK_BITS);
@@ -366,7 +366,7 @@ void big_int_set(big_int* x,int32_t v)
             /*@ requires i->chunks[block_i..N_INTS] |-> _
                     &*&  block_i >= 2 &*& block_i <= N_INTS; @*/
             /*@ ensures  i->chunks[old_block_i..N_INTS]
-                            |-> repeat(0,nat_of_int(N_INTS-old_block_i)); @*/
+                            |-> repeat(0,noi(N_INTS-old_block_i)); @*/
             /*@ decreases N_INTS-block_i; @*/
         {
             i->chunks[block_i] = 0;
@@ -402,11 +402,11 @@ big_int* new_big_int_from(int32_t v)
     /*@ ALREADY_PROVEN() @*/
     uint64_t abs_v = v < 0 ? (uint64_t)-(int64_t)v : (uint64_t)(int64_t)v;
     /*@ {
-        shiftleft_def(1,nat_of_int(CHUNK_BITS));
-        shiftright_div(abs_v,nat_of_int(CHUNK_BITS));
-        pow_monotonic(2,nat_of_int(CHUNK_BITS),N31);
-        bitand_pow_2(abs_v,nat_of_int(CHUNK_BITS));
-        div_rem(abs_v,pow_nat(2,nat_of_int(CHUNK_BITS)));
+        shiftleft_def(1,noi(CHUNK_BITS));
+        shiftright_div(abs_v,noi(CHUNK_BITS));
+        pow_monotonic(2,noi(CHUNK_BITS),N31);
+        bitand_pow_2(abs_v,noi(CHUNK_BITS));
+        div_rem(abs_v,pow_nat(2,noi(CHUNK_BITS)));
     } @*/
     int32_t v1 = (int32_t)(abs_v&((((uint64_t)1)<<CHUNK_BITS)-1));
     int32_t v2 = (int32_t)(abs_v >> CHUNK_BITS);
@@ -436,7 +436,7 @@ big_int* big_int_clone_into(big_int* ret,const big_int* x)
     ret->is_pos = x->is_pos;
     /*@ close [f]bi_block_opt(x_i,?xlast,?prev,0,?xptrs,
                                 ?chunks); @*/
-    /*@ assert let(pow_nat(2,nat_of_int(31-carry))-1,?upper); @*/
+    /*@ assert let(pow_nat(2,noi(31-carry))-1,?upper); @*/
     /*@ assert let(under ? -upper : 0, ?lower); @*/
 
     do

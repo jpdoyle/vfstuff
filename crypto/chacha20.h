@@ -433,7 +433,7 @@ lemma void rot_bound(nat b, int x, nat n)
 
 lemma void rot_succ(nat b, int x, nat n)
     requires x >= 0 &*& x < pow_nat(2,succ(b))
-        &*&  int_of_nat(n) + 1 < int_of_nat(succ(b));
+        &*&  ion(n) + 1 < ion(succ(b));
     ensures  rotl1(b,rot(succ(b),x,n)) == rot(succ(b),x,succ(n));
 {
     nat b1 = succ(b);
@@ -580,7 +580,7 @@ lemma void rot_succ(nat b, int x, nat n)
 
 lemma void rot_plus(nat b, int x, nat n, nat m)
     requires x >= 0 &*& x < pow_nat(2,b)
-        &*&  int_of_nat(n) + int_of_nat(m) < int_of_nat(b);
+        &*&  ion(n) + ion(m) < ion(b);
     ensures  rot(b,rot(b,x,n),m) == rot(b,x,nat_plus(n,m));
 {
     rot_bound(b,x,n);
@@ -642,7 +642,7 @@ lemma void rot_plus(nat b, int x, nat n, nat m)
 
 lemma void rot_rotates(nat b, int x, nat n, nat m)
     requires x >= 0 &*& x < pow_nat(2,b)
-        &*&  int_of_nat(n) + int_of_nat(m) == int_of_nat(b);
+        &*&  ion(n) + ion(m) == ion(b);
     ensures  rot(b,rot(b,x,n),m) == x;
 { }
 

@@ -55,72 +55,72 @@ void fib_nonneg(nat n)
 
 lemma void fib_fast(nat n)
     requires true;
-    ensures  fib(nat_of_int(2*int_of_nat(n)))
+    ensures  fib(noi(2*ion(n)))
                 == fib(n)*(2*fib(succ(n)) - fib(n))
-        &*&  fib(nat_of_int(2*int_of_nat(n)+1))
+        &*&  fib(noi(2*ion(n)+1))
                 == fib(n)*fib(n) + fib(succ(n))*fib(succ(n));
 {
     switch(n) {
     case zero:
     case succ(n0):
         fib_fast(n0);
-        assert fib(nat_of_int(2*int_of_nat(n0)))
+        assert fib(noi(2*ion(n0)))
                     == fib(n0)*(2*fib(succ(n0)) - fib(n0))
-            &*&  fib(nat_of_int(2*int_of_nat(n0)+1))
+            &*&  fib(noi(2*ion(n0)+1))
                     == fib(n0)*fib(n0) + fib(n)*fib(n);
-        assert fib(nat_of_int(2*int_of_nat(n0)))
+        assert fib(noi(2*ion(n0)))
                     == fib(n0)*(2*fib(succ(n0)) - fib(n0))
-            &*&  fib(nat_of_int(2*int_of_nat(n0)+1))
+            &*&  fib(noi(2*ion(n0)+1))
                     == fib(n0)*fib(n0) + fib(n)*fib(n);
-        assert fib(nat_of_int(2*int_of_nat(n)))
-            == fib(nat_of_int(2*int_of_nat(n0)+2));
-        assert fib(nat_of_int(2*int_of_nat(n)))
-            == fib(succ(succ(nat_of_int(2*int_of_nat(n0)))));
-        assert fib(nat_of_int(2*int_of_nat(n)+1))
-            == fib(succ(succ(nat_of_int(2*int_of_nat(n0)+1))));
+        assert fib(noi(2*ion(n)))
+            == fib(noi(2*ion(n0)+2));
+        assert fib(noi(2*ion(n)))
+            == fib(succ(succ(noi(2*ion(n0)))));
+        assert fib(noi(2*ion(n)+1))
+            == fib(succ(succ(noi(2*ion(n0)+1))));
 
-        assert fib(nat_of_int(2*int_of_nat(n)))
-            == fib(nat_of_int(2*int_of_nat(n0)))
-            +  fib(nat_of_int(2*int_of_nat(n0)+1));
-        assert fib(nat_of_int(2*int_of_nat(n)))
+        assert fib(noi(2*ion(n)))
+            == fib(noi(2*ion(n0)))
+            +  fib(noi(2*ion(n0)+1));
+        assert fib(noi(2*ion(n)))
             == fib(n0)*(2*fib(n) - fib(n0))
             +  fib(n0)*fib(n0) + fib(n)*fib(n);
-        assert fib(nat_of_int(2*int_of_nat(n)))
+        assert fib(noi(2*ion(n)))
             == 2*fib(n0)*fib(n) - fib(n0)*fib(n0)
             +  fib(n0)*fib(n0) + fib(n)*fib(n);
-        assert fib(nat_of_int(2*int_of_nat(n)))
+        assert fib(noi(2*ion(n)))
             == 2*fib(n0)*fib(n) + fib(n)*fib(n);
-        note_eq( fib(nat_of_int(2*int_of_nat(n)))
+        note_eq( fib(noi(2*ion(n)))
             ,  fib(n)*(2*fib(n0) + fib(n)));
-        assert fib(nat_of_int(2*int_of_nat(n)))
+        assert fib(noi(2*ion(n)))
             == fib(n)*(fib(n0) + fib(succ(n)));
-        assert fib(nat_of_int(2*int_of_nat(n)))
+        assert fib(noi(2*ion(n)))
             == fib(n)*(fib(succ(n)) - fib(n) + fib(succ(n)));
-        assert fib(nat_of_int(2*int_of_nat(n)))
+        assert fib(noi(2*ion(n)))
             == fib(n)*(2*fib(succ(n)) - fib(n));
 
-        assert fib(nat_of_int(2*int_of_nat(n)+1))
-            == fib(nat_of_int(2*int_of_nat(n0)+1))
-            +  fib(nat_of_int(2*int_of_nat(n)));
-        note_eq( fib(nat_of_int(2*int_of_nat(n)+1))
+        assert fib(noi(2*ion(n)+1))
+            == fib(noi(2*ion(n0)+1))
+            +  fib(noi(2*ion(n)));
+        note_eq( fib(noi(2*ion(n)+1))
             ,  fib(n0)*fib(n0) + fib(n)*fib(n)
             +  fib(n)*(2*fib(succ(n)) - fib(n)));
-        assert fib(nat_of_int(2*int_of_nat(n)+1))
+        assert fib(noi(2*ion(n)+1))
             == fib(n0)*fib(n0) + fib(n)*fib(n)
             +  2*fib(n)*fib(succ(n)) - fib(n)*fib(n);
-        assert fib(nat_of_int(2*int_of_nat(n)+1))
+        assert fib(noi(2*ion(n)+1))
             == fib(n0)*fib(n0) + 2*fib(n)*fib(succ(n));
-        assert fib(nat_of_int(2*int_of_nat(n)+1))
+        assert fib(noi(2*ion(n)+1))
             == fib(n0)*fib(n0) + 2*fib(n)*(fib(n0) + fib(n));
-        assert fib(nat_of_int(2*int_of_nat(n)+1))
+        assert fib(noi(2*ion(n)+1))
             == fib(n0)*fib(n0) + 2*fib(n)*fib(n0) + 2*fib(n)*fib(n);
-        assert fib(nat_of_int(2*int_of_nat(n)+1))
+        assert fib(noi(2*ion(n)+1))
             == (fib(n0) + fib(n))*fib(n0)
             +  (fib(n0) + fib(n))*fib(n) + fib(n)*fib(n);
-        note_eq( fib(nat_of_int(2*int_of_nat(n)+1))
+        note_eq( fib(noi(2*ion(n)+1))
             ,  (fib(n0) + fib(n))*(fib(n0)+fib(n))
             +  fib(n)*fib(n));
-        assert fib(nat_of_int(2*int_of_nat(n)+1))
+        assert fib(noi(2*ion(n)+1))
             == fib(succ(n))*fib(succ(n)) + fib(n)*fib(n);
     }
 }
@@ -162,9 +162,9 @@ int main(void)
 
     for(int i=0; i<n; ++i)
         /*@ invariant bi_big_int(f_n,?carry_n,_,
-                        fib(nat_of_int(i)))
+                        fib(noi(i)))
                 &*&   bi_big_int(f_n_1,?carry_n_1,_,
-                        fib(nat_of_int(i+1)))
+                        fib(noi(i+1)))
                 //&*&   carry_n == CARRY_BITS
                 //&*&   carry_n_1 == CARRY_BITS
                 &*&   carry_n >= CARRY_BITS - (i%(CARRY_BITS-1))
@@ -192,7 +192,7 @@ int main(void)
                     i/(CARRY_BITS-1), i%(CARRY_BITS-1) + 1);
             } @*/
         }
-        /*@ assert nat_of_int(i+2) == succ(succ(nat_of_int(i))); @*/
+        /*@ assert noi(i+2) == succ(succ(noi(i))); @*/
     }
 
     big_int_reduce(f_n);
@@ -202,15 +202,15 @@ int main(void)
         /* big_int* res = big_int_mul(f_n,f_n_1); */
         //char* x_hex = big_int_to_hex(f_n);
         // /*@ assert string(x_hex,?cs)
-        //    &*& base_n(hex_chars(),reverse(cs),_,fib(nat_of_int(orig_n))); @*/
+        //    &*& base_n(hex_chars(),reverse(cs),_,fib(noi(orig_n))); @*/
 
 
-    /* @ my_mul_mono_r(fib(nat_of_int(orig_n))
-                    ,0,fib(nat_of_int(orig_n+1))); @*/
+    /* @ my_mul_mono_r(fib(noi(orig_n))
+                    ,0,fib(noi(orig_n+1))); @*/
         char* x_hex = big_int_to_hex(f_n);
          /*@ assert string(x_hex,?cs)
             &*& base_n(hex_chars(),reverse(cs),_,
-                    fib(nat_of_int(orig_n))); @*/
+                    fib(noi(orig_n))); @*/
         printf("%s\n",x_hex);
         free(x_hex);
         /*@ leak base_n(_,_,_,_); @*/
@@ -264,7 +264,7 @@ int main(void)
     /*@ int sofar = 0; @*/
 
     for(; mask > n; mask >>= 1)
-        /*@ invariant int_of_nat(lg2) <= 32
+        /*@ invariant ion(lg2) <= 32
                 &*&   mask == pow_nat(2,lg2)/2
                 &*&   mask <  pow_nat(2,lg2)
                 &*&   0 == (n/pow_nat(2,lg2))
@@ -287,11 +287,11 @@ int main(void)
 
     for(; mask; mask >>= 1)
         /*@ invariant bi_big_int(f_n,CARRY_BITS,false,
-                        fib(nat_of_int(sofar)))
+                        fib(noi(sofar)))
                 &*&   bi_big_int(f_n_1,CARRY_BITS,false,
-                        fib(nat_of_int(sofar+1)))
+                        fib(noi(sofar+1)))
                 &*&   f_n != f_n_1
-                &*&   int_of_nat(lg2) <= 32
+                &*&   ion(lg2) <= 32
                 &*&   mask == pow_nat(2,lg2)/2
                 &*&   mask <  pow_nat(2,lg2)
                 &*&   sofar == (n/pow_nat(2,lg2))
@@ -311,10 +311,10 @@ int main(void)
             }
         } @*/
 
-        /*@ fib_fast(nat_of_int(sofar)); @*/
+        /*@ fib_fast(noi(sofar)); @*/
         /*@ my_mul_mono_r(2,0,sofar); @*/
-        /*@ assert succ(nat_of_int(2*sofar)) == nat_of_int(2*sofar+1); @*/
-        /*@ assert succ(nat_of_int(2*sofar+1)) == nat_of_int(2*sofar+2); @*/
+        /*@ assert succ(noi(2*sofar)) == noi(2*sofar+1); @*/
+        /*@ assert succ(noi(2*sofar+1)) == noi(2*sofar+2); @*/
 
         // -2*fib(n+1)
         big_int* f_2n_r = big_int_small_mul(NULL,NULL,-2, f_n_1);
@@ -341,8 +341,8 @@ int main(void)
 
         free_big_int_inner(f_n);
         free_big_int_inner(f_n_1);
-        /*@ assert bi_big_int(f_2n,_,_,fib(nat_of_int(2*sofar))); @*/
-        /*@ assert bi_big_int(f_2n_1,_,_,fib(nat_of_int(2*sofar+1))); @*/
+        /*@ assert bi_big_int(f_2n,_,_,fib(noi(2*sofar))); @*/
+        /*@ assert bi_big_int(f_2n_1,_,_,fib(noi(2*sofar+1))); @*/
         /*@ bi_big_int_unique(f_2n,f_2n_1); @*/
 
         if(n&mask) {
@@ -405,7 +405,7 @@ int main(void)
     {
         char* x_hex = big_int_to_hex(f_n);
         /*@ assert string(x_hex,?cs)
-            &*& base_n(hex_chars(),reverse(cs),_,fib(nat_of_int(n))); @*/
+            &*& base_n(hex_chars(),reverse(cs),_,fib(noi(n))); @*/
 
 
         printf("%s\n",x_hex);

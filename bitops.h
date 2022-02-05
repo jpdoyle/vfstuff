@@ -9,7 +9,7 @@
 
 lemma void ashr_euclid(int x,nat n);
     requires true;
-    ensures  [_]euclid_div_sol(x,pow_nat(2,n),ASHR(x,int_of_nat(n)),_);
+    ensures  [_]euclid_div_sol(x,pow_nat(2,n),ASHR(x,ion(n)),_);
 
   @*/
 

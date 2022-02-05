@@ -335,14 +335,14 @@ lemma_auto(append(repeat(v,n),repeat(v,m)))
 void append_repeat<t>(t v, nat n, nat m)
     requires true;
     ensures  append(repeat(v,n),repeat(v,m))
-        ==   repeat(v,nat_of_int(int_of_nat(n)+int_of_nat(m)));
+        ==   repeat(v,noi(ion(n)+ion(m)));
 {
     switch(n) {
     case zero:
     case succ(n0):
         append_repeat(v,n0,m);
-        assert nat_of_int(int_of_nat(n)+int_of_nat(m))
-            == succ(nat_of_int(int_of_nat(n0)+int_of_nat(m)));
+        assert noi(ion(n)+ion(m))
+            == succ(noi(ion(n0)+ion(m)));
     }
 }
 

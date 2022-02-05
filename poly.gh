@@ -314,7 +314,7 @@ void poly_mul_zero(list<int> p, list<int> q);
     ensures  !!poly_is_zero(poly_mul(p,q));
 
 lemma void poly_mul_commutes_inner(nat f, list<int> p, list<int> q);
-    requires int_of_nat(f) >= length(p) + length(q);
+    requires ion(f) >= length(p) + length(q);
     ensures  poly_mul(p,q) == poly_mul(q,p);
 
 lemma void poly_mul_distr(list<int> p, list<int> q,
@@ -346,7 +346,7 @@ lemma_auto(poly_mul(p,q)) void poly_mul_commutes(list<int> p,
 
 
 lemma void poly_mul_zero_unique_inner(nat f,list<int> p, list<int> q);
-    requires int_of_nat(f) >= length(p) + length(q)
+    requires ion(f) >= length(p) + length(q)
         &*&  !!poly_is_zero(poly_mul(p,q)) &*& !poly_is_zero(p);
     ensures  !!poly_is_zero(q);
 
@@ -431,7 +431,7 @@ void multishift_zero(nat n, list<int> p);
 lemma_auto(degree(multishift(n,p)))
 void multishift_deg(nat n, list<int> p);
     requires degree(p) >= 0;
-    ensures  degree(multishift(n,p)) == int_of_nat(n)+degree(p);
+    ensures  degree(multishift(n,p)) == ion(n)+degree(p);
 
 
 lemma_auto(leading_coeff(multishift(n,p)))
@@ -475,25 +475,25 @@ void poly_eval_append(list<int> a, list<int> b, int x)
     requires true;
     ensures  poly_eval(append(a,b),x)
         ==   poly_eval(a,x)
-        +    pow_nat(x,nat_of_int(length(a)))*poly_eval(b,x);
+        +    pow_nat(x,noi(length(a)))*poly_eval(b,x);
 {
     switch(a) {
     case nil:
     case cons(v,vs):
         poly_eval_append(vs,b,x);
-        mul_3var(x,pow_nat(x,nat_of_int(length(vs))),poly_eval(b,x));
+        mul_3var(x,pow_nat(x,noi(length(vs))),poly_eval(b,x));
         assert poly_eval(append(a,b),x)
             == v + x*poly_eval(append(vs,b),x);
         assert poly_eval(append(a,b),x)
             == v + x*(poly_eval(vs,x) +
-                    pow_nat(x,nat_of_int(length(vs)))*poly_eval(b,x));
+                    pow_nat(x,noi(length(vs)))*poly_eval(b,x));
         note_eq(x*(poly_eval(vs,x) +
-                    pow_nat(x,nat_of_int(length(vs)))*poly_eval(b,x)),
+                    pow_nat(x,noi(length(vs)))*poly_eval(b,x)),
                 x*poly_eval(vs,x) +
-                x*(pow_nat(x,nat_of_int(length(vs)))*poly_eval(b,x)));
+                x*(pow_nat(x,noi(length(vs)))*poly_eval(b,x)));
         assert poly_eval(append(a,b),x)
             == (v + x*poly_eval(vs,x)) +
-                    x*(pow_nat(x,nat_of_int(length(vs)))*poly_eval(b,x));
+                    x*(pow_nat(x,noi(length(vs)))*poly_eval(b,x));
     }
 }
 
@@ -558,20 +558,20 @@ lemma
 void poly_eval_bounded(list<int> a, int lo, int hi, int x)
     requires !!forall(a,(bounded)(lo,hi)) &*& x >= 0;
     ensures  poly_eval(a,x)
-            >= poly_eval(repeat(lo,nat_of_int(length(a))),x)
+            >= poly_eval(repeat(lo,noi(length(a))),x)
         &*& poly_eval(a,x)
-            <= poly_eval(repeat(hi,nat_of_int(length(a))),x);
+            <= poly_eval(repeat(hi,noi(length(a))),x);
 {
     switch(a) {
     case nil:
     case cons(v,vs):
         poly_eval_bounded(vs,lo,hi,x);
         my_mul_mono_r(x,
-            poly_eval(repeat(lo,nat_of_int(length(vs))),x),
+            poly_eval(repeat(lo,noi(length(vs))),x),
             poly_eval(vs,x));
         my_mul_mono_r(x,
             poly_eval(vs,x),
-            poly_eval(repeat(hi,nat_of_int(length(vs))),x));
+            poly_eval(repeat(hi,noi(length(vs))),x));
     }
 }
 
@@ -594,9 +594,9 @@ void poly_eval_bounded_pos(list<int> l, int hi, int x)
         &*&  hi > 0;
     ensures  poly_eval(l,x) >= 0
         &*& poly_eval(l,x)
-            <= (pow_nat(x,nat_of_int(length(l)))-1);
+            <= (pow_nat(x,noi(length(l)))-1);
 {
-    nat n = nat_of_int(length(l));
+    nat n = noi(length(l));
     poly_eval_bounded(l,0,hi,x);
     poly_eval_repeat_mul(hi,1,n,x);
     poly_eval_repeat_1(n,x);
@@ -618,12 +618,12 @@ void neg_most_sig(list<int> l, int base, list<int> most_sig)
     requires !!forall(l,(bounded)(0,base-1)) &*& poly_eval(most_sig,base) < 0
         &*&  base > 0;
     ensures  poly_eval(append(l,most_sig),base)
-            < (poly_eval(most_sig,base)+1)*pow_nat(base,nat_of_int(length(l)))
+            < (poly_eval(most_sig,base)+1)*pow_nat(base,noi(length(l)))
         &*&  poly_eval(append(l,most_sig),base) < 0
         &*&  poly_eval(append(l,most_sig),base) >=
-        poly_eval(most_sig,base)*pow_nat(base,nat_of_int(length(l)));
+        poly_eval(most_sig,base)*pow_nat(base,noi(length(l)));
 {
-    nat n = nat_of_int(length(l));
+    nat n = noi(length(l));
     int sig = poly_eval(most_sig,base);
     poly_eval_bounded(l,0,base-1,base);
     poly_eval_repeat_mul(base-1,1,n,base);

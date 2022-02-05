@@ -19,7 +19,7 @@ fixpoint list<int> fibFrom(int f0, int f1, nat n) {
 lemma_auto(length(fibFrom(x,y,n)))
 void fibFrom_length(int x, int y, nat n)
     requires true;
-    ensures  length(fibFrom(x,y,n)) == int_of_nat(n);
+    ensures  length(fibFrom(x,y,n)) == ion(n);
 { NAT_INDUCTION(n,n0,fibFrom_length(y,x+y,n0)) }
 
 lemma void even_fib_likelihood_core(int f0, int f1, nat n)
@@ -27,21 +27,21 @@ lemma void even_fib_likelihood_core(int f0, int f1, nat n)
         &*&  let((f0%2 == 0) ? 0 :
                  (f1%2 == 0) ? 1 : 2, ?firstEvenInd)
         ;
-    ensures  (int_of_nat(n)-firstEvenInd+2)/3
+    ensures  (ion(n)-firstEvenInd+2)/3
         ==   length(filter(is_even,fibFrom(f0,f1,n)))
         ;
 {
     switch(n) {
     case zero:
 
-        assert abs(int_of_nat(n) - firstEvenInd + 2) < abs(3);
-        division_unique((int_of_nat(n)-firstEvenInd+2),3,0,
+        assert abs(ion(n) - firstEvenInd + 2) < abs(3);
+        division_unique((ion(n)-firstEvenInd+2),3,0,
             2-firstEvenInd);
 
     case succ(n0):
-        if(int_of_nat(n) <= firstEvenInd) {
-            division_unique((int_of_nat(n)-firstEvenInd+2),3,0,
-                int_of_nat(n)+2-firstEvenInd);
+        if(ion(n) <= firstEvenInd) {
+            division_unique((ion(n)-firstEvenInd+2),3,0,
+                ion(n)+2-firstEvenInd);
             switch(n0) {
             case zero:
             case succ(n1):
@@ -67,7 +67,7 @@ lemma void even_fib_likelihood_core(int f0, int f1, nat n)
         div_rem(f1,2);
         div_rem(f0+f1,2);
 
-        assert int_of_nat(n) == 1+int_of_nat(n0);
+        assert ion(n) == 1+ion(n0);
 
         if(f0%2 == 0) {
             assert f1%2 != 0;
@@ -94,23 +94,23 @@ lemma void even_fib_likelihood_core(int f0, int f1, nat n)
         }
         even_fib_likelihood_core(f1,f0+f1,n0);
 
-        assert (int_of_nat(n0)-newEvenInd+2)/3
+        assert (ion(n0)-newEvenInd+2)/3
             == length(filter(is_even,fibFrom(f1,f0+f1,n0)));
 
         if(f0%2 == 0) {
-            assert (int_of_nat(n0)-newEvenInd+2)/3
+            assert (ion(n0)-newEvenInd+2)/3
                 == length(filter(is_even,fibFrom(f1,f0+f1,n0)));
             assert length(filter(is_even,fibFrom(f0,f1,n)))
                 == 1 + length(filter(is_even,fibFrom(f1,f0+f1,n0)));
             assert length(filter(is_even,fibFrom(f0,f1,n)))
-                == 1 + (int_of_nat(n0)-newEvenInd+2)/3;
+                == 1 + (ion(n0)-newEvenInd+2)/3;
             assert length(filter(is_even,fibFrom(f0,f1,n)))
-                == 1 + (int_of_nat(n0))/3;
-            into_numerator(1,int_of_nat(n0)-newEvenInd+2,3);
+                == 1 + (ion(n0))/3;
+            into_numerator(1,ion(n0)-newEvenInd+2,3);
             assert length(filter(is_even,fibFrom(f0,f1,n)))
-                == (3 + int_of_nat(n0))/3;
+                == (3 + ion(n0))/3;
             assert length(filter(is_even,fibFrom(f0,f1,n)))
-                == (int_of_nat(n)+2)/3;
+                == (ion(n)+2)/3;
 
         }
 
@@ -126,8 +126,8 @@ lemma void even_fib_likelihood_core(int f0, int f1, nat n)
 //{
 //    even_fib_likelihood_core(f0,f1,n);
 //    fibFrom_length(f0,f1,n);
-//    div_rem(int_of_nat(n),3);
-//    div_rem(int_of_nat(n),3);
+//    div_rem(ion(n),3);
+//    div_rem(ion(n),3);
 //}
 
 

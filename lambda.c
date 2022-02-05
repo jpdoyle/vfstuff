@@ -44,7 +44,7 @@ void lambda_depth_nonneg<t>(lambda<t> term)
 fixpoint bool valid_lambda<t>(lambda<t> term, nat depth) {
     switch(term) {
     case lamb_symbol(x): return true;
-    case lamb_var   (i): return int_of_nat(i) < int_of_nat(depth);
+    case lamb_var   (i): return ion(i) < ion(depth);
     case lamb_fn    (E): return valid_lambda(E,succ(depth));
     case lamb_app   (E1,E2):
         return valid_lambda(E1,depth)
@@ -207,8 +207,8 @@ predicate valid_LambdaTerm(LambdaTerm* term, nat depth;
                 &*& chars((void*)&term->term + sizeof(LambdaVar),
                         sizeof(union UntaggedLambdaTerm)
                             - sizeof(LambdaVar),_)
-                &*& var_ix < int_of_nat(depth)
-                &*& abstractVal == lamb_var(nat_of_int(var_ix))
+                &*& var_ix < ion(depth)
+                &*& abstractVal == lamb_var(noi(var_ix))
               )
          : (tag == LambFn)
             ? (     term->term.fn.body |-> ?body
@@ -234,7 +234,7 @@ predicate valid_LambdaTerm(LambdaTerm* term, nat depth;
                 &*& abstractVal == lamb_app(E1,E2)
               )
         )
-    &*& int_of_nat(depth) + lambda_depth(abstractVal) <= UINTPTR_MAX
+    &*& ion(depth) + lambda_depth(abstractVal) <= UINTPTR_MAX
     ;
 
 // As both a sanity check and a convenience, we can prove that any
@@ -250,10 +250,10 @@ void valid_LambdaTerm_auto_inner(LambdaTerm* term)
     ensures  [ f]valid_LambdaTerm( term,  depth,  val)
         &*&  term != 0
         &*&  !!valid_lambda(val,depth)
-        &*&  int_of_nat(depth) + lambda_depth(val) <= UINTPTR_MAX
+        &*&  ion(depth) + lambda_depth(val) <= UINTPTR_MAX
         ;
 {
-    if(int_of_nat(depth) + lambda_depth(val) > UINTPTR_MAX) {
+    if(ion(depth) + lambda_depth(val) > UINTPTR_MAX) {
         open valid_LambdaTerm(_,_,_);
         assert false;
     }
@@ -279,14 +279,14 @@ void valid_LambdaTerm_auto()
     ensures  [ f]valid_LambdaTerm( term,  depth,  val)
         &*&  term != 0
         &*&  !!valid_lambda(val,depth)
-        &*&  int_of_nat(depth) + lambda_depth(val) <= UINTPTR_MAX
+        &*&  ion(depth) + lambda_depth(val) <= UINTPTR_MAX
         ;
 { valid_LambdaTerm_auto_inner(term); }
 
 lemma void raiseLambdaTermDepth(LambdaTerm* t, nat depth)
     requires [?f]valid_LambdaTerm(t,?oldDepth,?val)
-        &*&  int_of_nat(depth) >= int_of_nat(oldDepth)
-        &*&  int_of_nat(depth) + lambda_depth(val) <= UINTPTR_MAX
+        &*&  ion(depth) >= ion(oldDepth)
+        &*&  ion(depth) + lambda_depth(val) <= UINTPTR_MAX
         ;
     ensures  [ f]valid_LambdaTerm(t,depth,val);
 {
@@ -477,19 +477,19 @@ typedef LambdaTerm* lambdaSubst_inner_t(const LambdaTerm* term,
         uintptr_t ind, const LambdaTerm* v);
     /*@ requires [?tf]valid_LambdaTerm(term,?depth,?t_val)
             &*&  ind >= 0
-            &*&  int_of_nat(depth) > ind
+            &*&  ion(depth) > ind
             &*&  [?vf]valid_LambdaTerm(v,zero,?v_val)
             &*&  [2]call_perm_level(currentThread,pair(lt, lambda_depth(t_val)),
                     {lambdaSubst_inner})
-            &*&  int_of_nat(depth) +
-                    lambda_depth(lambda_subst(t_val,nat_of_int(ind),
+            &*&  ion(depth) +
+                    lambda_depth(lambda_subst(t_val,noi(ind),
                                  v_val)) <= UINTPTR_MAX
             ;
       @*/
     /*@ ensures  [ tf]valid_LambdaTerm(term, depth, t_val)
             &*&  [ vf]valid_LambdaTerm(v,zero, v_val)
             &*&  valid_LambdaTerm(result, depth,
-                    lambda_subst(t_val,nat_of_int(ind),v_val))
+                    lambda_subst(t_val,noi(ind),v_val))
             ;
       @*/
     /*@ terminates; @*/
@@ -498,19 +498,19 @@ LambdaTerm* lambdaSubst_inner(const LambdaTerm* term, uintptr_t ind,
         const LambdaTerm* v) /*@ : lambdaSubst_inner_t @*/
     /*@ requires [?tf]valid_LambdaTerm(term,?depth,?t_val)
             &*&  ind >= 0
-            &*&  int_of_nat(depth) > ind
+            &*&  ion(depth) > ind
             &*&  [?vf]valid_LambdaTerm(v,zero,?v_val)
             &*&  [2]call_perm_level(currentThread,pair(lt, lambda_depth(t_val)),
                     {lambdaSubst_inner})
-            &*&  int_of_nat(depth) +
-                    lambda_depth(lambda_subst(t_val,nat_of_int(ind),
+            &*&  ion(depth) +
+                    lambda_depth(lambda_subst(t_val,noi(ind),
                                  v_val)) <= UINTPTR_MAX
             ;
       @*/
     /*@ ensures  [ tf]valid_LambdaTerm(term, depth, t_val)
             &*&  [ vf]valid_LambdaTerm(v,zero, v_val)
             &*&  valid_LambdaTerm(result, depth,
-                    lambda_subst(t_val,nat_of_int(ind),v_val))
+                    lambda_subst(t_val,noi(ind),v_val))
             ;
       @*/
     /*@ terminates; @*/
@@ -537,8 +537,8 @@ LambdaTerm* lambdaSubst_inner(const LambdaTerm* term, uintptr_t ind,
     case LambVar:
         if(term->term.var.var_ix == ind) {
             /*@ {
-                assert t_val == lamb_var(nat_of_int(ind));
-                assert lambda_subst(t_val,nat_of_int(ind),v_val)
+                assert t_val == lamb_var(noi(ind));
+                assert lambda_subst(t_val,noi(ind),v_val)
                     == v_val;
             } @*/
             free(ret);

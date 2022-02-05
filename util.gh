@@ -60,24 +60,24 @@ fixpoint list<int> range_inner(int min, int max, nat f) {
 }
 
 fixpoint list<int> range(int min, int max) {
-    return max < min ? nil : range_inner(min,max,nat_of_int(max-min));
+    return max < min ? nil : range_inner(min,max,noi(max-min));
 }
 
 lemma
 void range_inner_len(int min,int max, nat n)
     requires true;
     ensures  length(range_inner(min,max,n))
-        ==   int_of_nat(n);
+        ==   ion(n);
 { NAT_INDUCTION(n,n0,range_inner_len(min+1,max,n0)) }
 
 lemma_auto(length(range(min,max)))
 void range_len(int min,int max)
     requires max >= min;
     ensures  length(range(min,max)) == max-min;
-{ range_inner_len(min,max,nat_of_int(max-min)); }
+{ range_inner_len(min,max,noi(max-min)); }
 
 lemma void reverse_range_inner(int min,int max, nat f)
-    requires max > min &*& int_of_nat(succ(f)) == max-min;
+    requires max > min &*& ion(succ(f)) == max-min;
     ensures  reverse(range_inner(min,max,succ(f)))
         ==   cons(max-1,reverse(range_inner(min,max-1,f)));
 {
@@ -94,7 +94,7 @@ void reverse_range(int min,int max)
     ensures  reverse(range(min,max))
         ==   cons(max-1,reverse(range(min,max-1)));
 {
-    nat f = nat_of_int(max-min);
+    nat f = noi(max-min);
     switch(f) {
     case zero: assert false;
     case succ(f0):
@@ -107,12 +107,12 @@ lemma void bounded_range(int min, int max, int x)
     requires min <= max;
     ensures  bounded(min,max,x) == mem(x,range(min,max+1));
 {
-    for(nat f = zero; max+1 - int_of_nat(f) > min; f = succ(f))
-        invariant max+1 - int_of_nat(f) >= min
-            &*&   bounded(max+1-int_of_nat(f),max,x)
-                == mem(x,range_inner(max+1-int_of_nat(f),max+1,f))
+    for(nat f = zero; max+1 - ion(f) > min; f = succ(f))
+        invariant max+1 - ion(f) >= min
+            &*&   bounded(max+1-ion(f),max,x)
+                == mem(x,range_inner(max+1-ion(f),max+1,f))
             ;
-        decreases max+1 - int_of_nat(f) - min;
+        decreases max+1 - ion(f) - min;
     { }
 }
 
@@ -125,29 +125,29 @@ void range_distinct(int min,int max)
         return;
     }
 
-    for(nat f = zero; max - int_of_nat(f) > min; f = succ(f))
-        invariant max - int_of_nat(f) >= min
-            &*&   let(range_inner(max-int_of_nat(f),max,f),
+    for(nat f = zero; max - ion(f) > min; f = succ(f))
+        invariant max - ion(f) >= min
+            &*&   let(range_inner(max-ion(f),max,f),
                       ?l)
             &*&   !!distinct(l)
-            &*&   !!forall(l,(bounded)(max-int_of_nat(f),max-1))
+            &*&   !!forall(l,(bounded)(max-ion(f),max-1))
             ;
-        decreases max - int_of_nat(f) - min;
+        decreases max - ion(f) - min;
     {
-        int v = max-int_of_nat(succ(f));
+        int v = max-ion(succ(f));
         assert range_inner(v,max,succ(f))
             == cons(v,l);
 
         if(mem(v,l)) {
-            forall_elim(l,(bounded)(max-int_of_nat(f),max-1),
+            forall_elim(l,(bounded)(max-ion(f),max-1),
                     v);
             assert false;
         }
 
-        if(!forall(l, (bounded)(max-int_of_nat(succ(f)),max-1))) {
+        if(!forall(l, (bounded)(max-ion(succ(f)),max-1))) {
             int cx = not_forall(l,
-                    (bounded)(max-int_of_nat(succ(f)),max-1));
-            forall_elim(l,(bounded)(max-int_of_nat(f),max-1),
+                    (bounded)(max-ion(succ(f)),max-1));
+            forall_elim(l,(bounded)(max-ion(f),max-1),
                     cx);
             assert false;
         }

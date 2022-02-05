@@ -40,15 +40,15 @@ fixpoint bool is_prime_fueled(int x, nat f) {
     switch(f) {
     case zero: return true;
     case succ(f0):
-        return (int_of_nat(f) >= x ? is_prime_fueled(x,f0)
-                : ((x-int_of_nat(f) <= 1) || ((x%(x-int_of_nat(f)) !=
+        return (ion(f) >= x ? is_prime_fueled(x,f0)
+                : ((x-ion(f) <= 1) || ((x%(x-ion(f)) !=
                         0))) &&
                     is_prime_fueled(x,f0));
     }
 }
 
 lemma void is_prime_fueled_mono(int x, nat n, nat m)
-    requires int_of_nat(n) >= int_of_nat(m);
+    requires ion(n) >= ion(m);
     ensures  !(    is_prime_fueled(x,n)
                && !is_prime_fueled(x,m));
 {
@@ -56,26 +56,26 @@ lemma void is_prime_fueled_mono(int x, nat n, nat m)
     case zero:
     case succ(n0):
         if(n == m) { return; }
-        assert int_of_nat(n0) + 1 == int_of_nat(n);
-        if(int_of_nat(n) == int_of_nat(m)) {
+        assert ion(n0) + 1 == ion(n);
+        if(ion(n) == ion(m)) {
             nat_of_int_of_nat(n);
             assert false;
         }
-        assert int_of_nat(n) > int_of_nat(m);
+        assert ion(n) > ion(m);
         is_prime_fueled_mono(x,n0,m);
     }
 }
 
 fixpoint bool is_prime(int x) {
-    return x > 1 && is_prime_fueled(x,nat_of_int(x));
+    return x > 1 && is_prime_fueled(x,noi(x));
 }
 
 fixpoint list<int> primes_below(nat n) {
     switch(n) {
     case zero: return {};
     case succ(n0):
-        return (is_prime(int_of_nat(n))
-                ? cons(int_of_nat(n),primes_below(n0))
+        return (is_prime(ion(n))
+                ? cons(ion(n),primes_below(n0))
                 : primes_below(n0));
     }
 }
@@ -84,23 +84,23 @@ lemma void primes_below_correct(nat n)
     requires true;
     ensures  !!distinct(primes_below(n))
         &*&  !!forall(primes_below(n), is_prime)
-        &*&  !!forall(primes_below(n), (bounded)(2,int_of_nat(n)))
+        &*&  !!forall(primes_below(n), (bounded)(2,ion(n)))
         ;
 {
     switch(n) {
     case zero:
     case succ(n0):
         primes_below_correct(n0);
-        if(mem(int_of_nat(n),primes_below(n0))) {
-            forall_elim(primes_below(n0), (bounded)(2,int_of_nat(n0)),
-                    int_of_nat(n));
+        if(mem(ion(n),primes_below(n0))) {
+            forall_elim(primes_below(n0), (bounded)(2,ion(n0)),
+                    ion(n));
             assert false;
         }
-        if(!forall(primes_below(n), (bounded)(2,int_of_nat(n)))) {
+        if(!forall(primes_below(n), (bounded)(2,ion(n)))) {
             int cx = not_forall(primes_below(n),
-                    (bounded)(2,int_of_nat(n)));
-            if(cx != int_of_nat(n)) {
-                forall_elim(primes_below(n0), (bounded)(2,int_of_nat(n0)),
+                    (bounded)(2,ion(n)));
+            if(cx != ion(n)) {
+                forall_elim(primes_below(n0), (bounded)(2,ion(n0)),
                         cx);
             }
             assert false;
@@ -112,7 +112,7 @@ lemma_auto(mem(x,primes_below(n)))
 void primes_below_correct_auto(nat n,int x)
     requires true;
     ensures  mem(x,primes_below(n))
-        ==   (is_prime(x) && bounded(2,int_of_nat(n),x));
+        ==   (is_prime(x) && bounded(2,ion(n),x));
 {
     switch(n) {
     case zero: return;
@@ -122,13 +122,13 @@ void primes_below_correct_auto(nat n,int x)
 }
 
 lemma void primes_below_complete(int p, nat n)
-    requires !!is_prime(p) &*& p <= int_of_nat(n);
+    requires !!is_prime(p) &*& p <= ion(n);
     ensures  !!mem(p,primes_below(n));
 {
     switch(n) {
     case zero:
     case succ(n0):
-        if(p != int_of_nat(n)) {
+        if(p != ion(n)) {
             primes_below_complete(p,n0);
         }
     }
@@ -137,14 +137,14 @@ lemma void primes_below_complete(int p, nat n)
 lemma void primes_below_as_filter(nat n)
     requires true;
     ensures  primes_below(n) ==
-        filter(is_prime,reverse(range(1,int_of_nat(succ(n)))));
+        filter(is_prime,reverse(range(1,ion(succ(n)))));
 {
     switch(n) {
     case zero:
     case succ(n0):
         primes_below_as_filter(n0);
-        if(int_of_nat(n0) > 1) {
-            reverse_range(1,int_of_nat(n0));
+        if(ion(n0) > 1) {
+            reverse_range(1,ion(n0));
         }
     }
 }
@@ -153,7 +153,7 @@ lemma void primes_below_as_filter(nat n)
 lemma void shift_primes_below_range(int bound, nat n)
     requires true;
     ensures  (
-        (bound-1 > int_of_nat(n))
+        (bound-1 > ion(n))
         ? filter((ge_than)(bound-1), primes_below(n)) == nil
         : (is_prime(bound-1))
         ? filter((ge_than)(bound-1), primes_below(n))
@@ -194,16 +194,16 @@ lemma void prime_no_factors(int x, int y)
 
     nat f = zero;
 
-    while(int_of_nat(f) < (x-y))
+    while(ion(f) < (x-y))
         invariant !!is_prime_fueled(x,f)
-            &*&   int_of_nat(f) <= (x-y);
-        decreases (x-y) - int_of_nat(f);
+            &*&   ion(f) <= (x-y);
+        decreases (x-y) - ion(f);
     {
-        nat x_f = nat_of_int(x);
-        while(int_of_nat(x_f) > int_of_nat(succ(f)))
-            invariant int_of_nat(x_f) >= int_of_nat(succ(f))
+        nat x_f = noi(x);
+        while(ion(x_f) > ion(succ(f)))
+            invariant ion(x_f) >= ion(succ(f))
                 &*&   !!is_prime_fueled(x,x_f);
-            decreases int_of_nat(x_f);
+            decreases ion(x_f);
         {
             switch(x_f) {
             case zero: assert false;
@@ -216,7 +216,7 @@ lemma void prime_no_factors(int x, int y)
 
         nat_of_int_of_nat(x_f);
         nat_of_int_of_nat(f);
-        assert int_of_nat(x_f) == int_of_nat(succ(f));
+        assert ion(x_f) == ion(succ(f));
         assert x_f == succ(f);
 
         f = succ(f);
@@ -250,20 +250,20 @@ lemma int findFactor(int x)
             invariant y > 1 &*& y < factor
                 &*&   (factor%y != 0)
                         == is_prime_fueled(factor,
-                                nat_of_int(factor-y))
+                                noi(factor-y))
                 &*&   !!is_prime_fueled(factor,
-                        nat_of_int(factor-(y+1)))
+                        noi(factor-(y+1)))
                 ;
             decreases y;
         {
-            assert !!is_prime_fueled(factor,nat_of_int(factor-y));
-            assert succ(nat_of_int(factor-y)) ==
-                nat_of_int(factor- (y-1));
+            assert !!is_prime_fueled(factor,noi(factor-y));
+            assert succ(noi(factor-y)) ==
+                noi(factor- (y-1));
             if(y == 2) {
-                assert !is_prime_fueled(factor,nat_of_int(factor));
-                assert succ(nat_of_int(factor-1)) ==
-                    nat_of_int(factor);
-                note( !is_prime_fueled(factor,nat_of_int(factor-1)));
+                assert !is_prime_fueled(factor,noi(factor));
+                assert succ(noi(factor-1)) ==
+                    noi(factor);
+                note( !is_prime_fueled(factor,noi(factor-1)));
                 assert false;
             }
         }
@@ -347,43 +347,43 @@ fixpoint bool prime_up_to(nat n, int x) {
 lemma void prime_test(int x)
     requires x > 1;
     ensures  is_prime(x)
-        ==   prime_up_to(nat_of_int(x-1), x);
+        ==   prime_up_to(noi(x-1), x);
 {
-    primes_below_correct(nat_of_int(x-1));
-    if(is_prime(x) && !forall(primes_below(nat_of_int(x-1)),
+    primes_below_correct(noi(x-1));
+    if(is_prime(x) && !forall(primes_below(noi(x-1)),
                               (nonfactor)(x))) {
-        int cx = not_forall(primes_below(nat_of_int(x-1)),
+        int cx = not_forall(primes_below(noi(x-1)),
                 (nonfactor)(x));
-        forall_elim(primes_below(nat_of_int(x-1)), (bounded)(2,x-1), cx);
+        forall_elim(primes_below(noi(x-1)), (bounded)(2,x-1), cx);
         prime_no_factors(x,cx);
         assert false;
     }
-    if(!is_prime(x) && forall(primes_below(nat_of_int(x-1)),
+    if(!is_prime(x) && forall(primes_below(noi(x-1)),
                               (nonfactor)(x))) {
         int p = findFactor(x);
-        primes_below_complete(p,nat_of_int(x-1));
-        forall_elim(primes_below(nat_of_int(x-1)), (nonfactor)(x), p);
+        primes_below_complete(p,noi(x-1));
+        forall_elim(primes_below(noi(x-1)), (nonfactor)(x), p);
         assert false;
     }
 }
 
 lemma void prime_up_to_no_factors(nat n, int x, int y)
-    requires !!prime_up_to(n,x) &*& y > 1 &*& y <= int_of_nat(n);
+    requires !!prime_up_to(n,x) &*& y > 1 &*& y <= ion(n);
     ensures  x%y != 0;
 {
     switch(n) {
     case zero: assert false;
     case succ(n0):
         if(x%y == 0) {
-            if(y != int_of_nat(n)) {
+            if(y != ion(n)) {
                 prime_up_to_no_factors(n0,x,y);
                 assert false;
             } else if(is_prime(y)) {
                 assert false;
             } else {
                 prime_test(y);
-                assert !prime_up_to(nat_of_int(y-1),y);
-                int cx = not_forall(primes_below(nat_of_int(y-1)),
+                assert !prime_up_to(noi(y-1),y);
+                int cx = not_forall(primes_below(noi(y-1)),
                         (nonfactor)(y));
                 div_rem(x,y);
                 div_rem(y,cx);
@@ -403,21 +403,21 @@ lemma void prime_up_to_no_factors(nat n, int x, int y)
 }
 
 lemma void prime_test_sqrt(int x, nat n)
-    requires x > 1 &*& int_of_nat(n) < x
-        &*&  int_of_nat(succ(n))*int_of_nat(succ(n)) > x;
+    requires x > 1 &*& ion(n) < x
+        &*&  ion(succ(n))*ion(succ(n)) > x;
     ensures  is_prime(x) == prime_up_to(n, x);
 {
     prime_test(x);
     if(is_prime(x) && !prime_up_to(n, x)) {
         int cx = not_forall(primes_below(n),(nonfactor)(x));
-        prime_up_to_no_factors(nat_of_int(x-1),x,cx);
+        prime_up_to_no_factors(noi(x-1),x,cx);
         assert false;
     }
     if(!is_prime(x) && prime_up_to(n, x)) {
-        int cx = not_forall(primes_below(nat_of_int(x-1)),
+        int cx = not_forall(primes_below(noi(x-1)),
                             (nonfactor)(x));
         div_rem(x,cx);
-        assert int_of_nat(nat_of_int(x-1)) == x-1;
+        assert ion(noi(x-1)) == x-1;
         div_sign(x,cx);
         if(cx*cx > x) {
             if(x/cx > cx) {
@@ -437,13 +437,13 @@ lemma void prime_test_sqrt(int x, nat n)
             cx = x/cx;
         }
         assert cx*cx <= x;
-        if(cx > int_of_nat(n)) {
-            assert cx >= int_of_nat(succ(n));
-            my_mul_mono_l(int_of_nat(succ(n)),cx,int_of_nat(succ(n)));
-            my_mul_mono_r(cx,int_of_nat(succ(n)),cx);
+        if(cx > ion(n)) {
+            assert cx >= ion(succ(n));
+            my_mul_mono_l(ion(succ(n)),cx,ion(succ(n)));
+            my_mul_mono_r(cx,ion(succ(n)),cx);
             assert false;
         }
-        assert cx <= int_of_nat(n);
+        assert cx <= ion(n);
         assert x%cx == 0;
 
         prime_up_to_no_factors(n,x,cx);
@@ -453,8 +453,8 @@ lemma void prime_test_sqrt(int x, nat n)
 
 lemma void prime_up_to_composite(nat n, int x)
     requires x > 1 &*& !!prime_up_to(n,x)
-        &*&  !is_prime(int_of_nat(succ(n)))
-        &*&  int_of_nat(succ(n)) < x
+        &*&  !is_prime(ion(succ(n)))
+        &*&  ion(succ(n)) < x
         ;
     ensures  !!prime_up_to(succ(n),x);
 {}
@@ -463,14 +463,14 @@ fixpoint int gcd_below(int x, int y, nat n) {
     switch(n) {
     case zero: return 1;
     case succ(n0):
-        return (x%int_of_nat(n) == 0
-                && y%int_of_nat(n) == 0
-               ) ? int_of_nat(n) : gcd_below(x,y,n0);
+        return (x%ion(n) == 0
+                && y%ion(n) == 0
+               ) ? ion(n) : gcd_below(x,y,n0);
     }
 }
 
 fixpoint int gcd(int x,int y) {
-    return gcd_below(x,y,nat_of_int(min_of(x,y)));
+    return gcd_below(x,y,noi(min_of(x,y)));
 }
 
 lemma_auto(gcd_below(x,y,n))
@@ -487,7 +487,7 @@ void gcd_divides_x(int x, int y, nat n)
     switch(n) {
     case zero: division_unique(x,1,x,0);
     case succ(n0):
-        if(x%int_of_nat(n) == 0 && y%int_of_nat(n) == 0) {
+        if(x%ion(n) == 0 && y%ion(n) == 0) {
             return;
         }
         gcd_divides_x(x,y,n0);
@@ -516,7 +516,7 @@ void gcd_symm(int x, int y, nat n)
 //    switch(n) {
 //    case zero: division_unique(y,1,y,0);
 //    case succ(n0):
-//        if(x%int_of_nat(n) == 0 && y%int_of_nat(n) == 0) {
+//        if(x%ion(n) == 0 && y%ion(n) == 0) {
 //            return;
 //        }
 //        gcd_divides_y(x,y,n0);
@@ -525,13 +525,13 @@ void gcd_symm(int x, int y, nat n)
 
 lemma void gcd_is_max_divisor_inner(int x, int y, int d, nat n)
     requires x > 0 &*& y > 0 &*& x%d == 0 &*& y%d == 0
-        &*&  int_of_nat(n) >= d;
+        &*&  ion(n) >= d;
     ensures  gcd_below(x,y,n) >= d;
 {
     switch(n) {
     case zero:
     case succ(n0):
-        if(x%int_of_nat(n) == 0 && y%int_of_nat(n) == 0) {
+        if(x%ion(n) == 0 && y%ion(n) == 0) {
             return;
         }
         gcd_is_max_divisor_inner(x,y,d,n0);
@@ -557,12 +557,12 @@ lemma void gcd_is_max_divisor(int x, int y, int d)
         div_rem(x,d);
         div_rem(y,d);
         assert min_of(x,y) >= d;
-        gcd_is_max_divisor_inner(x,y,d,nat_of_int(min_of(x,y)));
+        gcd_is_max_divisor_inner(x,y,d,noi(min_of(x,y)));
     }
 }
 
 // lemma void prime_divides_product_inner(int p, int x, int y, nat n)
-//     requires !!is_prime(p) &*& (x*y)%p == 0 &*& abs(x) <= int_of_nat(n);
+//     requires !!is_prime(p) &*& (x*y)%p == 0 &*& abs(x) <= ion(n);
 //     ensures  (x%p == 0 || y%p == 0);
 // {
 //     switch(n) {
@@ -766,28 +766,28 @@ lemma void prime_divides_product(int p, int a, int b)
 
 lemma void prime_divides_factorial(int p, nat n)
     requires !!is_prime(p);
-    ensures  (factorial(n)%p == 0) == (int_of_nat(n) >= p);
+    ensures  (factorial(n)%p == 0) == (ion(n) >= p);
 {
     switch(n) {
     case zero:
         assert factorial(n) == 1;
         division_unique(1,p,0,1);
     case succ(n0):
-        assert factorial(n) == int_of_nat(n)*factorial(n0);
+        assert factorial(n) == ion(n)*factorial(n0);
         prime_divides_factorial(p,n0);
-        if(int_of_nat(n0) >= p) {
-            assert int_of_nat(n) >= p;
+        if(ion(n0) >= p) {
+            assert ion(n) >= p;
             div_rem(factorial(n0),p);
             assert factorial(n)
-                == int_of_nat(n)*(p*(factorial(n0)/p));
-            mul_3var(int_of_nat(n),p,(factorial(n0)/p));
-            division_unique(factorial(n),p,int_of_nat(n)*(factorial(n0)/p),0);
-        } else if(int_of_nat(n) == p) {
+                == ion(n)*(p*(factorial(n0)/p));
+            mul_3var(ion(n),p,(factorial(n0)/p));
+            division_unique(factorial(n),p,ion(n)*(factorial(n0)/p),0);
+        } else if(ion(n) == p) {
             division_unique(factorial(n),p,factorial(n0),0);
         } else if(factorial(n)%p == 0) {
-            prime_divides_product(p,int_of_nat(n),factorial(n0));
+            prime_divides_product(p,ion(n),factorial(n0));
             assert factorial(n0)%p != 0;
-            division_unique(int_of_nat(n),p,0,int_of_nat(n));
+            division_unique(ion(n),p,0,ion(n));
             assert false;
         }
     }
@@ -846,16 +846,16 @@ void indices_of_length<t>(t v, list<t> l, int b)
 lemma void ge_than_primes_length_nat(int i, nat n)
     requires true;
     ensures  length(filter((ge_than)(i), primes_below(n)))
-        <=   max_of(0,int_of_nat(n)+1-i);
+        <=   max_of(0,ion(n)+1-i);
 { NAT_INDUCTION(n,n0, ge_than_primes_length_nat(i,n0)) }
 
 lemma_auto(filter((ge_than)(i),
-            primes_below(nat_of_int(n))))
+            primes_below(noi(n))))
 void ge_than_primes_length(int i, int n)
     requires n >= 0;
-    ensures  length(filter((ge_than)(i), primes_below(nat_of_int(n))))
+    ensures  length(filter((ge_than)(i), primes_below(noi(n))))
         <=   max_of(0,n+1-i);
-{ ge_than_primes_length_nat(i,nat_of_int(n)); }
+{ ge_than_primes_length_nat(i,noi(n)); }
 
 
 lemma void sieve_works(int i, int n, list<int> primes)
@@ -866,13 +866,13 @@ lemma void sieve_works(int i, int n, list<int> primes)
         ;
     ensures reverse(indices_of_inner(1,primes,i))
         ==  filter((ge_than)(i),
-                primes_below(nat_of_int(n-1)));
+                primes_below(noi(n-1)));
 {
     switch(primes) {
     case nil:
     case cons(x,xs):
         sieve_works(i+1,n,xs);
-        shift_primes_below_range(i+1,nat_of_int(n-1));
+        shift_primes_below_range(i+1,noi(n-1));
     }
 }
 
@@ -1085,13 +1085,13 @@ lemma void prime_factorization_exhaustive(
 //    requires !!is_prime(x) &*& y > 1 &*& y < x;
 //    ensures  x%y != 0;
 //{
-//    nat f = nat_of_int(x);
+//    nat f = noi(x);
 //
-//    while(int_of_nat(f) > y)
+//    while(ion(f) > y)
 //        invariant is_prime_fueled(x,f)
-//            &*&   int_of_nat(f) >= y
+//            &*&   ion(f) >= y
 //            ;
-//        decreases int_of_nat(f) - y;
+//        decreases ion(f) - y;
 //    {
 //        switch(f) {
 //        case zero:     assert false;
@@ -1104,9 +1104,9 @@ lemma void prime_factorization_exhaustive(
 //    switch(n) {
 //    case zero: return {};
 //    case succ(n0):
-//        return x%int_of_nat(n) == 0 && is_prime(int_of_nat(n))
+//        return x%ion(n) == 0 && is_prime(ion(n))
 //            ?
-//            cons(int_of_nat(n),prime_factorization_fueled(x/int_of_nat(n), n0)
+//            cons(ion(n),prime_factorization_fueled(x/ion(n), n0)
 //    }
 //}
 
@@ -1130,10 +1130,10 @@ void primes_below_sorted(nat n)
     case zero:
     case succ(n0):
         primes_below_sorted(n0);
-        if(is_prime(int_of_nat(n))) {
+        if(is_prime(ion(n))) {
             if(!sorted(reverse(primes_below(n)))) {
                 pair<int,int> cx = not_sorted_append(reverse(primes_below(n0)),
-                            {int_of_nat(n)});
+                            {ion(n)});
             }
         }
     }

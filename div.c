@@ -243,7 +243,7 @@ lemma void euclid_div_intro(int D, int d)
     ensures  [_]euclid_div_sol(D,d,_,_);
 {
     ALREADY_PROVEN()
-    euclid_div_correct(nat_of_int(abs(D)),D,d,0);
+    euclid_div_correct(noi(abs(D)),D,d,0);
     close euclid_div_sol(D,d,_,_);
     leak euclid_div_sol(D,d,_,_);
 }
@@ -266,7 +266,7 @@ lemma void euclid_div_unique_intro(int D, int d, int q, int r)
         &*&  euclid_div(D,d) == pair(q,r);
 {
     ALREADY_PROVEN()
-    nat f = nat_of_int(abs_of(D));
+    nat f = noi(abs_of(D));
     int_of_nat_of_int(abs_of(D));
     euclid_div_correct(f,D,d,0);
     switch(euclid_div_inner(f,D,d,0)) {
@@ -283,7 +283,7 @@ lemma void euclid_mod_correct(int D, int d)
 {
     ALREADY_PROVEN()
     int_of_nat_of_int(abs_of(D));
-    euclid_div_correct(nat_of_int(abs_of(D)),D,d,0);
+    euclid_div_correct(noi(abs_of(D)),D,d,0);
     switch(euclid_div(D,d)) {
     case pair(q,r):
         euclid_div_unique_intro(D,d,q,r);

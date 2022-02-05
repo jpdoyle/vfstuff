@@ -78,8 +78,8 @@ lemma void div_shift(int x,int b, nat n)
 void big_int_tiny_mul(int32_t s, big_int* x)
     /*@ requires bi_big_int(x,?carry,?und,?v)
             &*&  let(log_ceil(abs(s)),?lg2)
-            &*&  carry >= int_of_nat(lg2); @*/
-    /*@ ensures  bi_big_int(x,carry-int_of_nat(lg2), und||(s<0), s*v);
+            &*&  carry >= ion(lg2); @*/
+    /*@ ensures  bi_big_int(x,carry-ion(lg2), und||(s<0), s*v);
       @*/
     /*@ terminates; @*/
 {
@@ -90,12 +90,12 @@ void big_int_tiny_mul(int32_t s, big_int* x)
     do
         /*@ requires bi_block(i, ?ilast, ?iprev, 0, ?loop_ptrs,
                                    ?loop_chunks)
-                &*&  let(pow_nat(2,nat_of_int(31-carry))-1,?upper)
+                &*&  let(pow_nat(2,noi(31-carry))-1,?upper)
                 &*&  let(und ? -upper : 0,?lower)
                 &*&  !!forall(loop_chunks, (bounded)(-upper,upper))
                 &*&  !!forall(loop_chunks, (bounded)(lower,upper))
                 &*&  let(pow_nat(2,
-                            nat_of_int(31-(carry-int_of_nat(lg2))))-1,
+                            noi(31-(carry-ion(lg2))))-1,
                          ?upper2)
                 &*&  let((und||(s<0)) ? -upper2 : 0,?lower2)
                 ; @*/
@@ -138,11 +138,11 @@ void big_int_tiny_mul(int32_t s, big_int* x)
             /*@ {
 
                 my_mul_mono_r((pow_nat(2,lg2)-1),upper,
-                    pow_nat(2,nat_of_int(31-carry)));
+                    pow_nat(2,noi(31-carry)));
                 pow_plus(2,lg2,31-carry);
 
                 pow_soft_monotonic(2,
-                    nat_of_int(31-(carry-int_of_nat(lg2))),N31);
+                    noi(31-(carry-ion(lg2))),N31);
                 if(s*i_v > upper2) {
                     if(s < 0) {
                         my_mul_mono_r(-s,-i_v,upper);
@@ -211,12 +211,12 @@ void big_int_tiny_mul(int32_t s, big_int* x)
             forall_append_exact(final_chunks,rest_chunks,
                 (bounded)(lower2,upper2));
 
-            mul_3var(pow_nat(CHUNK_BASE,nat_of_int(N_INTS)),s,
+            mul_3var(pow_nat(CHUNK_BASE,noi(N_INTS)),s,
                 poly_eval(loop_rest_chunks,CHUNK_BASE));
 
             note_eq( poly_eval(append(final_chunks,rest_chunks),CHUNK_BASE)
                 ,  s*(poly_eval(i_blk_chunks,CHUNK_BASE)
-                + pow_nat(CHUNK_BASE,nat_of_int(N_INTS))
+                + pow_nat(CHUNK_BASE,noi(N_INTS))
                     *poly_eval(loop_rest_chunks,CHUNK_BASE)));
         } @*/
 
@@ -241,14 +241,14 @@ big_int* big_int_small_mul(big_int* dst,big_int* scratch,int32_t s,const big_int
     scratch = scratch ? scratch : new_big_int_zero();
     uint64_t abs_s = s < 0 ? (uint64_t)-(int64_t)s : (uint64_t)s;
     /*@ {
-        shiftleft_def(1,nat_of_int(CARRY_BITS-2));
+        shiftleft_def(1,noi(CARRY_BITS-2));
         division_unique(pow_nat(2,N32),2,pow_nat(2,N31),0);
-        pow_times2(2,nat_of_int(CARRY_BITS-2),32/(CARRY_BITS-2)+1);
+        pow_times2(2,noi(CARRY_BITS-2),32/(CARRY_BITS-2)+1);
         pow_soft_monotonic(2,
             N32,
-            nat_of_int((CARRY_BITS-2)*(32/(CARRY_BITS-2)+1)));
+            noi((CARRY_BITS-2)*(32/(CARRY_BITS-2)+1)));
         division_unique(abs_s,
-            pow_nat(2,nat_of_int((CARRY_BITS-2)*(32/(CARRY_BITS-2)+1))),
+            pow_nat(2,noi((CARRY_BITS-2)*(32/(CARRY_BITS-2)+1))),
             0,abs_s);
         bi_big_int_unique(ret,x);
         bi_big_int_unique(ret,scratch);
@@ -264,33 +264,33 @@ big_int* big_int_small_mul(big_int* dst,big_int* scratch,int32_t s,const big_int
                 &*&   shift >= 0
                 &*&   (shift-1)*(CARRY_BITS-2) <= 32
                 &*&   ret != x &*& ret != scratch &*& x != scratch
-                &*&   retv == (abs_s/pow_nat(mask+1,nat_of_int(shift)))*v
+                &*&   retv == (abs_s/pow_nat(mask+1,noi(shift)))*v
                 &*&   bi_big_int(scratch,_,_,_)
                 ; @*/
         /*@ decreases shift; @*/
     {
         /*@ {
             shiftright_div(abs_s,
-                nat_of_int((shift-1)*(CARRY_BITS-2)));
-            div_rem(abs_s, pow_nat(2,nat_of_int((shift-1)*(CARRY_BITS-2))));
-            div_sign(abs_s, pow_nat(2,nat_of_int((shift-1)*(CARRY_BITS-2))));
+                noi((shift-1)*(CARRY_BITS-2)));
+            div_rem(abs_s, pow_nat(2,noi((shift-1)*(CARRY_BITS-2))));
+            div_sign(abs_s, pow_nat(2,noi((shift-1)*(CARRY_BITS-2))));
         } @*/
         uint64_t shifted = (abs_s>>((shift-1)*(uint64_t)(CARRY_BITS-2)));
         /*@ {
-            bitand_pow_2(shifted,nat_of_int(CARRY_BITS-2));
-            mod_sign(shifted,pow_nat(2,nat_of_int(CARRY_BITS-2)));
-            div_rem(shifted,pow_nat(2,nat_of_int(CARRY_BITS-2)));
+            bitand_pow_2(shifted,noi(CARRY_BITS-2));
+            mod_sign(shifted,pow_nat(2,noi(CARRY_BITS-2)));
+            div_rem(shifted,pow_nat(2,noi(CARRY_BITS-2)));
             assert (shifted&mask)
-                == shifted%pow_nat(2,nat_of_int(CARRY_BITS-2));
-            pow_monotonic(2,nat_of_int(CARRY_BITS-2),N31);
+                == shifted%pow_nat(2,noi(CARRY_BITS-2));
+            pow_monotonic(2,noi(CARRY_BITS-2),N31);
 
             assert (shifted&mask)
-                < pow_nat(2,nat_of_int(CARRY_BITS-2));
+                < pow_nat(2,noi(CARRY_BITS-2));
             assert (shifted&mask) < pow_nat(2,N31);
-            log_ceil_minimal(shifted&mask,nat_of_int(CARRY_BITS-2));
+            log_ceil_minimal(shifted&mask,noi(CARRY_BITS-2));
 
-            pow_times2(2,nat_of_int(CARRY_BITS-2),shift-1);
-            note_eq(shifted, abs_s/pow_nat(mask+1,nat_of_int(shift-1)));
+            pow_times2(2,noi(CARRY_BITS-2),shift-1);
+            note_eq(shifted, abs_s/pow_nat(mask+1,noi(shift-1)));
         } @*/
 
         int32_t coeff = (int32_t)(shifted&mask);
@@ -306,19 +306,19 @@ big_int* big_int_small_mul(big_int* dst,big_int* scratch,int32_t s,const big_int
             assert retv1 == (mask+1)*retv + (shifted%(mask+1))*v;
             assert retv1
                 == (mask+1)
-                    *((abs_s/pow_nat(mask+1,nat_of_int(shift)))*v)
+                    *((abs_s/pow_nat(mask+1,noi(shift)))*v)
                 + (shifted%(mask+1))*v;
             note_eq( retv1
                 ,  ((mask+1)
-                    *(abs_s/pow_nat(mask+1,nat_of_int(shift)))
+                    *(abs_s/pow_nat(mask+1,noi(shift)))
                     + shifted%(mask+1))*v);
             assert retv1
                 == ((mask+1)
-                    *(abs_s/pow_nat(mask+1,nat_of_int(shift)))
-                    + (abs_s/pow_nat(mask+1,nat_of_int(shift-1)))%(mask+1))*v;
-            div_shift(abs_s,mask+1,nat_of_int(shift-1));
+                    *(abs_s/pow_nat(mask+1,noi(shift)))
+                    + (abs_s/pow_nat(mask+1,noi(shift-1)))%(mask+1))*v;
+            div_shift(abs_s,mask+1,noi(shift-1));
             assert retv1
-                == (abs_s/pow_nat(mask+1,nat_of_int(shift-1)))*v;
+                == (abs_s/pow_nat(mask+1,noi(shift-1)))*v;
         } @*/
         /* @ {
 
@@ -422,8 +422,8 @@ big_int* big_int_mul(const big_int* x,const big_int* y)
     big_int* ret = new_big_int_zero();
     big_int* scratch0 = new_big_int_zero();
     big_int* scratch1 = new_big_int_zero();
-    /*@ shiftleft_def(1,nat_of_int(CHUNK_BITS)); @*/
-    /*@ pow_monotonic(2,nat_of_int(CHUNK_BITS),N31); @*/
+    /*@ shiftleft_def(1,noi(CHUNK_BITS)); @*/
+    /*@ pow_monotonic(2,noi(CHUNK_BITS),N31); @*/
     int32_t chunk_base = (1<<CHUNK_BITS);
 
     /*@ open bi_big_int(x,_,_,_); @*/
@@ -432,7 +432,7 @@ big_int* big_int_mul(const big_int* x,const big_int* y)
     /*@ assert [xf]bi_block(first,?xlast,0,0,?xptrs,?xchunks);
       @*/
     /*@ poly_eval_bounded_pos(xchunks,
-      pow_nat(2,nat_of_int(31-CARRY_BITS))-1, CHUNK_BASE); @*/
+      pow_nat(2,noi(31-CARRY_BITS))-1, CHUNK_BASE); @*/
     /*@ if(is_pos) {
       assert abs_of(xv) == xv;
       assert xv == poly_eval(xchunks,CHUNK_BASE);
@@ -459,7 +459,7 @@ big_int* big_int_mul(const big_int* x,const big_int* y)
                 &*&  bi_big_int(ret,CARRY_BITS,false,
                         poly_eval(loop_chunks,CHUNK_BASE)*yv
                         + pow_nat(CHUNK_BASE,
-                                nat_of_int(length(loop_chunks)))
+                                noi(length(loop_chunks)))
                             *retv)
                 &*&  bi_big_int(scratch0,CARRY_BITS,false,0)
                 &*&  bi_big_int(scratch1,_,_,_)
@@ -483,7 +483,7 @@ big_int* big_int_mul(const big_int* x,const big_int* y)
                     &*&  bi_big_int(ret,CARRY_BITS,false,
                             poly_eval(blk_chunks,CHUNK_BASE)*yv
                             + pow_nat(CHUNK_BASE,
-                                    nat_of_int(length(blk_chunks)))
+                                    noi(length(blk_chunks)))
                             *blk_retv)
                     ; @*/
             /*@ decreases block_i; @*/
@@ -517,51 +517,51 @@ big_int* big_int_mul(const big_int* x,const big_int* y)
                 assert bi_big_int(ret,CARRY_BITS,false, ?final_retv);
                 assert final_retv
                     == poly_eval(rest,CHUNK_BASE)*yv
-                    + pow_nat(CHUNK_BASE, nat_of_int(length(rest)))
+                    + pow_nat(CHUNK_BASE, noi(length(rest)))
                         *(v*yv + CHUNK_BASE*blk_retv);
                 mul_3var(
-                    pow_nat(CHUNK_BASE, nat_of_int(length(rest))),v,yv);
+                    pow_nat(CHUNK_BASE, noi(length(rest))),v,yv);
                 note_eq( final_retv
                     ,  poly_eval(rest,CHUNK_BASE)*yv
-                    + pow_nat(CHUNK_BASE, nat_of_int(length(rest)))
+                    + pow_nat(CHUNK_BASE, noi(length(rest)))
                         *(v*yv)
-                    + pow_nat(CHUNK_BASE, nat_of_int(length(rest)))
+                    + pow_nat(CHUNK_BASE, noi(length(rest)))
                         *(CHUNK_BASE*blk_retv));
                 assert final_retv
                     == (poly_eval(rest,CHUNK_BASE)
-                    + pow_nat(CHUNK_BASE, nat_of_int(length(rest)))
+                    + pow_nat(CHUNK_BASE, noi(length(rest)))
                         *v)*yv
-                    + pow_nat(CHUNK_BASE, nat_of_int(length(rest)))
+                    + pow_nat(CHUNK_BASE, noi(length(rest)))
                         *(CHUNK_BASE*blk_retv);
                 assert final_retv
                     == (poly_eval(rest,CHUNK_BASE)
-                    + pow_nat(CHUNK_BASE, nat_of_int(length(rest)))
+                    + pow_nat(CHUNK_BASE, noi(length(rest)))
                         *v)*yv
-                    + pow_nat(CHUNK_BASE, nat_of_int(length(rest)))
+                    + pow_nat(CHUNK_BASE, noi(length(rest)))
                         *CHUNK_BASE*blk_retv;
                 note_eq( final_retv
                     ,  (poly_eval(rest,CHUNK_BASE)
-                    + pow_nat(CHUNK_BASE, nat_of_int(length(rest)))
+                    + pow_nat(CHUNK_BASE, noi(length(rest)))
                         *v)*yv
                     + (CHUNK_BASE
                         *pow_nat(CHUNK_BASE,
-                            nat_of_int(length(rest))))
+                            noi(length(rest))))
                       *blk_retv);
                 assert final_retv
                     == poly_eval(append(rest,{v}),CHUNK_BASE)*yv
                     + (CHUNK_BASE
                         *pow_nat(CHUNK_BASE,
-                            nat_of_int(length(rest))))
+                            noi(length(rest))))
                       *blk_retv;
                 assert final_retv
                     == poly_eval(append(rest,{v}),CHUNK_BASE)*yv
                     + (pow_nat(CHUNK_BASE,
-                            nat_of_int(length(rest)+1)))
+                            noi(length(rest)+1)))
                       *blk_retv;
                 assert final_retv
                     == poly_eval(append(rest,{v}),CHUNK_BASE)*yv
                     + pow_nat(CHUNK_BASE,
-                            nat_of_int(length(blk_chunks)))
+                            noi(length(blk_chunks)))
                       *blk_retv;
             } @*/
         }
@@ -585,51 +585,51 @@ big_int* big_int_mul(const big_int* x,const big_int* y)
             assert bi_big_int(ret,CARRY_BITS,false, ?final_retv);
             assert final_retv
                 == poly_eval(rest,CHUNK_BASE)*yv
-                + pow_nat(CHUNK_BASE, nat_of_int(length(rest)))
+                + pow_nat(CHUNK_BASE, noi(length(rest)))
                     *(poly_eval(i_chunks,CHUNK_BASE)*yv
-                            + pow_nat(CHUNK_BASE, nat_of_int(N_INTS))
+                            + pow_nat(CHUNK_BASE, noi(N_INTS))
                             *retv);
 
             note_eq( final_retv
                 ,  poly_eval(rest,CHUNK_BASE)*yv
-                + pow_nat(CHUNK_BASE, nat_of_int(length(rest)))
+                + pow_nat(CHUNK_BASE, noi(length(rest)))
                     *(poly_eval(i_chunks,CHUNK_BASE)*yv)
-                + pow_nat(CHUNK_BASE, nat_of_int(length(rest)))
-                    *(pow_nat(CHUNK_BASE, nat_of_int(N_INTS))*retv));
+                + pow_nat(CHUNK_BASE, noi(length(rest)))
+                    *(pow_nat(CHUNK_BASE, noi(N_INTS))*retv));
 
-            mul_3var(pow_nat(CHUNK_BASE, nat_of_int(length(rest))),
+            mul_3var(pow_nat(CHUNK_BASE, noi(length(rest))),
                     poly_eval(i_chunks,CHUNK_BASE),yv);
-            mul_3var(pow_nat(CHUNK_BASE, nat_of_int(length(rest))),
-                    pow_nat(CHUNK_BASE, nat_of_int(N_INTS)),retv);
+            mul_3var(pow_nat(CHUNK_BASE, noi(length(rest))),
+                    pow_nat(CHUNK_BASE, noi(N_INTS)),retv);
 
             assert final_retv
                 == (poly_eval(rest,CHUNK_BASE)
-                + pow_nat(CHUNK_BASE, nat_of_int(length(rest)))
+                + pow_nat(CHUNK_BASE, noi(length(rest)))
                     *poly_eval(i_chunks,CHUNK_BASE))*yv
-                + pow_nat(CHUNK_BASE, nat_of_int(length(rest)))
-                    *(pow_nat(CHUNK_BASE, nat_of_int(N_INTS))*retv);
+                + pow_nat(CHUNK_BASE, noi(length(rest)))
+                    *(pow_nat(CHUNK_BASE, noi(N_INTS))*retv);
             assert final_retv
                 == (poly_eval(rest,CHUNK_BASE)
-                + pow_nat(CHUNK_BASE, nat_of_int(length(rest)))
+                + pow_nat(CHUNK_BASE, noi(length(rest)))
                     *poly_eval(i_chunks,CHUNK_BASE))*yv
-                + pow_nat(CHUNK_BASE, nat_of_int(length(rest)))
-                    *pow_nat(CHUNK_BASE, nat_of_int(N_INTS))*retv;
-            mul_3var(pow_nat(CHUNK_BASE, nat_of_int(length(rest))),
-                    pow_nat(CHUNK_BASE, nat_of_int(N_INTS)),retv);
-            pow_plus(CHUNK_BASE,nat_of_int(length(rest)),N_INTS);
+                + pow_nat(CHUNK_BASE, noi(length(rest)))
+                    *pow_nat(CHUNK_BASE, noi(N_INTS))*retv;
+            mul_3var(pow_nat(CHUNK_BASE, noi(length(rest))),
+                    pow_nat(CHUNK_BASE, noi(N_INTS)),retv);
+            pow_plus(CHUNK_BASE,noi(length(rest)),N_INTS);
             note_eq( final_retv
                 ,  (poly_eval(rest,CHUNK_BASE)
-                + pow_nat(CHUNK_BASE, nat_of_int(length(rest)))
+                + pow_nat(CHUNK_BASE, noi(length(rest)))
                     *poly_eval(i_chunks,CHUNK_BASE))*yv
-                + (pow_nat(CHUNK_BASE, nat_of_int(length(rest)+N_INTS)))
+                + (pow_nat(CHUNK_BASE, noi(length(rest)+N_INTS)))
                     *retv);
             assert final_retv
                 == poly_eval(append(rest,i_chunks),CHUNK_BASE)*yv
-                + (pow_nat(CHUNK_BASE, nat_of_int(length(rest)+N_INTS)))
+                + (pow_nat(CHUNK_BASE, noi(length(rest)+N_INTS)))
                     *retv;
             assert final_retv
                 == poly_eval(append(rest,i_chunks),CHUNK_BASE)*yv
-                + (pow_nat(CHUNK_BASE, nat_of_int(length(loop_chunks))))
+                + (pow_nat(CHUNK_BASE, noi(length(loop_chunks))))
                     *retv;
         } @*/
     } while(i);

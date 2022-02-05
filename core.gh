@@ -15,6 +15,16 @@
 
 fixpoint int abs_of(int x) { return x >= 0 ? x : -x; }
 
+lemma_auto void abs_of_pos(int x)
+    requires x >= 0;
+    ensures  abs_of(x) == x;
+{}
+
+lemma_auto void abs_of_neg(int x)
+    requires x < 0;
+    ensures  abs_of(x) == -x;
+{}
+
 predicate let<t>(t x; t y) = y == x;
 
 fixpoint bool nonneg(int x) { return x >= 0; }
@@ -398,11 +408,11 @@ void max_of_auto2(int a, int b);
 
 fixpoint bool isbit(int x) { return x == 0 || x == 1; }
 
-lemma_auto(int_of_nat(nat_minus(n,m)))
+lemma_auto(ion(nat_minus(n,m)))
 void nat_minus_int(nat n, nat m);
     requires true;
-    ensures  int_of_nat(nat_minus(n,m))
-        ==   max_of(0,int_of_nat(n)-int_of_nat(m));
+    ensures  ion(nat_minus(n,m))
+        ==   max_of(0,ion(n)-ion(m));
 
 lemma void abs_triangle(int x, int y)
     requires true;

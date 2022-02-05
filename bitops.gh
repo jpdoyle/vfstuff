@@ -83,12 +83,12 @@ void Z_neg_auto(Z z);
 lemma_auto(Z_size(z))
 void Z_size_bound_pos(Z z);
     requires !Z_is_neg(z);
-    ensures  int_of_Z(z) < pow_nat(2,nat_of_int(Z_size(z)));
+    ensures  int_of_Z(z) < pow_nat(2,noi(Z_size(z)));
 
 lemma_auto(Z_size(z))
 void Z_size_bound_neg(Z z);
     requires !!Z_is_neg(z);
-    ensures  -int_of_Z(z) <= pow_nat(2,nat_of_int(Z_size(z)));
+    ensures  -int_of_Z(z) <= pow_nat(2,noi(Z_size(z)));
 
 fixpoint Z Z_and(Z z1, Z z2) {
     switch (z1) {
@@ -150,7 +150,7 @@ lemma void bitor_def(int x1, Z z1, int x2, Z z2);
 
 lemma void shiftleft_def(int x, nat n);
     requires x >= 0;
-    ensures x << int_of_nat(n) == x * pow_nat(2, n);
+    ensures x << ion(n) == x * pow_nat(2, n);
 
 fixpoint Z Z_shiftright(Z z, nat n) {
     switch (n) {
@@ -164,20 +164,20 @@ fixpoint Z Z_shiftright(Z z, nat n) {
 
 lemma void shiftright_def(int x, Z z, nat n);
     requires x == int_of_Z(z) &*& x >= 0;
-    ensures x >> int_of_nat(n) == int_of_Z(Z_shiftright(z, n));
+    ensures x >> ion(n) == int_of_Z(Z_shiftright(z, n));
 
 lemma void truncate_unsigned_def(int x, nat n);
     requires true;
     ensures  euclid_mod(x,pow_nat(2,n))
-        ==   truncate_unsigned(x, int_of_nat(n));
+        ==   truncate_unsigned(x, ion(n));
 
 lemma_auto(truncate_unsigned(x,nb)) void truncate_unsigned_def_auto(int x, int nb)
     requires nb >= 0;
     ensures truncate_unsigned(x, nb)
-        == (x % pow_nat(2, nat_of_int(nb)) + pow_nat(2,nat_of_int(nb))) % pow_nat(2, nat_of_int(nb));
+        == (x % pow_nat(2, noi(nb)) + pow_nat(2,noi(nb))) % pow_nat(2, noi(nb));
 {
-    truncate_unsigned_def(x,nat_of_int(nb));
-    euclid_mod_auto(x, pow_nat(2, nat_of_int(nb)));
+    truncate_unsigned_def(x,noi(nb));
+    euclid_mod_auto(x, pow_nat(2, noi(nb)));
     int_of_nat_of_int(nb);
 }
 
@@ -196,7 +196,7 @@ fixpoint Z Z_truncate_signed(Z z, nat n) { // n = number of bits, not including 
 
 lemma void truncate_signed_def(int x, Z z, nat n);
     requires x == int_of_Z(z);
-    ensures truncate_signed(x, int_of_nat(n)) == int_of_Z(Z_truncate_signed(z, n));
+    ensures truncate_signed(x, ion(n)) == int_of_Z(Z_truncate_signed(z, n));
 
 // Limits
 
@@ -226,27 +226,27 @@ lemma void bitor_signed_limits(int x, int y, nat n);
 
 lemma void shiftleft_limits(int x, nat m, nat n);
     requires 0 <= x &*& x < pow_nat(2, m);
-    ensures 0 <= x << int_of_nat(n) &*& x << int_of_nat(n) < pow_nat(2, nat_plus(m, n));
+    ensures 0 <= x << ion(n) &*& x << ion(n) < pow_nat(2, nat_plus(m, n));
 
 lemma void shiftleft_signed_limits(int x, nat m, nat n);
     requires -pow_nat(2, m) <= x &*& x < pow_nat(2, m);
-    ensures -pow_nat(2, nat_plus(m, n)) <= x << int_of_nat(n) &*& x << int_of_nat(n) < pow_nat(2, nat_plus(m, n));
+    ensures -pow_nat(2, nat_plus(m, n)) <= x << ion(n) &*& x << ion(n) < pow_nat(2, nat_plus(m, n));
 
 lemma void shiftright_limits(int x, nat m, nat n);
     requires 0 <= x &*& x < pow_nat(2, m);
-    ensures 0 <= x >> int_of_nat(n) &*& x >> int_of_nat(n) < pow_nat(2, nat_minus(m, n));
+    ensures 0 <= x >> ion(n) &*& x >> ion(n) < pow_nat(2, nat_minus(m, n));
 
 lemma void shiftright_signed_limits(int x, nat m, nat n);
     requires -pow_nat(2, m) <= x &*& x < pow_nat(2, m);
-    ensures -pow_nat(2, nat_minus(m, n)) <= x >> int_of_nat(n) &*& x >> int_of_nat(n) < pow_nat(2, nat_minus(m, n));
+    ensures -pow_nat(2, nat_minus(m, n)) <= x >> ion(n) &*& x >> ion(n) < pow_nat(2, nat_minus(m, n));
 
 lemma void truncate_limits(int x, nat n);
     requires true;
-    ensures 0 <= truncate_unsigned(x, int_of_nat(n)) &*& truncate_unsigned(x, int_of_nat(n)) < pow_nat(2, n);
+    ensures 0 <= truncate_unsigned(x, ion(n)) &*& truncate_unsigned(x, ion(n)) < pow_nat(2, n);
 
 lemma void truncate_signed_limits(int x, nat n);
     requires true;
-    ensures -pow_nat(2, n) <= truncate_signed(x, int_of_nat(n)) &*& truncate_signed(x, int_of_nat(n)) < pow_nat(2, n);
+    ensures -pow_nat(2, n) <= truncate_signed(x, ion(n)) &*& truncate_signed(x, ion(n)) < pow_nat(2, n);
 
 // Bit blasting
 
@@ -347,12 +347,12 @@ fixpoint nat npow2_inner(int x,nat n) {
 }
 
 fixpoint nat npow2(int x) {
-    return npow2_inner(x,nat_of_int(abs(x)));
+    return npow2_inner(x,noi(abs(x)));
 }
 
 lemma_auto(npow2_inner(x,n))
 void npow2_prop_inner(int x, nat n);
-    requires abs(x) <= int_of_nat(n);
+    requires abs(x) <= ion(n);
     ensures  pow_nat(2,npow2_inner(x,n)) > abs(x);
 
 lemma_auto(npow2(x))
@@ -362,7 +362,7 @@ void npow2_prop(int x);
 
 lemma void npow2_minimal(int x,nat n);
     requires pow_nat(2,n) > abs(x);
-    ensures  int_of_nat(n) >= int_of_nat(npow2(x));
+    ensures  ion(n) >= ion(npow2(x));
 
 
 fixpoint nat log_ceil_inner(int x,nat n,nat sofar) {
@@ -375,7 +375,7 @@ fixpoint nat log_ceil_inner(int x,nat n,nat sofar) {
 }
 
 fixpoint nat log_ceil(int x) {
-    return log_ceil_inner(x,nat_of_int(abs(x)),zero);
+    return log_ceil_inner(x,noi(abs(x)),zero);
 }
 
 lemma_auto(log_ceil(x))
@@ -385,7 +385,7 @@ void log_ceil_prop(int x);
 
 lemma void log_ceil_minimal(int x,nat n);
     requires pow_nat(2,n) >= abs(x);
-    ensures  int_of_nat(n) >= int_of_nat(log_ceil(x));
+    ensures  ion(n) >= ion(log_ceil(x));
 
 lemma_auto(x|y)
 void bitor_commutes(int x, int y);
@@ -427,12 +427,12 @@ lemma void shiftright_div_inner(Z x_Z, nat n);
 
 lemma void shiftright_div(int x, nat n);
     requires x >= 0;
-    ensures  x>>int_of_nat(n) == x/pow_nat(2,n);
+    ensures  x>>ion(n) == x/pow_nat(2,n);
 
 //lemma void shiftright_div_rem(int x, nat n);
 //    requires x >= 0;
-//    ensures  x>>int_of_nat(n) == x/pow_nat(2,n)
-//        &*&  (x&((1<<int_of_nat(n))-1)) == x%pow_nat(2,n);
+//    ensures  x>>ion(n) == x/pow_nat(2,n)
+//        &*&  (x&((1<<ion(n))-1)) == x%pow_nat(2,n);
 
 #endif
 

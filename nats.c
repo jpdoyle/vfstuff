@@ -54,19 +54,19 @@ lemma_auto(nat_plus(n,m)) void nat_plus_comm(nat n, nat m)
 lemma_auto(nat_plus(n,m))
 void nat_plus_int_of_nat(nat n, nat m)
     requires true;
-    ensures  nat_plus(n,m) == nat_of_int(int_of_nat(n)+int_of_nat(m));
+    ensures  nat_plus(n,m) == noi(ion(n)+ion(m));
 { NAT_INDUCTION(n,n0,nat_plus_int_of_nat(n0,m)) }
 
 
-lemma_auto(nat_of_int(length(cons(x,xs)))) void nat_of_int_of_length<t>(t x, list<t> xs)
+lemma_auto(noi(length(cons(x,xs)))) void nat_of_int_of_length<t>(t x, list<t> xs)
     requires true;
-    ensures nat_of_int(length(cons(x,xs))) == succ(nat_of_int(length(xs)));
+    ensures noi(length(cons(x,xs))) == succ(noi(length(xs)));
 { }
 
-lemma_auto(nat_of_int(length(append(a,b)))) void nat_of_int_of_length_append<t>(list<t> a, list<t> b)
+lemma_auto(noi(length(append(a,b)))) void nat_of_int_of_length_append<t>(list<t> a, list<t> b)
     requires true;
-    ensures nat_of_int(length(append(a,b))) ==
-        nat_plus(nat_of_int(length(a)),nat_of_int(length(b)));
+    ensures noi(length(append(a,b))) ==
+        nat_plus(noi(length(a)),noi(length(b)));
 {
     switch(a) {
     case nil:
@@ -75,11 +75,11 @@ lemma_auto(nat_of_int(length(append(a,b)))) void nat_of_int_of_length_append<t>(
     }
 }
 
-lemma_auto(nat_of_int(x)) void nat_of_int_auto(int x)
+lemma_auto(noi(x)) void nat_of_int_auto(int x)
     requires x > 0;
-    ensures  (nat_of_int(x) != zero);
+    ensures  (noi(x) != zero);
 {
-    assert nat_of_int(x) == succ(nat_of_int(x-1));
+    assert noi(x) == succ(noi(x-1));
 }
 
 lemma void pow10_distrib(int x, int y, nat n)

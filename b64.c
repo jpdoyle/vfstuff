@@ -244,7 +244,7 @@ lemma void base_n_split(list<char> symbs_l,list<char> symbs_r)
         &*&  seq == append(seq_l,seq_r)
         &*&  val == v_l
                     + pow_nat(length(place_vals),
-                              nat_of_int(length(symbs_l)))*v_r;
+                              noi(length(symbs_l)))*v_r;
 {
         ALREADY_PROVEN()
     switch(symbs_l) {
@@ -265,29 +265,29 @@ lemma void base_n_split(list<char> symbs_l,list<char> symbs_r)
 
         assert v_suff == v_xs
                        + pow_nat(length(place_vals),
-                                 nat_of_int(length(xs)))*v_r;
+                                 noi(length(xs)))*v_r;
 
         assert val == v
                 + length(place_vals)*(v_xs
                     + pow_nat(length(place_vals),
-                                 nat_of_int(length(xs)))*v_r);
+                                 noi(length(xs)))*v_r);
         note_eq( length(place_vals)*(v_xs
                     + pow_nat(length(place_vals),
-                                 nat_of_int(length(xs)))*v_r)
+                                 noi(length(xs)))*v_r)
             ,  length(place_vals)*v_xs
                     + length(place_vals)*(pow_nat(length(place_vals),
-                                 nat_of_int(length(xs)))*v_r));
+                                 noi(length(xs)))*v_r));
 
         assert val == (v + length(place_vals)*v_xs)
                     + length(place_vals)*(pow_nat(length(place_vals),
-                                 nat_of_int(length(xs)))*v_r);
+                                 noi(length(xs)))*v_r);
 
         mul_assoc(length(place_vals),pow_nat(length(place_vals),
-                                 nat_of_int(length(xs))),v_r);
+                                 noi(length(xs))),v_r);
 
         assert val == v_l
                     + (pow_nat(length(place_vals),
-                               nat_of_int(length(symbs_l)))*v_r);
+                               noi(length(symbs_l)))*v_r);
 
     }
 }
@@ -300,7 +300,7 @@ lemma void base_n_append(list<char> symbs_l,list<char> symbs_r)
                     append(seq_l,seq_r),
                     val_l
                     + val_r*pow_nat(length(place_vals),
-                                    nat_of_int(length(symbs_l))));
+                                    noi(length(symbs_l))));
 {
         ALREADY_PROVEN()
     switch(symbs_l) {
@@ -312,8 +312,8 @@ lemma void base_n_append(list<char> symbs_l,list<char> symbs_r)
         base_n_append(ss,symbs_r);
         assert [f2]base_n(_,append(ss,symbs_r),?seq_rest,?val_res);
 
-        assert nat_of_int(length(symbs_l))
-            == succ(nat_of_int(length(ss)));
+        assert noi(length(symbs_l))
+            == succ(noi(length(ss)));
 
         assert [f1]let(index_of(s,place_vals),?v);
 
@@ -321,7 +321,7 @@ lemma void base_n_append(list<char> symbs_l,list<char> symbs_r)
 
         assert val_res == val_ss
             + val_r*pow_nat(length(place_vals),
-                                    nat_of_int(length(ss)));
+                                    noi(length(ss)));
 
         close [f2]base_n(place_vals,append(symbs_l,symbs_r),
                     append(seq_l,seq_r),
@@ -330,10 +330,10 @@ lemma void base_n_append(list<char> symbs_l,list<char> symbs_r)
         assert val_final == v
             + length(place_vals)*(val_ss
                     + val_r*pow_nat(length(place_vals),
-                                    nat_of_int(length(ss))));
+                                    noi(length(ss))));
 
         mul_3var(val_r,length(place_vals),
-                pow_nat(length(place_vals), nat_of_int(length(ss))));
+                pow_nat(length(place_vals), noi(length(ss))));
 
     }
 }
@@ -546,14 +546,14 @@ uint8_t* bytes_of_hex(size_t len, char* s, size_t* outlen)
             assert v == h*16+l;
             assert loop_val
                 == rest_val
-                + pow_nat(16,nat_of_int(length(rest_hexits)))
+                + pow_nat(16,noi(length(rest_hexits)))
                     *v;
 
             note_eq(length(rest_hexits),len-2-i);
 
             assert loop_val
                 == rest_val
-                + pow_nat(16,nat_of_int(len-2-i))
+                + pow_nat(16,noi(len-2-i))
                     *(h*16 + l);
 
             division_unique(len-2-i,2,len/2-1-i/2,0);
@@ -561,12 +561,12 @@ uint8_t* bytes_of_hex(size_t len, char* s, size_t* outlen)
 
             assert loop_val
                 == rest_val
-                + pow_nat(16,nat_of_int(2*((len-2-i)/2)))
+                + pow_nat(16,noi(2*((len-2-i)/2)))
                     *(h*16 + l);
             pow_times2(16,N2,(len-2-i)/2);
             assert loop_val
                 == rest_val
-                + pow_nat(16*16,nat_of_int(((len-2-i)/2)))
+                + pow_nat(16*16,noi(((len-2-i)/2)))
                     *v;
         } @*/
     }
@@ -664,7 +664,7 @@ char* hex_of_bytes(size_t len, uint8_t* b)
             assert base_n(hex_chars(),
                 reverse(cons(c1,cons(c2,rest_hex))),_,?final_val);
             assert final_val == rest_val +
-                pow_nat(16,nat_of_int(length(rest_hex)))*x;
+                pow_nat(16,noi(length(rest_hex)))*x;
             pow_times2(16,N2,len-1-old_i);
         } @*/
     }

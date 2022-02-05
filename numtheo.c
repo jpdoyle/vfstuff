@@ -165,7 +165,7 @@ size_t int_sqrt(size_t n)
 size_t prime_sieve(size_t* buff, size_t n)
     /*@ requires buff[..n] |-> _ &*& n > 0 &*& n+n <= ULLONG_MAX; @*/
     /*@ ensures  u_llong_buffer(buff, result, n,
-                    reverse(primes_below(nat_of_int(n-1))));
+                    reverse(primes_below(noi(n-1))));
       @*/
     /*@ terminates; @*/
 {
@@ -182,14 +182,14 @@ size_t prime_sieve(size_t* buff, size_t n)
     if(n <= 2) {
         /*@ {
           if(n == 2) {
-            assert nat_of_int(n-1) == succ(zero);
+            assert noi(n-1) == succ(zero);
           } else {
             if(n < 1) { assert false; }
             if(n > 1) { assert false; }
             assert n == 1;
-            assert nat_of_int(n-1) == zero;
+            assert noi(n-1) == zero;
           }
-        assert primes_below(nat_of_int(n-1)) == {};
+        assert primes_below(noi(n-1)) == {};
         } @*/
         return 0;
     }
@@ -202,27 +202,27 @@ size_t prime_sieve(size_t* buff, size_t n)
         if(n <= 3) {
             /*@ {
                 assert n == 3;
-                assert primes_below(nat_of_int(n-1)) == {2};
+                assert primes_below(noi(n-1)) == {2};
             } @*/
             return 1;
         } else {
             /*@ {
                 assert n == 4;
-                assert primes_below(nat_of_int(2)) == {2};
-                //note_eq(nat_of_int(n-1),succ(succ(succ(zero))));
+                assert primes_below(noi(2)) == {2};
+                //note_eq(noi(n-1),succ(succ(succ(zero))));
                 assert !!is_prime(2);
                 if(!is_prime(3)) {
-                    prime_test_sqrt(3,nat_of_int(2));
+                    prime_test_sqrt(3,noi(2));
                     division_unique(3,2,1,1);
                     division_unique(2,3,0,2);
-                    assert nat_of_int(2) == succ(succ(zero));
-                    assert !forall(primes_below(nat_of_int(2)),
+                    assert noi(2) == succ(succ(zero));
+                    assert !forall(primes_below(noi(2)),
                         (nonfactor)(3));
                     nonfactor_def(3,2);
                     assert false;
                 }
                 assert !!is_prime(3);
-                assert primes_below(nat_of_int(n-1)) == {3,2};
+                assert primes_below(noi(n-1)) == {3,2};
             } @*/
             return 2;
         }
@@ -230,13 +230,13 @@ size_t prime_sieve(size_t* buff, size_t n)
 
     for(i = 0; i < n; ++i)
         /*@ requires buff[i..n] |-> _ &*& i <= n &*& i >= 0; @*/
-        /*@ ensures  buff[old_i..n] |-> repeat(1,nat_of_int(n-old_i));
+        /*@ ensures  buff[old_i..n] |-> repeat(1,noi(n-old_i));
           @*/
         /*@ decreases n-i; @*/
     {
         buff[i] = 1;
     }
-    /*@ assert buff[..n] |-> repeat(1,nat_of_int(n)); @*/
+    /*@ assert buff[..n] |-> repeat(1,noi(n)); @*/
 
     /*@ {
         open ullongs(buff,_,_);
@@ -248,11 +248,11 @@ size_t prime_sieve(size_t* buff, size_t n)
 
     /*@ {
         assert buff[2..n] |-> ?init_nums;
-        assert init_nums == repeat(1,nat_of_int(n-2));
+        assert init_nums == repeat(1,noi(n-2));
         if(!forall(indices_of_inner(1,init_nums,2),
-                (prime_up_to)(nat_of_int(1)))) {
+                (prime_up_to)(noi(1)))) {
             int cx = not_forall(indices_of_inner(1,init_nums,2),
-                (prime_up_to)(nat_of_int(1)));
+                (prime_up_to)(noi(1)));
             assert false;
         }
         if(!forall(indices_of_inner(0,init_nums,2),
@@ -262,7 +262,7 @@ size_t prime_sieve(size_t* buff, size_t n)
             //indices_of_inner_correct(0,init_nums,2,cx);
             assert nth_of(cx-2,init_nums) == some(0);
             nth_of_is_nth(cx-2,init_nums);
-            mem_repeat(nth(cx-2,init_nums),1,nat_of_int(n-2));
+            mem_repeat(nth(cx-2,init_nums),1,noi(n-2));
             assert false;
         }
         if(!forall(init_nums,isbit)) {
@@ -275,7 +275,7 @@ size_t prime_sieve(size_t* buff, size_t n)
     for(i = 2; i*i < n; ++i)
         /*@ requires buff[i..n] |-> ?nums
                 &*&  !!forall(indices_of_inner(1,nums,i),
-                        (prime_up_to)(nat_of_int(i-1)))
+                        (prime_up_to)(noi(i-1)))
                 &*&  !!forall(indices_of_inner(0,nums,i),
                         (notf)(is_prime))
                 &*&  !!forall(nums,isbit)
@@ -285,14 +285,14 @@ size_t prime_sieve(size_t* buff, size_t n)
                 :    !!forall(indices_of_inner(1,nums,i), is_prime)
                 &*&  reverse(indices_of_inner(1,nums,i))
                      == filter((ge_than)(i),
-                            primes_below(nat_of_int(n-1)))
+                            primes_below(noi(n-1)))
                 ;
           @*/
         /*@ ensures  buff[old_i..n] |-> ?primes
                 &*&  !!forall(primes,isbit)
                 &*&  reverse(indices_of_inner(1,primes,old_i))
                      == filter((ge_than)(old_i),
-                            primes_below(nat_of_int(n-1)))
+                            primes_below(noi(n-1)))
                 ;
           @*/
         /*@ decreases n-i; @*/
@@ -312,13 +312,13 @@ size_t prime_sieve(size_t* buff, size_t n)
                 assert !mem(i,indices_of_inner(1,nums,i));
                 assert !is_prime(i);
                 if(!forall(indices_of_inner(1,tail(nums),i+1),
-                        (prime_up_to)(nat_of_int(i)))) {
+                        (prime_up_to)(noi(i)))) {
                     int cx = not_forall(
                         indices_of_inner(1,tail(nums),i+1),
-                        (prime_up_to)(nat_of_int(i)));
+                        (prime_up_to)(noi(i)));
                     forall_elim(indices_of_inner(1,tail(nums),i+1),
-                        (prime_up_to)(nat_of_int(i-1)), cx);
-                    prime_up_to_composite(nat_of_int(i-1),cx);
+                        (prime_up_to)(noi(i-1)), cx);
+                    prime_up_to_composite(noi(i-1),cx);
 
                     assert false;
                 }
@@ -334,18 +334,18 @@ size_t prime_sieve(size_t* buff, size_t n)
                     assert buff[i+1..n] |-> ?later;
                     if(!forall(indices_of_inner(1, later,
                                         (i+1)),
-                                (prime_up_to)(nat_of_int(i)))) {
+                                (prime_up_to)(noi(i)))) {
                         int cx = not_forall(indices_of_inner(1, later,
                                         (i+1)),
-                                (prime_up_to)(nat_of_int(i)));
+                                (prime_up_to)(noi(i)));
                         assert cx >= i+1;
                         assert cx < n;
                         forall_elim(indices_of_inner(1,later,i+1),
-                                (prime_up_to)(nat_of_int(i-1)),cx);
+                                (prime_up_to)(noi(i-1)),cx);
                         division_unique(cx,i,1,cx-i);
                         if(!is_prime(i)) { assert false; }
-                        assert !!prime_up_to(nat_of_int(i-1),cx);
-                        assert nat_of_int(i) == succ(nat_of_int(i-1));
+                        assert !!prime_up_to(noi(i-1),cx);
+                        assert noi(i) == succ(noi(i-1));
 
                         if(nonfactor(i,cx)) { assert false; }
                         assert false;
@@ -356,7 +356,7 @@ size_t prime_sieve(size_t* buff, size_t n)
             for(j = i + i; j < n; j += i)
                 /*@ requires buff[(j-i+1)..n] |-> ?later
                         &*&  !!forall(indices_of_inner(1,later,j-i+1),
-                                (prime_up_to)(nat_of_int(i-1)))
+                                (prime_up_to)(noi(i-1)))
                         &*&  !!forall(indices_of_inner(0,later,j-i+1),
                                 (notf)(is_prime))
                         &*&  !!forall(later,isbit)
@@ -364,12 +364,12 @@ size_t prime_sieve(size_t* buff, size_t n)
                         &*&  j < n ? emp
                         : !!forall(indices_of_inner(1, later,
                                         (j-i+1)),
-                                (prime_up_to)(nat_of_int(i)));
+                                (prime_up_to)(noi(i)));
                 @*/
                 /*@ ensures  buff[(old_j-i+1)..n] |-> ?new_later
                         &*&  !!forall(indices_of_inner(1, new_later,
                                         (old_j-i+1)),
-                                (prime_up_to)(nat_of_int(i)))
+                                (prime_up_to)(noi(i)))
                         &*&  !!forall(indices_of_inner(0,new_later,old_j-i+1),
                                 (notf)(is_prime))
                         &*&  !!forall(new_later,isbit)
@@ -389,7 +389,7 @@ size_t prime_sieve(size_t* buff, size_t n)
                     forall_append_exact(
                         indices_of_inner(1,pref,j-i+1),
                         indices_of_inner(1,rest,j),
-                        (prime_up_to)(nat_of_int(i-1)));
+                        (prime_up_to)(noi(i-1)));
                     forall_append_exact(
                         indices_of_inner(0,pref,j-i+1),
                         indices_of_inner(0,rest,j),
@@ -399,15 +399,15 @@ size_t prime_sieve(size_t* buff, size_t n)
                     div_rem(j,i);
                     division_unique(j+i,i,(j/i+1),0);
 
-                    if(prime_up_to(nat_of_int(i),j)) {
-                        prime_up_to_no_factors(nat_of_int(i), j, i);
+                    if(prime_up_to(noi(i),j)) {
+                        prime_up_to_no_factors(noi(i), j, i);
                         assert false;
                     }
 
                     if(!forall(indices_of_inner(1,pref,j-i+1),
-                            (prime_up_to)(nat_of_int(i)))) {
+                            (prime_up_to)(noi(i)))) {
                         int cx = not_forall(indices_of_inner(1,pref,j-i+1),
-                            (prime_up_to)(nat_of_int(i)));
+                            (prime_up_to)(noi(i)));
                         if(cx <= 0) { assert false; }
                         assert cx >= j-i+1;
                         assert cx <  j;
@@ -419,9 +419,9 @@ size_t prime_sieve(size_t* buff, size_t n)
                         division_unique(diff,i,0,diff);
                         division_unique(i-j,i,1-j/i,0);
                         forall_elim(indices_of_inner(1,pref,j-i+1),
-                            (prime_up_to)(nat_of_int(i-1)), cx);
+                            (prime_up_to)(noi(i-1)), cx);
                         int_of_nat_of_int(i);
-                        assert nat_of_int(i) == succ(nat_of_int(i-1));
+                        assert noi(i) == succ(noi(i-1));
                         assert cx%i == 0;
 
                         div_rem(cx,i);
@@ -440,14 +440,14 @@ size_t prime_sieve(size_t* buff, size_t n)
                         assert buff[j+1..n] |-> ?next;
                         if(!forall(indices_of_inner(1, next,
                                             (j+1)),
-                                    (prime_up_to)(nat_of_int(i)))) {
+                                    (prime_up_to)(noi(i)))) {
                             int cx = not_forall(indices_of_inner(1,
                                             next, (j+1)),
-                                    (prime_up_to)(nat_of_int(i)));
+                                    (prime_up_to)(noi(i)));
                             assert cx >= j+1;
                             assert cx < n;
                             forall_elim(indices_of_inner(1,next,j+1),
-                                    (prime_up_to)(nat_of_int(i-1)),cx);
+                                    (prime_up_to)(noi(i-1)),cx);
                             division_unique(j,i,j/i,0);
                             division_unique(cx,i,j/i,cx-j);
                             assert false;
@@ -464,11 +464,11 @@ size_t prime_sieve(size_t* buff, size_t n)
                     assert buff[((old_j+i)-i+1)..n] |-> ?next_later
                         &*&  !!forall(indices_of_inner(1, next_later,
                                         ((old_j+i)-i+1)),
-                                (prime_up_to)(nat_of_int(i)));
+                                (prime_up_to)(noi(i)));
 
                     if(!forall(indices_of_inner(1, take(i-1,later),
                                         (old_j-i+1)),
-                                (prime_up_to)(nat_of_int(i)))) {
+                                (prime_up_to)(noi(i)))) {
                         assert false;
                     }
                     indices_of_inner_append(1,{0},next_later,old_j);
@@ -481,14 +481,14 @@ size_t prime_sieve(size_t* buff, size_t n)
                     assert !!forall(
                         indices_of_inner(1, cons(0,next_later),
                             old_j),
-                        (prime_up_to)(nat_of_int(i)));
+                        (prime_up_to)(noi(i)));
 
                     forall_append(
                         indices_of_inner(1, take(i-1,later),
                                         (old_j-i+1)),
                         indices_of_inner(1, cons(0,next_later),
                                         old_j),
-                        (prime_up_to)(nat_of_int(i)));
+                        (prime_up_to)(noi(i)));
 
                     forall_append(
                         indices_of_inner(0, take(i-1,later),
@@ -541,8 +541,8 @@ size_t prime_sieve(size_t* buff, size_t n)
                     int cx = not_forall(indices_of_inner(1,next,i+1),
                         is_prime);
                     forall_elim(indices_of_inner(1,next,i+1),
-                        (prime_up_to)(nat_of_int(i)),cx);
-                    prime_test_sqrt(cx,nat_of_int(i));
+                        (prime_up_to)(noi(i)),cx);
+                    prime_test_sqrt(cx,noi(i));
                     assert false;
                 }
 
@@ -557,9 +557,9 @@ size_t prime_sieve(size_t* buff, size_t n)
            assert buff[old_i..n] |-> ?primes;
            assert reverse(indices_of_inner(1,later_primes,old_i+1))
                      == filter((ge_than)(old_i+1),
-                            primes_below(nat_of_int(n-1)));
+                            primes_below(noi(n-1)));
 
-            shift_primes_below_range(old_i+1,nat_of_int(n-1));
+            shift_primes_below_range(old_i+1,noi(n-1));
 
         } @*/
     }
@@ -568,14 +568,14 @@ size_t prime_sieve(size_t* buff, size_t n)
         assert buff[2..n] |-> ?base_primes;
         assert reverse(indices_of_inner(1,base_primes,2))
                      == filter((ge_than)(2),
-                            primes_below(nat_of_int(n-1)));
+                            primes_below(noi(n-1)));
 
         assert buff[..n] |-> ?primes;
         assert !!forall(primes,isbit);
-        if(filter((ge_than)(0),primes_below(nat_of_int(n-1)))
-           != filter((ge_than)(2),primes_below(nat_of_int(n-1)))) {
+        if(filter((ge_than)(0),primes_below(noi(n-1)))
+           != filter((ge_than)(2),primes_below(noi(n-1)))) {
             int cx = filter_diff((ge_than)(0),(ge_than)(2),
-                primes_below(nat_of_int(n-1)));
+                primes_below(noi(n-1)));
             assert false;
         }
 
@@ -583,11 +583,11 @@ size_t prime_sieve(size_t* buff, size_t n)
              indices_of_inner(1,base_primes,2));
         note_eq(reverse(indices_of_inner(1,primes,0)),
             filter((ge_than)(0),
-                        primes_below(nat_of_int(n-1))));
-        if(filter((ge_than)(0), primes_below(nat_of_int(n-1)))
-           != primes_below(nat_of_int(n-1))) {
+                        primes_below(noi(n-1))));
+        if(filter((ge_than)(0), primes_below(noi(n-1)))
+           != primes_below(noi(n-1))) {
             int x = filter_effect((ge_than)(0),
-                primes_below(nat_of_int(n-1)));
+                primes_below(noi(n-1)));
             assert false;
         }
     } @*/
@@ -597,7 +597,7 @@ size_t prime_sieve(size_t* buff, size_t n)
     /*@ assert  buff[..n] |-> ?primes
             &*&  !!forall(primes,isbit)
             &*&  reverse(indices_of_inner(1,primes,0))
-                    == primes_below(nat_of_int(n-1))
+                    == primes_below(noi(n-1))
             ;
         @*/
 
@@ -612,7 +612,7 @@ size_t prime_sieve(size_t* buff, size_t n)
                 &*&   !!forall(sieve_primes,isbit)
                 &*&   reverse(append(final_primes,
                             indices_of_inner(1,sieve_primes,j)))
-                    == primes_below(nat_of_int(n-1))
+                    == primes_below(noi(n-1))
                 ;
           @*/
         /*@ decreases n-j; @*/

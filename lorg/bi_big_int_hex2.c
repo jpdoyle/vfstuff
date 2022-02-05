@@ -229,7 +229,7 @@ char* big_int_to_hex(const big_int* s)
             for(; chunk_bits_left; chunk_bits_left -= 4, chunk >>= 4)
                 /*@ requires chunk >= 0
                         &*&  chunk
-                            < pow_nat(2,nat_of_int(chunk_bits_left))
+                            < pow_nat(2,noi(chunk_bits_left))
                         &*&  ret[len..cap] |-> _
                         &*&  chunk_bits_left >= 0
                         &*&  4*chunk_chars_left == chunk_bits_left
@@ -280,15 +280,15 @@ char* big_int_to_hex(const big_int* s)
                     assert abs(chunk) == chunk;
                     assert pow_nat(2,N4)*(chunk>>4) <= chunk;
                     assert pow_nat(2,N4)*(chunk>>4)
-                        <  pow_nat(2,nat_of_int(chunk_bits_left));
+                        <  pow_nat(2,noi(chunk_bits_left));
                     pow_plus(2,N4,chunk_bits_left-4);
                     assert pow_nat(2,N4)*(chunk>>4)
                         < pow_nat(2,N4)
-                            *pow_nat(2,nat_of_int(chunk_bits_left-4));
+                            *pow_nat(2,noi(chunk_bits_left-4));
                     my_inv_mul_strict_mono_r(pow_nat(2,N4), chunk>>4,
-                        pow_nat(2,nat_of_int(chunk_bits_left-4)));
+                        pow_nat(2,noi(chunk_bits_left-4)));
                     assert (chunk>>4)
-                        < pow_nat(2,nat_of_int(chunk_bits_left-4));
+                        < pow_nat(2,noi(chunk_bits_left-4));
 
                 } @*/
 
@@ -358,20 +358,20 @@ char* big_int_to_hex(const big_int* s)
                 assert final_val ==
                     orig_chunk
                     + poly_eval(chk_rest,CHUNK_BASE)
-                        *pow_nat(16,nat_of_int(length(chk_cs)));
+                        *pow_nat(16,noi(length(chk_cs)));
                 assert final_val ==
                     orig_chunk
                     + poly_eval(chk_rest,CHUNK_BASE)
-                        *pow_nat(16,nat_of_int(CHUNK_BITS/4));
+                        *pow_nat(16,noi(CHUNK_BITS/4));
                 assert final_val ==
                     orig_chunk
                     + poly_eval(chk_rest,CHUNK_BASE)
-                        *pow_nat(pow_nat(2,N4),nat_of_int(CHUNK_BITS/4));
+                        *pow_nat(pow_nat(2,N4),noi(CHUNK_BITS/4));
                 pow_times2(2,N4,CHUNK_BITS/4);
                 assert final_val ==
                     orig_chunk
                     + poly_eval(chk_rest,CHUNK_BASE)
-                        *pow_nat(2,nat_of_int(CHUNK_BITS));
+                        *pow_nat(2,noi(CHUNK_BITS));
                 note_eq( final_val ,
                     poly_eval(cons(orig_chunk,chk_rest),
                         CHUNK_BASE));
@@ -453,25 +453,25 @@ char* big_int_to_hex(const big_int* s)
             assert final_val ==
                 orig_block
                 + poly_eval(rest_chunks,CHUNK_BASE)
-                    *pow_nat(16,nat_of_int(length(block_cs)));
+                    *pow_nat(16,noi(length(block_cs)));
             assert final_val ==
                 orig_block
                 + poly_eval(rest_chunks,CHUNK_BASE)
-                    *pow_nat(16,nat_of_int(N_INTS*(CHUNK_BITS/4)));
+                    *pow_nat(16,noi(N_INTS*(CHUNK_BITS/4)));
             assert final_val ==
                 orig_block
                 + poly_eval(rest_chunks,CHUNK_BASE)
-                    *pow_nat(pow_nat(2,N4),nat_of_int(N_INTS*(CHUNK_BITS/4)));
+                    *pow_nat(pow_nat(2,N4),noi(N_INTS*(CHUNK_BITS/4)));
             pow_times2(2,N4,N_INTS*(CHUNK_BITS/4));
             assert final_val ==
                 orig_block
                 + poly_eval(rest_chunks,CHUNK_BASE)
-                    *pow_nat(2,nat_of_int(N_INTS*CHUNK_BITS));
-            pow_times2(2,nat_of_int(CHUNK_BITS),N_INTS);
+                    *pow_nat(2,noi(N_INTS*CHUNK_BITS));
+            pow_times2(2,noi(CHUNK_BITS),N_INTS);
             assert final_val ==
                 orig_block
                 + poly_eval(rest_chunks,CHUNK_BASE)
-                    *pow_nat(CHUNK_BASE,nat_of_int(N_INTS));
+                    *pow_nat(CHUNK_BASE,noi(N_INTS));
             note_eq( final_val ,
                 poly_eval(append(block_chunks,rest_chunks),
                     CHUNK_BASE));

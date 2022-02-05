@@ -212,34 +212,34 @@ void pow_nat_pos(int x, nat n)
     }
 }
 
-lemma_auto(pow_nat(x,nat_of_int(n)))
+lemma_auto(pow_nat(x,noi(n)))
 void pow_nat_int_pos(int x, int n)
     requires x >= 1;
-    ensures  pow_nat(x,nat_of_int(n)) >= 1;
-{ pow_nat_pos(x,nat_of_int(n)); }
+    ensures  pow_nat(x,noi(n)) >= 1;
+{ pow_nat_pos(x,noi(n)); }
 
-lemma_auto(pow_nat(x,nat_of_int(n)))
+lemma_auto(pow_nat(x,noi(n)))
 void pow_nat_hard_pos(int x, int n)
     requires x > 1 && n > 0;
-    ensures  pow_nat(x,nat_of_int(n)) > 1;
+    ensures  pow_nat(x,noi(n)) > 1;
 {
-    pow_nat_pos(x,nat_of_int(n-1));
-    assert nat_of_int(n) == succ(nat_of_int(n-1));
-    my_mul_strict_mono_l(1,x,pow_nat(x,nat_of_int(n-1)));
+    pow_nat_pos(x,noi(n-1));
+    assert noi(n) == succ(noi(n-1));
+    my_mul_strict_mono_l(1,x,pow_nat(x,noi(n-1)));
 }
 
 lemma void pow_plus(int x,nat y,int z)
     requires z >= 0;
-    ensures  pow_nat(x,nat_of_int(int_of_nat(y)+z))
-        ==   pow_nat(x,y)*pow_nat(x,nat_of_int(z));
+    ensures  pow_nat(x,noi(ion(y)+z))
+        ==   pow_nat(x,y)*pow_nat(x,noi(z));
 {
     switch(y) {
     case zero:
     case succ(y0):
         pow_plus(x,y0,z);
-        mul_assoc(x,pow_nat(x,y0),pow_nat(x,nat_of_int(z)));
-        assert nat_of_int(int_of_nat(y)+z)
-            == succ(nat_of_int(int_of_nat(y0)+z));
+        mul_assoc(x,pow_nat(x,y0),pow_nat(x,noi(z)));
+        assert noi(ion(y)+z)
+            == succ(noi(ion(y0)+z));
     }
 }
 
@@ -266,33 +266,33 @@ lemma void pow_times1(int x,int y,nat z)
 
 lemma void pow_times2(int x,nat y,int z)
     requires z >= 0;
-    ensures  pow_nat(x,nat_of_int(int_of_nat(y)*z))
-        ==   pow_nat(pow_nat(x,y),nat_of_int(z));
+    ensures  pow_nat(x,noi(ion(y)*z))
+        ==   pow_nat(pow_nat(x,y),noi(z));
 {
     switch(y) {
     case zero:
     case succ(y0):
-        assert nat_of_int(int_of_nat(y))
-            == succ(nat_of_int(int_of_nat(y0)));
-        note_eq( int_of_nat(y) , 1+int_of_nat(y0));
-        note_eq((1+int_of_nat(y0))*z,z + int_of_nat(y0)*z);
+        assert noi(ion(y))
+            == succ(noi(ion(y0)));
+        note_eq( ion(y) , 1+ion(y0));
+        note_eq((1+ion(y0))*z,z + ion(y0)*z);
 
-        assert pow_nat(x,nat_of_int(int_of_nat(y)*z))
-            == pow_nat(x,nat_of_int((1+int_of_nat(y0))*z));
-        assert pow_nat(x,nat_of_int(int_of_nat(y)*z))
-            == pow_nat(x,nat_of_int(z + int_of_nat(y0)*z));
-        my_mul_mono_r(int_of_nat(y0),0,z);
-        pow_plus(x,nat_of_int(z),int_of_nat(y0)*z);
-        assert pow_nat(x,nat_of_int(int_of_nat(y)*z))
-            == pow_nat(x,nat_of_int(z))
-              *pow_nat(x,nat_of_int(int_of_nat(y0)*z));
+        assert pow_nat(x,noi(ion(y)*z))
+            == pow_nat(x,noi((1+ion(y0))*z));
+        assert pow_nat(x,noi(ion(y)*z))
+            == pow_nat(x,noi(z + ion(y0)*z));
+        my_mul_mono_r(ion(y0),0,z);
+        pow_plus(x,noi(z),ion(y0)*z);
+        assert pow_nat(x,noi(ion(y)*z))
+            == pow_nat(x,noi(z))
+              *pow_nat(x,noi(ion(y0)*z));
         pow_times2(x,y0,z);
-        pow_times1(x,pow_nat(x,y0),nat_of_int(z));
+        pow_times1(x,pow_nat(x,y0),noi(z));
     }
 }
 
 lemma void pow_monotonic(int x,nat y,nat z)
-    requires x > 1 &*& int_of_nat(y) < int_of_nat(z);
+    requires x > 1 &*& ion(y) < ion(z);
     ensures  pow_nat(x,y) < pow_nat(x,z);
 {
     switch(y) {
@@ -314,13 +314,13 @@ lemma void pow_monotonic(int x,nat y,nat z)
 }
 
 lemma void pow_soft_monotonic(int x,nat y,nat z)
-    requires x >= 1 &*& int_of_nat(y) <= int_of_nat(z);
+    requires x >= 1 &*& ion(y) <= ion(z);
     ensures  pow_nat(x,y) <= pow_nat(x,z);
 {
-    if(x > 1 && int_of_nat(y) != int_of_nat(z)) pow_monotonic(x,y,z);
-    else if(int_of_nat(y) == int_of_nat(z)) {
-        assert nat_of_int(int_of_nat(y)) == y;
-        assert nat_of_int(int_of_nat(z)) == z;
+    if(x > 1 && ion(y) != ion(z)) pow_monotonic(x,y,z);
+    else if(ion(y) == ion(z)) {
+        assert noi(ion(y)) == y;
+        assert noi(ion(z)) == z;
         assert pow_nat(x,y) == pow_nat(x,z);
     } else { assert x == 1;
         assert pow_nat(x,y) == 1;
@@ -337,7 +337,7 @@ void factorial_positive(nat n)
     case zero:
     case succ(n0):
         factorial_positive(n0);
-        my_mul_mono_r(int_of_nat(n),1,factorial(n0));
+        my_mul_mono_r(ion(n),1,factorial(n0));
     }
 }
 

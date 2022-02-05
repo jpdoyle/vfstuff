@@ -622,7 +622,7 @@ void poly_mul_zero(list<int> p, list<int> q)
 
 
 lemma void poly_mul_commutes_inner(nat f, list<int> p, list<int> q)
-    requires int_of_nat(f) >= length(p) + length(q);
+    requires ion(f) >= length(p) + length(q);
     ensures  poly_mul(p,q) == poly_mul(q,p);
 {
     ALREADY_PROVEN()
@@ -856,11 +856,11 @@ lemma void poly_mul_assoc(list<int> p, list<int> q,
 lemma_auto(poly_mul(p,q)) void poly_mul_commutes(list<int> p, list<int> q)
     requires true;
     ensures  poly_mul(p,q) == poly_mul(q,p);
-{ poly_mul_commutes_inner(nat_of_int(length(p) + length(q)),p,q); }
+{ poly_mul_commutes_inner(noi(length(p) + length(q)),p,q); }
 
 
 lemma void poly_mul_zero_unique_inner(nat f,list<int> p, list<int> q)
-    requires int_of_nat(f) >= length(p) + length(q)
+    requires ion(f) >= length(p) + length(q)
         &*&  !!poly_is_zero(poly_mul(p,q)) &*& !poly_is_zero(p);
     ensures  !!poly_is_zero(q);
 {
@@ -930,7 +930,7 @@ lemma void poly_mul_zero_unique_inner(nat f,list<int> p, list<int> q)
 lemma void poly_mul_zero_unique(list<int> p, list<int> q)
     requires !!poly_is_zero(poly_mul(p,q)) &*& !poly_is_zero(p);
     ensures  !!poly_is_zero(q);
-{ poly_mul_zero_unique_inner(nat_of_int(length(p) + length(q)),p,q); }
+{ poly_mul_zero_unique_inner(noi(length(p) + length(q)),p,q); }
 
 
 lemma_auto(degree(poly_mul(p,q)))
@@ -1113,7 +1113,7 @@ void multishift_zero(nat n, list<int> p)
 lemma_auto(degree(multishift(n,p)))
 void multishift_deg(nat n, list<int> p)
     requires degree(p) >= 0;
-    ensures  degree(multishift(n,p)) == int_of_nat(n)+degree(p);
+    ensures  degree(multishift(n,p)) == ion(n)+degree(p);
 { NAT_INDUCTION(n,n0,multishift_deg(n0,p)) }
 
 
@@ -1172,7 +1172,7 @@ lemma pair<list<int>, list<int> > poly_div(list<int> a, list<int> b)
             &*&   cursor == multishift(cursor_mul,b)
             &*&   degree(cursor) >= degree(r)
             ;
-        decreases int_of_nat(cursor_mul) + degree(r);
+        decreases ion(cursor_mul) + degree(r);
     {
         if(degree(cursor) == degree(r)) {
             assert leading_coeff(cursor) == 1;

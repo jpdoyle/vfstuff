@@ -6,15 +6,15 @@
 #include "../finfield.gh"
 
 fixpoint int P25519() {
-    return pow_nat(2,nat_of_int(255)) - 19;
+    return pow_nat(2,noi(255)) - 19;
 }
 
 fixpoint int P448() {
-    return pow_nat(2,nat_of_int(448)) - pow_nat(2,nat_of_int(224)) - 1;
+    return pow_nat(2,noi(448)) - pow_nat(2,noi(224)) - 1;
 }
 
 fixpoint int P569() {
-    return pow_nat(2,nat_of_int(512)) - 569;
+    return pow_nat(2,noi(512)) - 569;
 }
 
 lemma void p25519_formula();

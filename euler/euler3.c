@@ -88,7 +88,7 @@ size_t largest_prime_factor(size_t n)
                 &*&   primes[i..n_primes] |-> ?suff
                 &*&   !!sorted(suff)
                 &*&   append(pref,suff)
-                    == reverse(primes_below(nat_of_int(sqrt_n)))
+                    == reverse(primes_below(noi(sqrt_n)))
                 &*&   max_factor*n == orig_n
                 &*&   prime_factorization(max_factor,?ps)
                 &*&   max_prime == maximum(cons(1,ps))
@@ -104,7 +104,7 @@ size_t largest_prime_factor(size_t n)
     {
         /*@ open ullongs(primes+i,_,_); @*/
         size_t p = primes[i];
-        /*@ assert !!mem(p,reverse(primes_below(nat_of_int(sqrt_n))));
+        /*@ assert !!mem(p,reverse(primes_below(noi(sqrt_n))));
           @*/
         if(n%p == 0) {
             /*@ {
@@ -137,7 +137,7 @@ size_t largest_prime_factor(size_t n)
                     int cx = not_forall(pref,(nonfactor)(n/p));
                     forall_elim(pref,(nonfactor)(n),cx);
                     forall_elim(pref,(nonfactor)(n),cx);
-                    primes_below_correct(nat_of_int(sqrt_n));
+                    primes_below_correct(noi(sqrt_n));
                     disjoint_append(pref,suff);
                     sorted_append(pref,suff);
                     forall_elim(pref,(notf)((flip)(mem,suff)),cx);
@@ -152,7 +152,7 @@ size_t largest_prime_factor(size_t n)
                     }
 
                     assert !!mem(cx,append(pref,suff));
-                    forall_elim(primes_below(nat_of_int(sqrt_n)),
+                    forall_elim(primes_below(noi(sqrt_n)),
                         is_prime,cx);
 
                     if(cx == n/p) { division_unique(n,cx,p,0); assert false; }
@@ -166,7 +166,7 @@ size_t largest_prime_factor(size_t n)
                         int q = n/p;
                         division_unique(n/p,n/p,1,0);
                         if(!is_prime(q)) { q = findFactor(n/p); }
-                        primes_below_complete(q,nat_of_int(sqrt_n));
+                        primes_below_complete(q,noi(sqrt_n));
                         assert !!mem(q,append(pref,suff));
                         if(mem(q,suff)) {
                             sorted_append(pref,suff);
@@ -251,17 +251,17 @@ size_t largest_prime_factor(size_t n)
     }
     /*@ {
         assert suff == {};
-        assert pref == reverse(primes_below(nat_of_int(sqrt_n)));
+        assert pref == reverse(primes_below(noi(sqrt_n)));
         if(n <= sqrt_n) {
             int q = n; if(!is_prime(q)) { q = findFactor(q); }
-            primes_below_complete(q,nat_of_int(sqrt_n));
+            primes_below_complete(q,noi(sqrt_n));
             forall_elim(pref,(nonfactor)(n),q);
             assert false;
         }
         if(!is_prime(n)) {
             factor_bound(max_factor,n);
-            prime_test_sqrt(n,nat_of_int(sqrt_n));
-            forall_reverse(primes_below(nat_of_int(sqrt_n)),(nonfactor)(n));
+            prime_test_sqrt(n,noi(sqrt_n));
+            forall_reverse(primes_below(noi(sqrt_n)),(nonfactor)(n));
             assert false;
         }
         assert !!is_prime(n);
@@ -271,9 +271,9 @@ size_t largest_prime_factor(size_t n)
         int final_max = maximum(cons(n,factors));
         if(final_max != n) {
             assert !!mem(final_max,factors);
-            primes_below_correct(nat_of_int(sqrt_n));
+            primes_below_correct(noi(sqrt_n));
             forall_elim(factors,(contains)(append(pref,suff)),final_max);
-            forall_elim(primes_below(nat_of_int(sqrt_n)),
+            forall_elim(primes_below(noi(sqrt_n)),
                 (bounded)(2,sqrt_n),final_max);
             assert false;
         }

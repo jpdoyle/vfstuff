@@ -93,15 +93,15 @@ void pow_nat_pos(int x, nat n);
     requires x >= 1;
     ensures  pow_nat(x,n) >= 1;
 
-lemma_auto(pow_nat(x,nat_of_int(n)))
+lemma_auto(pow_nat(x,noi(n)))
 void pow_nat_int_pos(int x, int n);
     requires x >= 1;
-    ensures  pow_nat(x,nat_of_int(n)) >= 1;
+    ensures  pow_nat(x,noi(n)) >= 1;
 
-lemma_auto(pow_nat(x,nat_of_int(n)))
+lemma_auto(pow_nat(x,noi(n)))
 void pow_nat_hard_pos(int x, int n);
     requires x > 1 && n > 0;
-    ensures  pow_nat(x,nat_of_int(n)) > 1;
+    ensures  pow_nat(x,noi(n)) > 1;
 
 lemma_auto(pow_nat(1,n))
 void pow_1(nat n)
@@ -111,8 +111,8 @@ void pow_1(nat n)
 
 lemma void pow_plus(int x,nat y,int z);
     requires z >= 0;
-    ensures  pow_nat(x,nat_of_int(int_of_nat(y)+z))
-        ==   pow_nat(x,y)*pow_nat(x,nat_of_int(z));
+    ensures  pow_nat(x,noi(ion(y)+z))
+        ==   pow_nat(x,y)*pow_nat(x,noi(z));
 
 lemma void pow_times1(int x,int y,nat z);
     requires true;
@@ -121,15 +121,15 @@ lemma void pow_times1(int x,int y,nat z);
 
 lemma void pow_times2(int x,nat y,int z);
     requires z >= 0;
-    ensures  pow_nat(x,nat_of_int(int_of_nat(y)*z))
-        ==   pow_nat(pow_nat(x,y),nat_of_int(z));
+    ensures  pow_nat(x,noi(ion(y)*z))
+        ==   pow_nat(pow_nat(x,y),noi(z));
 
 lemma void pow_soft_monotonic(int x,nat y,nat z);
-    requires x >= 1 &*& int_of_nat(y) <= int_of_nat(z);
+    requires x >= 1 &*& ion(y) <= ion(z);
     ensures  pow_nat(x,y) <= pow_nat(x,z);
 
 lemma void pow_monotonic(int x,nat y,nat z);
-    requires x > 1 &*& int_of_nat(y) < int_of_nat(z);
+    requires x > 1 &*& ion(y) < ion(z);
     ensures  pow_nat(x,y) < pow_nat(x,z);
 
 fixpoint int pow2(nat n) { return pow_nat(2,n); }
@@ -137,7 +137,7 @@ fixpoint int pow2(nat n) { return pow_nat(2,n); }
 fixpoint int factorial(nat n) {
     switch(n) {
     case zero: return 1;
-    case succ(n0): return int_of_nat(n)*factorial(n0);
+    case succ(n0): return ion(n)*factorial(n0);
     }
 }
 

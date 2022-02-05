@@ -70,7 +70,7 @@ void repchar_mem(char x, nat n, char c)
 lemma_auto(length(repchar(n,c)))
 void length_repchar(nat n, char c)
     requires true;
-    ensures  length(repchar(n,c)) == int_of_nat(n);
+    ensures  length(repchar(n,c)) == ion(n);
 {
     switch(n) {
     case zero:
@@ -119,7 +119,7 @@ char* leftpad(char pad, size_t len, const char* s)
                      : length(newcs) == len
                      &*& newcs
                         == append(
-                            repchar(nat_of_int(len-length(cs)), pad),
+                            repchar(noi(len-length(cs)), pad),
                             cs)
                      )
                  )
@@ -144,12 +144,12 @@ char* leftpad(char pad, size_t len, const char* s)
         while(i < pad_len)
             /*@ requires ret[i..pad_len]     |-> _; @*/
             /*@ ensures  ret[old_i..pad_len] |->
-                            repchar(nat_of_int(pad_len-old_i),pad)
+                            repchar(noi(pad_len-old_i),pad)
                     &*&  i == pad_len; @*/
             /*@ decreases pad_len-i; @*/
         {
-            /*@ assert succ(nat_of_int(pad_len-i-1))
-                    == nat_of_int(pad_len-i); @*/
+            /*@ assert succ(noi(pad_len-i-1))
+                    == noi(pad_len-i); @*/
             ret[i] = pad;
             ++i;
         }
