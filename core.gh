@@ -15,6 +15,11 @@
 
 fixpoint int abs_of(int x) { return x >= 0 ? x : -x; }
 
+lemma_auto(abs(x)) void abs_is_abs_of(int x)
+    requires true;
+    ensures  abs_of(x) == abs(x);
+{}
+
 lemma_auto void abs_of_pos(int x)
     requires x >= 0;
     ensures  abs_of(x) == x;

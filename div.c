@@ -54,6 +54,17 @@ ALREADY_PROVEN()
     division_zero_unique(d,(q-(D/d)),(r-(D%d)));
 }
 
+lemma void division_unique_nonneg(int D, int d, int q, int r)
+    requires d > 0 &*& r < d
+        &*&  q >= 0 &*& D >= 0 &*& r >= 0
+        &*&  D == d*q + r;
+    ensures  q == (D/d) &*& r == (D%d);
+{
+    my_mul_mono_l(1,d,q);
+    division_unique(D,d,q,r);
+}
+
+
 lemma void mod_sign(int x, int d)
     requires d > 0;
     ensures  x >= 0 ? x%d >= 0 : x%d <= 0;

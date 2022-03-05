@@ -37,6 +37,11 @@ fixpoint list<int> minimize(list<int> poly) {
     }
 }
 
+lemma void minimize_forall(fixpoint(int,bool) p, list<int> l)
+    requires !!forall(l,p);
+    ensures  !!forall(minimize(l),p);
+{ LIST_INDUCTION(l,xs,minimize_forall(p,xs)) }
+
 lemma_auto(poly_is_zero(p)) void poly_all_eq_zero(list<int> p);
     requires true;
     ensures  all_eq(p,0) == poly_is_zero(p);
@@ -630,6 +635,53 @@ void neg_most_sig(list<int> l, int base, list<int> most_sig)
     poly_eval_repeat_1(n,base);
     my_mul_mono_l(sig+1,0,pow_nat(base,n));
 }
+
+lemma int poly_negative_coeff(list<int> l, int p)
+    requires p >= 0 &*& poly_eval(l,p) < 0;
+    ensures  result < 0 &*& !!mem(result,l);
+{
+    switch(l) {
+    case nil: assert false;
+    case cons(x,xs):
+        if(x < 0) return x;
+
+        assert x + p*poly_eval(xs,p) < 0;
+        assert p*poly_eval(xs,p) < 0;
+        my_inv_mul_mono_r(p,poly_eval(xs,p),0);
+        return poly_negative_coeff(xs,p);
+    }
+}
+
+lemma int poly_positive_zero(list<int> l, int p)
+    requires p > 0 &*& poly_eval(l,p) == 0 &*& !poly_is_zero(l);
+    ensures  result < 0 &*& !!mem(result,l);
+{
+    switch(l) {
+    case nil: assert false;
+    case cons(x,xs):
+        if(x < 0) return x;
+        else if(x == 0) {
+            assert p*poly_eval(xs,p) == 0;
+            // division_zero_unique(p,poly_eval(xs,p),0);
+            if(poly_eval(xs,p) > 0) {
+                my_mul_mono_r(p,1,poly_eval(xs,p));
+                assert false;
+            }
+            if(poly_eval(xs,p) < 0) {
+                my_mul_mono_r(p,poly_eval(xs,p),-1);
+                assert false;
+            }
+
+            return poly_positive_zero(xs,p);
+        } else {
+            assert x + p*poly_eval(xs,p) == 0;
+            assert p*poly_eval(xs,p) < 0;
+            my_inv_mul_mono_r(p,poly_eval(xs,p),0);
+            return poly_negative_coeff(xs,p);
+        }
+    }
+}
+
 
 #endif
 
