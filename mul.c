@@ -44,11 +44,41 @@ lemma void my_mul_strict_mono_r(int a, int b1, int b2)
     {}
 }
 
+lemma void my_inv_mul_mono_l(int a1, int a2, int b)
+    requires a1*b <= a2*b &*& 0 < b;
+    ensures a1 <= a2;
+{
+    if(a1 > a2) {
+        my_mul_strict_mono_l(a2,a1,b);
+        assert false;
+    }
+}
+
+lemma void my_inv_mul_mono_r(int a, int b1, int b2)
+    requires 0 < a &*& a*b1 <= a*b2;
+    ensures b1 <= b2;
+{
+    if(b2 < b1) {
+        my_mul_strict_mono_r(a,b2,b1);
+        assert false;
+    }
+}
+
+lemma void my_inv_mul_strict_mono_l(int a1, int a2, int b)
+    requires a1*b < a2*b &*& 0 < b;
+    ensures a1 < a2;
+{
+    if(a2 <= a1) {
+        my_mul_mono_l(a2,a1,b);
+        assert false;
+    }
+}
+
 lemma void my_inv_mul_strict_mono_r(int a, int b1, int b2)
     requires 0 < a &*& a*b1 < a*b2;
     ensures b1 < b2;
 {
-    if(b1 >= b2) {
+    if(b2 <= b1) {
         my_mul_mono_r(a,b2,b1);
         assert false;
     }

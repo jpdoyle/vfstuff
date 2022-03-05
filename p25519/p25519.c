@@ -88,7 +88,7 @@ lemma pratt_cert p569_pratt()
     ensures  pratt_certificate(result,1,_,P569);
 {
     p569_formula();
-    return p25519_13407807929942597099574024998205846127479365820592393377723561443721764030073546976801874298166903427690031858186486050853753882811946569946433649006083527_pratt();
+    return p25519_0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffdc7_pratt();
 }
 
 lemma void p569_is_prime()

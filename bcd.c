@@ -153,8 +153,6 @@ lemma void bcd_join(list<int> le1,list<int> le2)
     switch(le1) {
     case nil:
         if(v1 != 0 || bcd1 != 0) {
-            open bcd_int(le1,v1,bcd1);
-            open dec_num(le1,v1);
             assert false;
         }
         leak [f]bcd_int(le1,v1,bcd1);
@@ -163,13 +161,9 @@ lemma void bcd_join(list<int> le1,list<int> le2)
         open [f]dec_num(cons(x,xs),v1);
 
         if(poly_eval(xs,10) < 0) {
-            int cx = poly_negative_coeff(xs,10);
-            forall_elim(xs,(bounded)(0,9),cx);
             assert false;
         }
         if(poly_eval(xs,16) < 0) {
-            int cx = poly_negative_coeff(xs,16);
-            forall_elim(xs,(bounded)(0,9),cx);
             assert false;
         }
 
@@ -266,14 +260,10 @@ unsigned long bcd_add_long(unsigned long x,unsigned long y)
             assert !!bounded(0,9,x_place);
 
             if(poly_eval(x_rest,10) < 0) {
-                int cx = poly_negative_coeff(x_rest,10);
-                forall_elim(x_rest,(bounded)(0,9),cx);
                 assert false;
             }
 
             if(poly_eval(y_rest,10) < 0) {
-                int cx = poly_negative_coeff(y_rest,10);
-                forall_elim(y_rest,(bounded)(0,9),cx);
                 assert false;
             }
 
@@ -342,8 +332,6 @@ unsigned long bcd_add_long(unsigned long x,unsigned long y)
                             my_mul_mono_r(10,1,loop_xv/10);
                         } else if(y/16 > 0) {
                             my_mul_mono_r(10,1,loop_yv/10);
-                        } else {
-                            assert ret_digit >= 10;
                         }
                         assert false;
                     }
@@ -354,22 +342,9 @@ unsigned long bcd_add_long(unsigned long x,unsigned long y)
                             + carry,
                         pow_nat(10,noi(length(ret_le))));
 
-                    assert retv + ((x_digit + 10*(loop_xv/10))
-                                    + (y_digit + 10*(loop_yv/10))
-                                    + carry
-                                   )*pow_nat(10,noi(length(ret_le)))
-                        >= 10*pow_nat(10,noi(length(ret_le)));
-
-                    assert 10*pow_nat(10,noi(length(ret_le)))
-                        < pow_nat(10,N8);
-
                     if(length(ret_le)+1 >= 8) {
-                        pow_soft_monotonic(10,N8,noi(length(ret_le)+1));
                         assert false;
                     }
-
-                    assert length(ret_le)+1 < 8;
-                    my_strict_mono_l(length(ret_le)+1,8,4);
 
                     assert false;
                 }
