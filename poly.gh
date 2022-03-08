@@ -685,4 +685,3 @@ lemma int poly_positive_zero(list<int> l, int p)
 
 #endif
 
-		

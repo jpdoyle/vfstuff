@@ -1,4 +1,4 @@
-/*@ #include "poly.gh" @*/
+#include "bcd.h"
 /*@ #include "div.gh" @*/
 /*@ #include "bitops.gh" @*/
 
@@ -10,10 +10,6 @@
 
 
 /*@
-
-predicate dec_num(list<int> le_digits; int value)
-    =   !!forall(le_digits, (bounded)(0,9))
-    &*& value == poly_eval(le_digits,10);
 
 lemma void dec_9876543210()
     requires true;
@@ -78,286 +74,286 @@ lemma void dec_unique(list<int> le1, list<int> le2, int v)
     }
 }
 
-predicate bcd_int(list<int> le_digits; int value, int bcd_value)
-    =   dec_num(le_digits,value)
-    &*& bcd_value == poly_eval(le_digits,16);
+lemma void bcd_exact(list<int> le_digits, int value, int bcd_value)
+    requires !!forall(le_digits,(bounded)(0,9))
+        &*&  poly_eval(le_digits,10) == value
+        &*&  poly_eval(le_digits,16) == bcd_value;
+    ensures  bcd_int(bcd_value,noi(length(le_digits)),le_digits,value);
+{
+    switch(le_digits) {
+    case nil:
+        close bcd_int(0,zero,le_digits,0);
+    case cons(x,xs):
+        if(poly_eval(xs,10) < 0) {
+            int cx = poly_negative_coeff(xs,10);
+            forall_elim(xs,(bounded)(0,9),cx);
+
+            assert false;
+        }
+
+        if(poly_eval(xs,16) < 0) {
+            int cx = poly_negative_coeff(xs,16);
+            forall_elim(xs,(bounded)(0,9),cx);
+
+            assert false;
+        }
+
+        division_unique_nonneg(value,10,poly_eval(xs,10),x);
+        division_unique_nonneg(bcd_value,16,poly_eval(xs,16),x);
+        bcd_exact(xs,value/10,bcd_value/16);
+        close bcd_int(bcd_value,succ(noi(length(xs))),le_digits,value);
+    }
+}
 
 lemma_auto void bcd_inv()
-    requires [?f]bcd_int(?le,?v,?bcd);
-    ensures  [ f]bcd_int( le, v, bcd)
+    requires [?f]bcd_int(?bcd,?n,?le,?v);
+    ensures  [ f]bcd_int(bcd, n, le, v)
         &*&  v >= 0 &*& bcd >= 0 &*& (v == 0) == (bcd == 0)
-        &*&  bcd < pow_nat(16, noi(length(le)))
-        &*&  v < pow_nat(10, noi(length(le)))
+        &*&  (v == 0) == poly_is_zero(le)
+        &*&  bcd < pow_nat(16, n)
+        &*&  v < pow_nat(10, n)
+        &*&  !!forall(le,(bounded)(0,9))
+        &*&  bcd == poly_eval(le,16)
+        &*&  v   == poly_eval(le,10)
+        &*&  ion(n) == length(le)
         ;
 {
     if(v < 0 || bcd < 0 || (v == 0) != (bcd == 0) ||
-            bcd >= pow_nat(16,noi(length(le))) ||
-            v   >= pow_nat(10,noi(length(le)))) {
-        open bcd_int(le,v,bcd);
-        open dec_num(le,v);
-        if(v < 0) {
-            int cx = poly_negative_coeff(le,10);
-            forall_elim(le,(bounded)(0,9),cx);
-            assert false;
-        }
-        if(bcd < 0) {
-            int cx = poly_negative_coeff(le,16);
-            forall_elim(le,(bounded)(0,9),cx);
-            assert false;
+            (v == 0) != poly_is_zero(le) ||
+            bcd >= pow_nat(16,n) ||
+            v   >= pow_nat(10,n) ||
+            !forall(le,(bounded)(0,9)) ||
+            bcd != poly_eval(le,16) ||
+            v   != poly_eval(le,10) ||
+            ion(n) != length(le)
+            ) {
+
+        open bcd_int(bcd,n,le,v);
+
+        switch(n) {
+        case zero:
+        case succ(n0):
+            bcd_inv();
         }
 
-        if((v == 0) != (bcd == 0)) {
-            if(v == 0 && bcd != 0) {
-                if(!poly_is_zero(le)) {
-                    int cx = poly_positive_zero(le,10);
-                    forall_elim(le,(bounded)(0,9),cx);
-                    assert false;
-                }
-                poly_eval_zero(le,16);
-                assert false;
-            }
-
-            if(v != 0 && bcd == 0) {
-                if(!poly_is_zero(le)) {
-                    int cx = poly_positive_zero(le,16);
-                    forall_elim(le,(bounded)(0,9),cx);
-                    assert false;
-                }
-                poly_eval_zero(le,10);
-                assert false;
-            }
+        if(v < 0) assert false;
+        if(bcd < 0) assert false;
+        if(!forall(le,(bounded)(0,9))) assert false;
+        if(bcd != poly_eval(le,16)) {
+            div_rem(bcd,16);
             assert false;
         }
+        if(v   != poly_eval(le,10)) assert false;
 
-        if(bcd >= pow_nat(16, noi(length(le)))) {
-            poly_eval_bounded_pos(le,9,16);
-            assert false;
-        }
 
-        if(v >= pow_nat(10, noi(length(le)))) {
-            poly_eval_bounded_pos(le,9,10);
-            assert false;
-        }
+        if((v == 0) || (bcd == 0)) {}
 
         assert false;
     }
 }
 
-lemma void bcd_join(list<int> le1,list<int> le2)
-    requires [?f]bcd_int(le1,?v1,?bcd1)
-        &*&  [ f]bcd_int(le2,?v2,?bcd2);
-    ensures  [f]bcd_int(append(le1,le2),
-                v1 + pow_nat(10,noi(length(le1)))*v2,
-                bcd1 + pow_nat(16,noi(length(le1)))*bcd2);
+lemma void bcd_join(int bcd1, nat n, int bcd2)
+    requires [?f]bcd_int(bcd1, n,?le1,?v1)
+        &*&  [ f]bcd_int(bcd2,?m,?le2,?v2);
+    ensures  [f]bcd_int(
+        bcd1 + pow_nat(16,n)*bcd2,
+        nat_plus(n,m),
+        append(le1,le2),
+        v1 + pow_nat(10,n)*v2);
 {
-    switch(le1) {
-    case nil:
-        if(v1 != 0 || bcd1 != 0) {
-            assert false;
+    open bcd_int(bcd1,n,le1,v1);
+    switch(n) {
+    case zero:
+    case succ(n0):
+        switch(le1) {
+        case nil: assert false;
+        case cons(x,xs):
+            assert [f]bcd_int(bcd1/16,n0,xs,?v1_rest);
+            division_unique_nonneg(v1,10,v1_rest,x);
+            bcd_join(bcd1/16,n0,bcd2);
+            assert [f]bcd_int(
+                bcd1/16 + pow_nat(16,n0)*bcd2,
+                nat_plus(n0,m),
+                append(xs,le2),
+                v1/10 + pow_nat(10,n0)*v2);
+
+            mul_3var(16,pow_nat(16,n0),bcd2);
+            mul_3var(10,pow_nat(10,n0),v2);
+            division_unique_nonneg(
+                    bcd1 + pow_nat(16,n)*bcd2,16,
+                    bcd1/16 + pow_nat(16,n0)*bcd2,x);
+            division_unique_nonneg(
+                    v1 + pow_nat(10,n)*v2,10,
+                    v1/10 + pow_nat(10,n0)*v2,x);
+
+            close [f]bcd_int(
+                bcd1 + pow_nat(16,n)*bcd2,
+                nat_plus(n,m),
+                append(le1,le2),
+                v1 + pow_nat(10,n)*v2);
         }
-        leak [f]bcd_int(le1,v1,bcd1);
-    case cons(x,xs):
-        open [f]bcd_int(cons(x,xs),v1,bcd1);
-        open [f]dec_num(cons(x,xs),v1);
-
-        if(poly_eval(xs,10) < 0) {
-            assert false;
-        }
-        if(poly_eval(xs,16) < 0) {
-            assert false;
-        }
-
-        division_unique_nonneg(v1,10,poly_eval(xs,10),x);
-        division_unique_nonneg(bcd1,16,poly_eval(xs,16),x);
-
-        close [f]dec_num(xs,v1/10);
-        close [f]bcd_int(xs,v1/10,bcd1/16);
-        bcd_join(xs,le2);
-        open bcd_int(append(xs,le2),
-                (v1/10 + pow_nat(10,noi(length(xs)))*v2),
-                (bcd1/16 + pow_nat(16,noi(length(xs)))*bcd2));
-
-        open dec_num(append(xs,le2),
-                (v1/10 + pow_nat(10,noi(length(xs)))*v2));
-
-        mul_3var(10,pow_nat(10,noi(length(xs))),v2);
-        mul_3var(16,pow_nat(16,noi(length(xs))),bcd2);
-
-        close [f]dec_num(cons(x,append(xs,le2)),
-                (v1 + pow_nat(10,succ(noi(length(xs))))*v2));
-
-        close [f]bcd_int(cons(x,append(xs,le2)),
-                v1+ pow_nat(10,succ(noi(length(xs))))*v2,
-                bcd1 + pow_nat(16,succ(noi(length(xs))))*bcd2);
     }
 }
 
+lemma void bcd_resize(int bcd, nat n)
+    requires [?f]bcd_int(bcd,?m,?le,?v)
+        &*&  (bcd < pow_nat(16,n) || v < pow_nat(10,n));
+    ensures  [ f]bcd_int(bcd, n,?le_final, v)
+        &*&  minimize(le) == minimize(le_final);
+{
+    switch(n) {
+    case zero:
+        assert bcd == 0;
+        assert v == 0;
+        leak [f]bcd_int(bcd,m,le,v);
+        close [f]bcd_int(bcd,n,nil,v);
+        return;
+
+    case succ(n0):
+        switch(le) {
+        case nil:
+            assert bcd == 0;
+            assert v == 0;
+            bcd_resize(0, n0);
+
+            assert [f]bcd_int(0,n0,?rest,0);
+            close [f]bcd_int(0,n,cons(0,rest),0);
+            return;
+
+        case cons(x,xs):
+            open [f]bcd_int(bcd,m,cons(x,xs),v);
+            assert [f]bcd_int(bcd/16,_,xs,?v_rest);
+            division_unique_nonneg(v,10,v_rest,x);
+            bcd_resize(bcd/16, n0);
+
+            assert [f]bcd_int(bcd/16,n0,?rest,v/10);
+            close [f]bcd_int(bcd,n,cons(x,rest),v);
+            return;
+        }
+    }
+}
 
   @*/
 
-unsigned long bcd_add_long(unsigned long x,unsigned long y)
-    /*@ requires bcd_int(?x_le,?xv,x) &*& bcd_int(?y_le,?yv,y)
+uint32_t bcd_add_u32(uint32_t x,uint32_t y)
+    /*@ requires [?f1]bcd_int(x,?xn,?x_le,?xv)
+            &*&  [?f2]bcd_int(y,?yn,?y_le,?yv)
             &*&  xv+yv < pow_nat(10,N8)
-            ;
-      @*/
-    /*@ ensures  bcd_int(_,xv+yv,result); @*/
+            ; @*/
+    /*@ ensures  bcd_int(result,?rn,_,xv+yv)
+            &*&  ion(rn) <= 8; @*/
     /*@ terminates; @*/
 {
+    uint32_t carry = 0;
+    uint32_t shift = 0;
+    uint32_t ret = 0;
+
     /*@ {
       produce_limits(x);
       produce_limits(y);
+      pow_times2(2,N4,8);
+      bcd_resize(x,N8);
+      bcd_resize(y,N8);
     } @*/
 
-    unsigned long carry = 0;
-    unsigned long shift = 0;
-    unsigned long ret = 0;
+    /*@ nat n = zero; @*/
+    /*@ nat m = N8; @*/
 
-    /*@ list<int> loop_x_le = x_le; @*/
-    /*@ list<int> loop_y_le = y_le; @*/
-    /*@ list<int> ret_le = nil; @*/
-    /*@ close bcd_int(ret_le,0,ret); @*/
-
-    while(x > 0 || y > 0 || carry > 0)
-        /*@ requires bcd_int(loop_x_le,?loop_xv,x)
-                &*&  bcd_int(loop_y_le,?loop_yv,y)
-                &*&  bcd_int(ret_le,?retv,ret)
+    while(shift < 32)
+        /*@ requires [f1]bcd_int(x,m,?loop_x_le,?loop_xv)
+                &*&  [f2]bcd_int(y,m,?loop_y_le,?loop_yv)
+                &*&  bcd_int(ret,n,?ret_le,?retv)
                 &*&  carry <= 1
-                &*&  (shift <= 28 || (x <= 0 && y <= 0 && carry <= 0))
-                &*&  ret < pow_nat(2,noi(shift))
-                &*&  length(ret_le)*4 == shift
+                &*&  nat_plus(n,m) == N8
+                &*&  shift == 4*ion(n)
+                &*&  (shift > 28
+                     ? shift == 32 &*& x <= 0 &*& y <= 0 &*& carry <= 0
+                     : true)
+                &*&  ret < pow_nat(16,n)
                 &*&  retv
-                    + (loop_xv+loop_yv+carry)*pow_nat(10,noi(length(ret_le)))
+                    + (loop_xv+loop_yv+carry)*pow_nat(10,n)
                     == xv + yv;
                 @*/
-        /*@ ensures bcd_int(loop_x_le,_,x)
-                &*& bcd_int(loop_y_le,_,y)
-                &*& bcd_int(ret_le,xv+yv,ret); @*/
+        /*@ ensures [f1]bcd_int(x,_,_,_)
+                &*& [f2]bcd_int(y,_,_,_)
+                &*& bcd_int(ret,N8,_,xv+yv); @*/
         /*@ decreases 32-shift; @*/
     {
         /*@ { ALREADY_PROVEN() } @*/
-        /*@ open bcd_int(loop_x_le,_,_); @*/
-        /*@ open dec_num(loop_x_le,_); @*/
-        /*@ open bcd_int(loop_y_le,_,_); @*/
-        /*@ open dec_num(loop_y_le,_); @*/
-
-        /*@ int x_place; @*/ /*@ list<int> x_rest; @*/
-        /*@ int y_place; @*/ /*@ list<int> y_rest; @*/
+        /*@ open bcd_int(x,m,_,_); @*/
+        /*@ open bcd_int(y,m,_,_); @*/
 
         /*@ {
-            switch(loop_x_le) {
-            case nil:
-                x_place = 0; x_rest = nil;
-            case cons(xd,xds):
-                x_place = xd; x_rest = xds;
-            }
-            switch(loop_y_le) {
-            case nil:
-                y_place = 0; y_rest = nil;
-            case cons(yd,yds):
-                y_place = yd; y_rest = yds;
-            }
-
-            assert !!bounded(0,9,x_place);
-
-            if(poly_eval(x_rest,10) < 0) {
-                assert false;
-            }
-
-            if(poly_eval(y_rest,10) < 0) {
-                assert false;
-            }
-
             div_rem(x,16);
-            division_unique_nonneg(x,16,poly_eval(x_rest,16),x_place);
-            division_unique_nonneg(loop_xv,10,poly_eval(x_rest,10),x_place);
+            div_rem(loop_xv,10);
             div_rem(y,16);
-            division_unique_nonneg(y,16,poly_eval(y_rest,16),y_place);
-            division_unique_nonneg(loop_yv,10,poly_eval(y_rest,10),y_place);
+            div_rem(loop_yv,10);
+        } @*/
 
-            loop_x_le = x_rest;
-            loop_y_le = y_rest;
+        uint32_t x_digit = x%16;
+        uint32_t y_digit = y%16;
+        uint32_t ret_digit = x_digit + y_digit + carry;
 
-            close dec_num(loop_x_le,loop_xv/10);
-            close bcd_int(loop_x_le,loop_xv/10,x/16);
-            bcd_inv();
-            close dec_num(loop_y_le,loop_yv/10);
-            close bcd_int(loop_y_le,loop_yv/10,y/16);
-            bcd_inv();
+        /*@ {
+            assert [f1]bcd_int(x/16,?n0,?x_rest,?xv_rest);
+            assert [f2]bcd_int(y/16, n0,?y_rest,?yv_rest);
+            division_unique_nonneg(loop_xv,10,xv_rest,x_digit);
+            division_unique_nonneg(loop_yv,10,yv_rest,y_digit);
+            note_eq(x_digit,loop_xv%10);
+            note_eq(y_digit,loop_yv%10);
+
             assert x/16 >= 0;
             assert y/16 >= 0;
-        } @*/
 
-        unsigned long x_digit = x%16;
-        unsigned long y_digit = y%16;
-        unsigned long ret_digit = x_digit + y_digit + carry;
-        /*@ assert ret_digit >= 0 &*& ret_digit <= 19; @*/
+            assert ret_digit >= 0 &*& ret_digit <= 19;
+            if(ret_digit < 0) assert false;
+            if(ret_digit > 19) assert false;
 
-        /*@ {
             assert shift <= 28;
 
-            if((loop_xv/10 == 0) != (x/16 == 0)) {
-                assert false;
-            }
-
-            if((loop_yv/10 == 0) != (y/16 == 0)) {
-                assert false;
-            }
-
             if(shift + 4 > 28) {
-                if(x/16 > 0 || y/16 > 0 || ret_digit >= 10) {
-                    assert xv + yv < pow_nat(10,N8);
-                    assert retv + (loop_xv + loop_yv +
-                            carry)*pow_nat(10,noi(length(ret_le)))
-                        < pow_nat(10,N8);
-                    assert loop_xv%10 == x_digit;
-                    assert loop_yv%10 == y_digit;
-                    div_rem(ret_digit,10);
-                    assert retv + ((x_digit + 10*(loop_xv/10))
-                                    + (y_digit + 10*(loop_yv/10))
-                                    + carry
-                                    )*pow_nat(10,noi(length(ret_le)))
-                        < pow_nat(10,N8);
-
-                    assert retv + ((x_digit + 10*(loop_xv/10))
-                                    + (y_digit + 10*(loop_yv/10))
-                                    + carry
-                                   )*pow_nat(10,noi(length(ret_le)))
-                        < pow_nat(10,N8);
-
-                    if((x_digit + 10*(loop_xv/10))
-                            + (y_digit + 10*(loop_yv/10))
-                            + carry
-                            < 10) {
-                        if(x/16 > 0) {
-                            my_mul_mono_r(10,1,loop_xv/10);
-                        } else if(y/16 > 0) {
-                            my_mul_mono_r(10,1,loop_yv/10);
-                        }
-                        assert false;
-                    }
-
-                    my_mul_mono_l(10,
-                        (x_digit + 10*(loop_xv/10))
-                            + (y_digit + 10*(loop_yv/10))
-                            + carry,
-                        pow_nat(10,noi(length(ret_le))));
-
-                    if(length(ret_le)+1 >= 8) {
-                        assert false;
-                    }
-
+                if(shift < 28) {
+                    division_unique_nonneg(shift,4,length(ret_le),0);
+                    division_unique_nonneg(shift,4,6,shift-24);
                     assert false;
                 }
+
+                if(x/16 > 0 || y/16 > 0 || ret_digit >= 10) assert false;
+            }
+
+            if(ret_digit >= 10) {
+                division_unique_nonneg(ret_digit,10,(uint32_t)1,ret_digit-10);
+
+                assert (ret_digit-10) + 10 + 10*(loop_xv/10) + 10*(loop_yv/10)
+                    == loop_xv + loop_yv + carry;
+            } else {
+                division_unique_nonneg(ret_digit,10,(uint32_t)0,ret_digit);
+                assert ret_digit == ret_digit%10;
+                assert ret_digit + 10*(loop_xv/10) + 10*(loop_yv/10)
+                    == loop_xv + loop_yv + carry;
+
             }
         } @*/
 
-        carry = ret_digit / 10;
-        /*@ div_rem(ret_digit,10); @*/
-        ret_digit %= 10;
+        /* carry = ((ret_digit >= 10) ? (uint32_t)1 : (uint32_t)0); */
+        /* ret_digit -= carry*10; */
+        if(ret_digit >= 10) {
+            carry = 1;
+            ret_digit -= 10;
+        } else {
+            carry = 0;
+        }
 
         /*@ {
+            if(ret_digit < 0) assert false;
+            if(ret_digit > 9) assert false;
+            if(!(ret_digit >= 0 && ret_digit <= 9)) assert false;
+            if(!bounded(0,9,ret_digit)) assert false;
+
             shiftleft_def(ret_digit,noi(shift));
             my_mul_mono_l(0,ret_digit,pow_nat(2,noi(shift)));
+
+            pow_times2(2,N4,ion(n));
             assert ret < pow_nat(2,noi(shift));
             assert ret + 10*pow_nat(2,noi(shift)) < 11*pow_nat(2,noi(shift));
             my_mul_strict_mono_l(11,pow_nat(2,N4),pow_nat(2,noi(shift)));
@@ -369,43 +365,24 @@ unsigned long bcd_add_long(unsigned long x,unsigned long y)
             pow_plus(2,N4,28);
             assert ret + ret_digit*pow_nat(2,noi(shift)) < pow_nat(2,N32);
 
-            if(pow_nat(2,noi(shift)) != pow_nat(16,noi(length(ret_le)))) {
-                pow_times2(2,N4,length(ret_le));
-                assert false;
-            }
+            pow_times2(2,N4,length(ret_le));
+            pow_times2(2,N4,length(ret_le)+1);
 
-            if(pow_nat(2,noi(shift+4)) != pow_nat(16,noi(length(ret_le)+1))) {
-                pow_times2(2,N4,length(ret_le)+1);
-                assert false;
-            }
-
-            close bcd_int({ret_digit},ret_digit,ret_digit);
-            bcd_join(ret_le,{ret_digit});
+            note(bounded(0,9,ret_digit));
+            bcd_exact({ret_digit},ret_digit,ret_digit);
+            bcd_join(ret,n,ret_digit);
 
             note_eq(xv + yv,  retv
                 + (ret_digit + 10*carry + 10*(loop_xv/10)
-                    + 10*(loop_yv/10))*pow_nat(10,noi(length(ret_le))));
-
-            assert xv + yv == retv
-                + ret_digit*pow_nat(10,noi(length(ret_le)))
-                + (10*carry + 10*(loop_xv/10) + 10*(loop_yv/10))*pow_nat(10,noi(length(ret_le)));
-
-            assert xv + yv == retv
-                + ret_digit*pow_nat(10,noi(length(ret_le)))
-                + (10*(carry + loop_xv/10 + loop_yv/10))*pow_nat(10,noi(length(ret_le)));
+                    + 10*(loop_yv/10))*pow_nat(10,n));
 
             note_eq(xv + yv ,  retv
-                + ret_digit*pow_nat(10,noi(length(ret_le)))
+                + ret_digit*pow_nat(10,n)
                 + (carry + loop_xv/10
-                    + loop_yv/10)*(10*pow_nat(10,noi(length(ret_le)))));
+                    + loop_yv/10)*(10*pow_nat(10,n)));
 
-
-            assert xv + yv == retv
-                + ret_digit*pow_nat(10,noi(length(ret_le)))
-                + (carry + loop_xv/10
-                    + loop_yv/10)*pow_nat(10,succ(noi(length(ret_le))));
-
-            ret_le = append(ret_le,{ret_digit});
+            n = succ(n);
+            m = nat_predecessor(m);
         } @*/
 
         ret += (ret_digit<<shift);
@@ -414,10 +391,8 @@ unsigned long bcd_add_long(unsigned long x,unsigned long y)
         shift += 4;
     }
 
-    /*@ leak bcd_int(loop_x_le,_,x); @*/
-    /*@ leak bcd_int(loop_y_le,_,y); @*/
-    /*@ open bcd_int(ret_le,xv+yv,ret); @*/
-    /*@ close bcd_int(ret_le,xv+yv,ret); @*/
+    /*@ leak [f1]bcd_int(x,_,_,_); @*/
+    /*@ leak [f2]bcd_int(y,_,_,_); @*/
 
     return ret;
 }

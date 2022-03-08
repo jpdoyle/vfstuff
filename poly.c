@@ -1365,5 +1365,49 @@ lemma int poly_nonzero_pt(list<int> p)
     return ret;
 }
 
+lemma void karatsuba_step(
+        list<int> x0, list<int> x1, list<int> y0, list<int> y1,
+        int B)
+    requires B > 0 &*& length(x0) == length(y0)
+        &*&  let(poly_eval(x0,B)*poly_eval(y0,B),?z0)
+        &*&  let((poly_eval(x0,B) + poly_eval(x1,B))
+                *(poly_eval(y0,B) + poly_eval(y1,B)),
+                ?z1)
+        &*&  let(poly_eval(x1,B)*poly_eval(y1,B),?z2)
+        ;
+    ensures  poly_eval(append(x0,x1),B)*poly_eval(append(y0,y1),B)
+        ==   z0
+        +    (z1 - z0 - z2)*pow_nat(B,noi(length(x0)))
+        +    z2*pow_nat(B,noi(2*length(x0)));
+{
+    pow_plus(B,noi(length(x0)),length(x0));
+
+    note_eq( poly_eval(append(x0,x1),B)*poly_eval(append(y0,y1),B)
+        ,  (poly_eval(x0,B) + pow_nat(B,noi(length(x0)))*poly_eval(x1,B))
+        *  (poly_eval(y0,B) + pow_nat(B,noi(length(y0)))*poly_eval(y1,B)));
+
+    mul_3var(poly_eval(x0,B),pow_nat(B,noi(length(y0))),poly_eval(y1,B));
+    mul_3var(poly_eval(y0,B),pow_nat(B,noi(length(x0))),poly_eval(x1,B));
+
+    note_eq( poly_eval(append(x0,x1),B)*poly_eval(append(y0,y1),B)
+        ,  poly_eval(x0,B)*poly_eval(y0,B)
+        +  (poly_eval(x0,B)*poly_eval(y1,B)
+            + poly_eval(x1,B)*poly_eval(y0,B))
+           *pow_nat(B,noi(length(x0)))
+        +  (poly_eval(x1,B)*pow_nat(B,noi(length(x0))))
+           *(poly_eval(y1,B)*pow_nat(B,noi(length(y0)))));
+
+    mul_3var(poly_eval(x1,B)*pow_nat(B,noi(length(x0))),
+            poly_eval(y1,B),pow_nat(B,noi(length(y0))));
+
+
+    mul_3var(poly_eval(x1,B),pow_nat(B,noi(length(x0))),
+            poly_eval(y1,B));
+
+    mul_3var(poly_eval(x1,B)*poly_eval(y1,B),
+            pow_nat(B,noi(length(x0))),pow_nat(B,noi(length(y0))));
+
+}
+
 @*/
 
