@@ -212,20 +212,7 @@ ALREADY_PROVEN()
     if(r == 0) {
         div_rem(x,p);
 
-        if(x%p != 0) {
-            assert x == p*q;
-            assert x == p*(x/p) + x%p;
-            assert p*q == p*(x/p) + x%p;
-            assert p*(q - x/p) == x%p;
-            assert abs(p*(q - x/p)) == abs(x%p);
-            mul_abs_commute(p,q-x/p);
-            assert abs(p)*abs(q - x/p) == abs(x%p);
-            if(q - x/p == 0) { assert false; }
-            my_mul_mono_r(abs(p),1,abs(q-x/p));
-
-
-            assert false;
-        }
+        if(x%p != 0) { assert false; }
 
         assert x%p == 0;
         mod_abs(x,p);

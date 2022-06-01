@@ -1,6 +1,6 @@
 /*@ #include "div.gh" @*/
 
-#if 0
+#if 1
 #define ALREADY_PROVEN()
 #else
 #define ALREADY_PROVEN() assume(false);
@@ -338,10 +338,6 @@ lemma void euclid_div_sign(int D, int d)
 
         if(D < d) {
             euclid_div_exact(D,d,0,D);
-        } else {
-            if(q <= 0) {
-                my_mul_mono_l(q,0,d);
-            }
         }
     }
 
@@ -470,17 +466,14 @@ void euclid_mod_nonneg_auto(int D, int d)
     div_rem(D,d);
     mod_sign(D,d);
     if(D < 0 && D%d != 0 && euclid_mod(D,d) == D%d) {
-        euclid_mod_correct(D,d);
         assert false;
     }
 
     if(D%d == 0 && euclid_mod(D,d) != D%d) {
-        euclid_div_exact(D,d,D/d,0);
         assert false;
     }
 
     if(D >= 0 && euclid_mod(D,d) != D%d) {
-        euclid_div_exact(D,d,D/d,D%d);
         assert false;
     }
 }

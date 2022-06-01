@@ -182,6 +182,12 @@ void max_of_auto2(int a, int b)
     ensures  max_of(a,b) == max_of(b,a);
 {}
 
+lemma_auto(max_of(a,b))
+void max_of_auto3(int a, int b)
+    requires a >= b;
+    ensures  max_of(a,b) == a;
+{}
+
 lemma void min_of_correct(int a, int b, int c)
     requires true;
     ensures  min_of(a,b) <= a &*& min_of(a,b) <= b

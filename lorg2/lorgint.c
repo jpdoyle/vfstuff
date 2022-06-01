@@ -256,9 +256,6 @@ void lorgint_reduce_inplace_internal(lorgint* li)
     /*@ int n = 0; @*/
     /*@ euclid_div_sign(1<<31,base); @*/
     /*@ euclid_div_sign(-(1<<31),base); @*/
-    /* @ if(2*mmin < -(1<<31)+base) {
-        assert false;
-    } @*/
     /*@ if(!forall(limbs,(bounded)(mmin,mmax))) {
         int cx = not_forall(limbs,(bounded)(mmin,mmax));
         forall_elim(limbs,(bounded)(min,max),cx);
@@ -678,14 +675,7 @@ void lorgint_reduce_inplace_internal(lorgint* li)
                 assert val >= 0 &*& val <= base-1;
 
                 if(!(final_carry == 0 || (-1 <= ediv && ediv <= 0))) {
-                    assert final_carry != 0;
-                    assert ediv < -1 || ediv > 0;
-                    assert -1 <= orig_carry &*& orig_carry <= 0;
-                    assert res >= -base &*& res <= 0;
                     euclid_div_sign(res,base);
-                    assert base*ediv == res-emod;
-                    assert base*ediv > res-base;
-                    assert base*ediv > -2*base;
                     if(ediv < -1) {
                         my_mul_mono_r(base,ediv,-2);
                         assert false;
@@ -737,20 +727,8 @@ void lorgint_reduce_inplace_internal(lorgint* li)
                     assert rest_limbs == nil;
                     if(div + final_carry
                             >= pow_nat(base,noi(len-(n+1)+extra_cap))) {
-                SKIP_A_PROOF()
-                        assert -poly_eval(l_limbs,base) + orig_carry
-                            +  pow_nat(base,noi(1))*final_carry
-                            <  pow_nat(base,noi(len-n+extra_cap));
-                        assert rem + base*div + base*final_carry
-                            <  pow_nat(base,noi(len-n+extra_cap));
-                        assert rem + base*(div + final_carry)
-                            <  pow_nat(base,noi(len-n+extra_cap));
                         assert noi(len-n+extra_cap)
                             == succ(noi(len-n-1+extra_cap));
-                        assert rem + base*(div + final_carry)
-                            <  base*pow_nat(base,noi(len-(n+1)+extra_cap));
-                        assert base*(div + final_carry)
-                            <  base*pow_nat(base,noi(len-(n+1)+extra_cap));
                         my_inv_mul_strict_mono_r(base,div+final_carry,
                             pow_nat(base,noi(len-(n+1)+extra_cap)));
                         assert false;
