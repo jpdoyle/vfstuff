@@ -68,6 +68,28 @@ lemma_auto(minimal(p)) void minimize_minimal(list<int> p);
     requires !!minimal(p);
     ensures  minimize(p) == p;
 
+lemma void minimal_append(list<int> a,list<int> b);
+    requires !!minimal(b) &*& b != nil;
+    ensures  !!minimal(append(a,b));
+
+lemma void minimize_append_r(list<int> a,list<int> b);
+    requires minimize(b) != nil;
+    ensures  minimize(append(a,b)) == append(a,minimize(b));
+
+lemma void minimize_append_l(list<int> a,list<int> b);
+    requires !!minimal(a);
+    ensures  minimize(append(a,b)) == append(a,minimize(b));
+
+lemma_auto(mem(x,minimize(p)))
+void mem_minimize(int x, list<int> p);
+    requires x != 0;
+    ensures  mem(x,minimize(p)) == mem(x,p);
+
+lemma void minimize_is_prefix(list<int> p);
+    requires true;
+    ensures  take(length(minimize(p)),p)
+        ==   minimize(p);
+
 lemma_auto(minimize(minimize(p)))
 void minimize_idempotent(list<int> p);
     requires true;

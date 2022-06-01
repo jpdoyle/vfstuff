@@ -26,9 +26,13 @@ lemma void div_monotonic_denominator(int D, int x, int y);
     requires D > 0 &*& x > 0 &*& y >= x;
     ensures  D/y <= D/x;
 
+lemma void div_negate(int D, int d);
+    requires d > 0;
+    ensures  (-D)/d == -(D/d);
+
 lemma void div_shrinks(int x, int d);
-    requires d > 0 &*& x >= 0;
-    ensures  x/d <= x;
+    requires d > 0;
+    ensures  abs_of(x/d) <= abs_of(x);
 
 lemma void div_twice(int x, int y, int z);
     requires y != 0 &*& z != 0;
@@ -89,7 +93,7 @@ fixpoint pair<int,int> euclid_div_inner(nat f, int D, int d, int q) {
     }
 }
 
-fixpoint pair<int,int> euclid_div(int D, int d) {
+fixpoint pair<int,int> euclid_divmod(int D, int d) {
     return euclid_div_inner(noi(abs_of(D)),D,d,0);
 }
 
@@ -146,7 +150,7 @@ lemma void euclid_div_correct(nat f, int D, int d, int q)
 
 predicate euclid_div_sol(int D, int d; int q, int r)
     = d > 0
-    &*& switch(euclid_div(D,d)) {
+    &*& switch(euclid_divmod(D,d)) {
         case pair(qv,rv): return q == qv &*& r == rv;
 
     } &*& 0 <= r &*& r < d &*& D == q * d + r;
@@ -164,19 +168,24 @@ lemma void euclid_div_unique(int D, int d, int q1, int r1,
 lemma void euclid_div_unique_intro(int D, int d, int q, int r);
     requires d > 0 &*& r >= 0 &*& r < d &*& D == q*d + r;
     ensures  [_]euclid_div_sol(D,d,q,r)
-        &*&  euclid_div(D,d) == pair(q,r);
+        &*&  euclid_divmod(D,d) == pair(q,r);
 
 lemma void euclid_div_intro(int D, int d);
     requires d > 0;
-    ensures  [_]euclid_div_sol(D,d,_,_);
+    ensures [_]euclid_div_sol(D, d, fst(euclid_divmod(D, d)),
+                snd(euclid_divmod(D, d)));
 
 lemma_auto void euclid_div_auto();
     requires [?f]euclid_div_sol(?D,?d,?q,?r);
     ensures  [ f]euclid_div_sol( D, d, q, r)
         &*&  r >= 0 &*& r < d &*& d > 0 &*& D == q*d + r;
 
+fixpoint int euclid_div(int D, int d) {
+    return fst(euclid_divmod(D,d));
+}
+
 fixpoint int euclid_mod(int D, int d) {
-    return snd(euclid_div(D,d));
+    return snd(euclid_divmod(D,d));
 }
 
 lemma void euclid_mod_correct(int D, int d);
@@ -185,12 +194,55 @@ lemma void euclid_mod_correct(int D, int d);
 
 lemma void euclid_div_exact(int D, int d, int q, int r);
     requires d > 0 &*& r >= 0 &*& r < d &*& D == q*d + r;
-    ensures  euclid_div(D,d) == pair(q,r);
+    ensures  euclid_divmod(D,d) == pair(q,r);
+
+lemma void euclid_div_sign(int D, int d);
+    requires d > 0;
+    ensures  D < 0
+        ?    (fst(euclid_divmod(D,d)) <  0)
+        :    D < d
+        ?    (fst(euclid_divmod(D,d)) == 0)
+        :    (fst(euclid_divmod(D,d)) >  0);
 
 lemma_auto(euclid_mod(D,d))
 void euclid_mod_auto(int D, int d);
     requires d > 0;
     ensures euclid_mod(D, d) == (D % d + d) % d;
+
+lemma
+void euclid_div_equiv(int D, int d);
+    requires d > 0;
+    ensures  D%d >= 0
+        ? euclid_divmod(D,d) == pair(D/d,D%d)
+        : euclid_divmod(D,d) == pair(D/d-1,D%d+d)
+        ;
+
+lemma_auto(euclid_divmod(D,d))
+void euclid_div_equiv_pos(int D, int d);
+    requires d > 0;
+    ensures  (D%d >= 0) == (euclid_divmod(D,d) == pair(D/d,D%d));
+
+lemma_auto(euclid_divmod(D,d))
+void euclid_div_equiv_neg(int D, int d);
+    requires d > 0;
+    ensures  (D%d < 0) == (euclid_divmod(D,d) == pair(D/d-1,D%d+d));
+
+lemma_auto(euclid_div(D,d))
+void euclid_div_more_neg(int D, int d);
+    requires d > 0;
+    ensures  euclid_div(D,d) <= D/d;
+
+lemma void euclid_div_mono_numerator(int x, int y, int d);
+    requires d > 0 &*& y >= x;
+    ensures  fst(euclid_divmod(x,d)) <= fst(euclid_divmod(y,d));
+
+lemma void euclid_div_mono_denominator(int D, int x, int y);
+    requires x > 0 &*& y >= x;
+    ensures  D >= 0
+        ?    fst(euclid_divmod(D,y)) <= fst(euclid_divmod(D,x))
+        :    fst(euclid_divmod(D,y)) >= fst(euclid_divmod(D,x))
+        ;
+
 
 lemma_auto(euclid_mod(D,d))
 void euclid_mod_nonneg_auto(int D, int d);

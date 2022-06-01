@@ -1,6 +1,6 @@
 /*@ #include "poly.gh" @*/
 
-#if 1
+#if 0
 #define ALREADY_PROVEN()
 #else
 #define ALREADY_PROVEN() assume(false);
@@ -68,6 +68,78 @@ lemma_auto(minimal(p)) void minimize_minimal(list<int> p)
     }
 }
 
+lemma void minimal_append(list<int> a,list<int> b)
+    requires !!minimal(b) &*& b != nil;
+    ensures  !!minimal(append(a,b));
+{
+    switch(a) {
+    case nil:
+    case cons(x,xs):
+        switch(append(xs,b)) {
+        case nil:
+            assert length(append(xs,b)) == 0;
+            assert false;
+        case cons(xx,xxs):
+            minimal_append(xs,b);
+        }
+    }
+}
+
+lemma void minimize_append_r(list<int> a,list<int> b)
+    requires minimize(b) != nil;
+    ensures  minimize(append(a,b)) == append(a,minimize(b));
+{
+    switch(a) {
+    case nil:
+    case cons(x,xs):
+        switch(append(xs,b)) {
+        case nil:
+            assert length(append(xs,b)) == 0;
+            assert false;
+        case cons(xx,xxs):
+            minimize_append_r(xs,b);
+        }
+    }
+}
+
+lemma void minimize_append_l(list<int> a,list<int> b)
+    requires !!minimal(a);
+    ensures  minimize(append(a,b)) == append(a,minimize(b));
+{
+    switch(a) {
+    case nil:
+    case cons(x,xs):
+        switch(xs) {
+        case nil:
+        case cons(xx,xxs):
+            minimize_append_l(xs,b);
+        }
+    }
+}
+
+lemma_auto(mem(x,minimize(p)))
+void mem_minimize(int x, list<int> p)
+    requires x != 0;
+    ensures  mem(x,minimize(p)) == mem(x,p);
+{
+    switch(p) {
+    case nil:
+    case cons(v,vs):
+        mem_minimize(x,vs);
+    }
+}
+
+lemma void minimize_is_prefix(list<int> p)
+    requires true;
+    ensures  take(length(minimize(p)),p)
+        ==   minimize(p);
+{
+    switch(p) {
+    case nil:
+    case cons(x,xs):
+        minimize_is_prefix(xs);
+    }
+}
 
 lemma_auto(minimize(minimize(p)))
 void minimize_idempotent(list<int> p)

@@ -1,6 +1,6 @@
 /*@ #include "div.gh" @*/
 
-#if 1
+#if 0
 #define ALREADY_PROVEN()
 #else
 #define ALREADY_PROVEN() assume(false);
@@ -251,9 +251,9 @@ lemma void euclid_div_unique(int D, int d, int q1, int r1,
 
 lemma void euclid_div_intro(int D, int d)
     requires d > 0;
-    ensures  [_]euclid_div_sol(D,d,_,_);
+    ensures [_]euclid_div_sol(D, d, fst(euclid_divmod(D, d)),
+                snd(euclid_divmod(D, d)));
 {
-    ALREADY_PROVEN()
     euclid_div_correct(noi(abs(D)),D,d,0);
     close euclid_div_sol(D,d,_,_);
     leak euclid_div_sol(D,d,_,_);
@@ -274,7 +274,7 @@ lemma_auto void euclid_div_auto()
 lemma void euclid_div_unique_intro(int D, int d, int q, int r)
     requires d > 0 &*& r >= 0 &*& r < d &*& D == q*d + r;
     ensures  [_]euclid_div_sol(D,d,q,r)
-        &*&  euclid_div(D,d) == pair(q,r);
+        &*&  euclid_divmod(D,d) == pair(q,r);
 {
     ALREADY_PROVEN()
     nat f = noi(abs_of(D));
@@ -295,7 +295,7 @@ lemma void euclid_mod_correct(int D, int d)
     ALREADY_PROVEN()
     int_of_nat_of_int(abs_of(D));
     euclid_div_correct(noi(abs_of(D)),D,d,0);
-    switch(euclid_div(D,d)) {
+    switch(euclid_divmod(D,d)) {
     case pair(q,r):
         euclid_div_unique_intro(D,d,q,r);
     }
@@ -303,12 +303,48 @@ lemma void euclid_mod_correct(int D, int d)
 
 lemma void euclid_div_exact(int D, int d, int q, int r)
     requires d > 0 &*& r >= 0 &*& r < d &*& D == q*d + r;
-    ensures  euclid_div(D,d) == pair(q,r);
+    ensures  euclid_divmod(D,d) == pair(q,r);
 {
-    if(euclid_div(D,d) != pair(q,r)) {
+    ALREADY_PROVEN()
+    if(euclid_divmod(D,d) != pair(q,r)) {
         euclid_div_unique_intro(D,d,q,r);
         assert false;
     }
+}
+
+lemma void euclid_div_sign(int D, int d)
+    requires d > 0;
+    ensures  (fst(euclid_divmod(D,d)) <  0) == (D < 0)
+        &*&  (fst(euclid_divmod(D,d)) == 0) == (D >= 0 && D < d)
+        &*&  (fst(euclid_divmod(D,d)) >  0) == (D >= d)
+        ;
+{
+    ALREADY_PROVEN()
+    euclid_div_intro(D,d);
+    assert [_]euclid_div_sol(D,d,?q,?r);
+    euclid_div_exact(D,d,q,r);
+    assert euclid_divmod(D,d) == pair(q,r);
+    assert d*q + r == D;
+    if(D < 0) {
+        if(q >= 0) {
+            my_mul_mono_r(d,0,q);
+            assert false;
+        }
+    } else {
+        if(q < 0) {
+            my_mul_mono_r(d,q,-1);
+            assert false;
+        }
+
+        if(D < d) {
+            euclid_div_exact(D,d,0,D);
+        } else {
+            if(q <= 0) {
+                my_mul_mono_l(q,0,d);
+            }
+        }
+    }
+
 }
 
 lemma_auto(euclid_mod(D,d))
@@ -330,6 +366,100 @@ void euclid_mod_auto(int D, int d)
         division_unique(D%d + d, d, 0, D%d + d);
     }
 }
+
+lemma
+void euclid_div_equiv(int D, int d)
+    requires d > 0;
+    ensures  D%d >= 0
+        ? euclid_divmod(D,d) == pair(D/d,D%d)
+        : euclid_divmod(D,d) == pair(D/d-1,D%d+d)
+        ;
+{
+    ALREADY_PROVEN()
+    div_rem(D,d);
+    if(D%d >= 0) {
+        euclid_div_exact(D,d,D/d,D%d);
+    } else {
+        euclid_div_exact(D,d,D/d-1,D%d+d);
+    }
+}
+
+lemma_auto(euclid_divmod(D,d))
+void euclid_div_equiv_pos(int D, int d)
+    requires d > 0;
+    ensures  (D%d >= 0) == (euclid_divmod(D,d) == pair(D/d,D%d));
+{ euclid_div_equiv(D,d); }
+
+lemma_auto(euclid_divmod(D,d))
+void euclid_div_equiv_neg(int D, int d)
+    requires d > 0;
+    ensures  (D%d < 0) == (euclid_divmod(D,d) == pair(D/d-1,D%d+d));
+{ euclid_div_equiv(D,d); }
+
+lemma void euclid_div_mono_numerator(int x, int y, int d)
+    requires d > 0 &*& y >= x;
+    ensures  fst(euclid_divmod(x,d)) <= fst(euclid_divmod(y,d));
+{
+    euclid_div_intro(x,d);
+    assert [_]euclid_div_sol(x,d,?xq,?xr);
+    euclid_div_intro(y,d);
+    assert [_]euclid_div_sol(y,d,?yq,?yr);
+
+    if(xq > yq) {
+        assert d*xq + xr <= d*yq + yr;
+        assert d*xq + xr <= d*(yq + 1);
+
+        my_mul_mono_r(d,yq+1,xq);
+
+        assert false;
+    }
+}
+
+lemma_auto(euclid_div(D,d))
+void euclid_div_more_neg(int D, int d)
+    requires d > 0;
+    ensures  euclid_div(D,d) <= D/d;
+{
+    euclid_div_intro(D,d);
+    euclid_div_equiv(D,d);
+}
+
+lemma void euclid_div_mono_denominator(int D, int x, int y)
+    requires x > 0 &*& y >= x;
+    ensures  D >= 0
+        ?    fst(euclid_divmod(D,y)) <= fst(euclid_divmod(D,x))
+        :    fst(euclid_divmod(D,y)) >= fst(euclid_divmod(D,x))
+        ;
+{
+    euclid_div_intro(D,x);
+    assert [_]euclid_div_sol(D,x,?xq,?xr);
+    euclid_div_intro(D,y);
+    assert [_]euclid_div_sol(D,y,?yq,?yr);
+    euclid_div_sign(D,x);
+    euclid_div_sign(D,y);
+
+    if(D >= 0) {
+        if(yq > xq) {
+            my_mul_mono_r(x,xq+1,yq);
+            my_mul_mono_l(x,y,yq);
+
+            assert false;
+        }
+    } else {
+        assert yq <= 0;
+        assert xq <= 0;
+        if(-yq > -xq) {
+            assert x*xq + xr <= y*yq + yr;
+            assert -xq+1 <= -yq;
+            my_mul_mono_r(y,-xq+1,-yq);
+            assert y*(-xq+1) <= -y*yq;
+            my_mul_mono_l(x,y,-xq);
+
+            assert false;
+        }
+    }
+}
+
 
 lemma_auto(euclid_mod(D,d))
 void euclid_mod_nonneg_auto(int D, int d)
@@ -417,6 +547,15 @@ lemma void div_monotonic_numerator(int x, int y, int d)
     }
 }
 
+lemma void div_negate(int D, int d)
+    requires d > 0;
+    ensures  (-D)/d == -(D/d);
+{
+    ALREADY_PROVEN()
+    div_rem(D,d);
+    division_unique(-D,d,-(D/d),-(D%d));
+}
+
 lemma void into_numerator(int x, int y, int d)
     requires d > 0 &*& x >= 0 &*& y >= 0;
     ensures  x + (y/d) == (d*x + y)/d;
@@ -482,18 +621,14 @@ lemma void div_monotonic_denominator(int D, int x, int y)
 }
 
 lemma void div_shrinks(int x, int d)
-    requires d > 0 &*& x >= 0;
-    ensures  x/d <= x;
+    requires d > 0;
+    ensures  abs_of(x/d) <= abs_of(x);
 {
-    ALREADY_PROVEN()
-    if(x/d > x) {
-        div_sign(x,d);
-        mod_sign(x,d);
+    if(abs_of(x/d) > abs_of(x)) {
         div_rem(x,d);
-
-        my_mul_mono_l(1,d,x);
-        my_mul_strict_mono_r(d,x,x/d);
-
+        assert abs_of(d*(x/d)) <= abs_of(x);
+        mul_abs_commute(d,x/d);
+        my_mul_strict_mono_l(1,d,abs_of(x/d));
         assert false;
     }
 }

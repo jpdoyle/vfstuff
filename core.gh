@@ -20,12 +20,12 @@ lemma_auto(abs(x)) void abs_is_abs_of(int x)
     ensures  abs_of(x) == abs(x);
 {}
 
-lemma_auto void abs_of_pos(int x)
+lemma_auto(abs_of(x)) void abs_of_pos(int x)
     requires x >= 0;
     ensures  abs_of(x) == x;
 {}
 
-lemma_auto void abs_of_neg(int x)
+lemma_auto(abs_of(x)) void abs_of_neg(int x)
     requires x < 0;
     ensures  abs_of(x) == -x;
 {}
@@ -55,6 +55,10 @@ fixpoint t onpairs<r,s,t>(fixpoint(r,s,t) f, pair<r,s> p) {
     switch(p) {
     case pair(x,y): return f(x,y);
     }
+}
+
+fixpoint pair<t,t> diag<t>(t x) {
+    return pair(x,x);
 }
 
 fixpoint bool ge_than(int x, int y) { return y >= x; }
@@ -150,6 +154,10 @@ fixpoint list<pair<k,v> > take_until<k,v>(k key, list<pair<k,v> > l) {
 
 fixpoint bool equals<t>(t x, t y) { return x == y; }
 
+fixpoint bool equals_on<s,t>(fixpoint(s,t) f,fixpoint(s,t) g, s x) {
+    return f(x) == f(x);
+}
+
 lemma void note(bool x)
     requires x == true;
     ensures  x == true;
@@ -230,6 +238,11 @@ fixpoint option<t> opmap<s,t>(fixpoint(s,t) f, option<s> op) {
 
 fixpoint option<t> opstep<s,t>(fixpoint(s,option<t>) f, option<s> o) {
     return option_into(none,f,o);
+}
+
+fixpoint option<t> opchain<r,s,t>(fixpoint(s,option<t>) f,
+        fixpoint(r,option<s>) g, r x) {
+    return opstep(f,g(x));
 }
 
 fixpoint list<t> oplist<t>(option<t> o) {
@@ -357,6 +370,68 @@ fixpoint pair<r,s> pair_bimap<p,q,r,s>(fixpoint(p,r) lf,
     }
 }
 
+fixpoint pair<pair<r,s>, t> pair_shift_l<r,s,t>(pair<r,pair<s,t> > p) {
+    switch(p) {
+    case pair(a,p1):
+        return switch(p1) {
+        case pair(b,c):
+            return pair(pair(a,b),c);
+        };
+    }
+}
+
+fixpoint pair<r,pair<s,t> > pair_shift_r<r,s,t>(pair<pair<r,s>,t > p) {
+    switch(p) {
+    case pair(p1,c):
+        return switch(p1) {
+        case pair(a,b):
+            return pair(a,pair(b,c));
+        };
+    }
+}
+
+fixpoint option<pair<s,t> > pair_op_r<s,t>(pair<s,option<t> > p) {
+    switch(p) {
+    case pair(a,op_b):
+        return switch(op_b) {
+        case none: return none;
+        case some(b): return some(pair(a,b));
+        };
+    }
+}
+
+fixpoint option<pair<s,t> > pair_op_l<s,t>(pair<option<s>,t> p) {
+    switch(p) {
+    case pair(op_a,b):
+        return switch(op_a) {
+        case none: return none;
+        case some(a): return some(pair(a,b));
+        };
+    }
+}
+
+fixpoint pair<t,s> pair_flip<s,t>(pair<s,t> p) {
+    switch(p) {
+    case pair(a,b):
+        return pair(b,a);
+    }
+}
+
+fixpoint pair<pair<r,s>,pair<r,t> > pair_distrib_l<r,s,t>(r x, pair<s,t> p) {
+    switch(p) {
+    case pair(a,b):
+        return pair(pair(x,a),pair(x,b));
+    }
+}
+
+fixpoint pair<pair<s,r>,pair<t,r> > pair_distrib_r<r,s,t>(pair<s,t> p, r x)
+{
+    switch(p) {
+    case pair(a,b):
+        return pair(pair(a,x),pair(b,x));
+    }
+}
+
 lemma void pair_bifunctor<p,q,r, s,t,w>(
         fixpoint(q,r) lf, fixpoint(p,q) lg,
         fixpoint(t,w) rf, fixpoint(s,t) rg,
@@ -410,6 +485,11 @@ void max_of_auto2(int a, int b);
     requires true;
     ensures  max_of(a,b) == max_of(b,a);
 
+lemma_auto(max_of(a,b))
+void max_of_auto3(int a, int b);
+    requires a >= b;
+    ensures  max_of(a,b) == a;
+
 
 fixpoint bool isbit(int x) { return x == 0 || x == 1; }
 
@@ -421,7 +501,7 @@ void nat_minus_int(nat n, nat m);
 
 lemma void abs_triangle(int x, int y)
     requires true;
-    ensures  abs(x+y) <= abs(x) + abs(y);
+    ensures  abs_of(x+y) <= abs_of(x) + abs_of(y);
 {
     if(x >= 0) {}
     if(y >= 0) {}
