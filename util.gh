@@ -159,7 +159,8 @@ void bounded_cases(int l, int h, int x);
     requires !!bounded(l,h,x);
     ensures  (x != l) == bounded(l+1,h,x);
 
-lemma_auto(bounded(l,l,x)) void bounded_base_case(int l, int x)
+lemma_auto(bounded(l,l,x))
+void bounded_base_case(int l, int x)
     requires true;
     ensures  (x == l) == bounded(l,l,x);
 { }
