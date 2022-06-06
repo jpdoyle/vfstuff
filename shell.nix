@@ -159,14 +159,14 @@ let
 
   verifast = stdenv.mkDerivation rec {
     name    = "verifast-${version}";
-    version = "7b8443214eef4d1fdaec3608bce9cfeb3f491847";
+    version = "c3f577c738114cf043bc035a3dc657fb75a631d6";
 
     src = fetchgit {
         url = "https://github.com/jpdoyle/verifast.git";
         #url = /home/joe/verifast.git;
         rev   = "${version}";
         sha256 =
-          "0iasx2zdii9r3yv2yf32s942807xf8g506j1hghv5ijfnpm1z6ls";
+          "sha256-Ryx0tUGCiBJNm/jK8uqrkSdX5mrEiYik4WlXtjQgEvM=";
     };
 
     dontStrip = true;
@@ -210,6 +210,7 @@ let
       Z3_DLL_DIR="${z3WithOcaml.lib}/lib";
       LD_LIBRARY_PATH = "${z3WithOcaml.lib}/lib:${capnproto}/lib";
       CAPNP_LIBS="${capnproto}/lib";
+      LIB_capnp="${capnproto}/lib";
         VFVERSION = "${version}";
 
         buildCommand = ''
@@ -218,9 +219,10 @@ let
             cd $(basename $src)
             chmod -R +w .
             cd src
+            echo $CAPNP_LIBS
 
             pushd cxx_frontend/ast_exporter/build
-            CC=${CLANG_DIR}/bin/clang CXX=${CLANG_DIR}/bin/clang++ cmake -DLLVM_INSTALL_DIR=${LLVM_INSTALL_DIR} -DCMAKE_BUILD_TYPE=Debug -DCAPNP_LIBS=$CAPNP_LIBS ..
+            CC=${CLANG_DIR}/bin/clang CXX=${CLANG_DIR}/bin/clang++ cmake -DLLVM_INSTALL_DIR=${LLVM_INSTALL_DIR} -DCMAKE_BUILD_TYPE=Debug -DCAPNP_LIBS=${CAPNP_LIBS} ..
             popd
 
             make NUMCPU=3 VERBOSE=1
