@@ -1,8 +1,9 @@
 #include "lorgint.h"
 /*@ #include <arrays.gh> @*/
 /*@ #include "../div.gh" @*/
+/*@ #include "../bitops.gh" @*/
 
-#if 1
+#if 0
 #define ALREADY_PROVEN() {}
 #else
 #define ALREADY_PROVEN() { assume(false); }
@@ -31,8 +32,7 @@ static int32_t min32(int32_t x, int32_t y)
 }
 
 static void euclid_divide(int32_t D, int32_t d, int32_t* q, int32_t* r)
-    /*@ requires d > 0 &*& *q |-> _ &*& *r |-> _
-            &*&  (euclid_div(D,d) >= -(1<<31) || D/d-1 >= -(1<<31)); @*/
+    /*@ requires d > 0 &*& *q |-> _ &*& *r |-> _; @*/
     /*@ ensures  [_]euclid_div_sol(D,d,euclid_div(D,d),euclid_mod(D,d))
             &*&  *q |-> euclid_div(D,d) &*& *r |-> euclid_mod(D,d); @*/
     /*@ terminates; @*/
@@ -53,6 +53,30 @@ static void euclid_divide(int32_t D, int32_t d, int32_t* q, int32_t* r)
     *q = div;
     *r = rem;
 }
+
+static void euclid_divide_64_32(int64_t D, int32_t d, int64_t* q, int32_t* r)
+    /*@ requires d > 0 &*& *q |-> _ &*& *r |-> _; @*/
+    /*@ ensures  [_]euclid_div_sol(D,d,euclid_div(D,d),euclid_mod(D,d))
+            &*&  *q |-> euclid_div(D,d) &*& *r |-> euclid_mod(D,d); @*/
+    /*@ terminates; @*/
+{
+    /*@ {
+        div_rem(D,d);
+        euclid_div_intro(D,d);
+        euclid_div_equiv(D,d);
+        div_shrinks(D,d);
+    } @*/
+
+    int64_t div = D/d;
+    int32_t rem = (int32_t)(D%d);
+    if(rem < 0) {
+        rem += d;
+        div -= 1;
+    }
+    *q = div;
+    *r = rem;
+}
+
 
 void lorgint_add_internal(lorgint* dst, lorgint* src)
     /*@ requires     lorgint_view(dst, ?base, ?dst_neg,
@@ -242,6 +266,7 @@ void lorgint_reduce_inplace_internal(lorgint* li)
             ; @*/
     /*@ terminates; @*/
 {
+    /*@ ALREADY_PROVEN() @*/
     /*@ open lorgint_reduce_inplace_internal_args(_,_,_); @*/
     int32_t *p;
     int32_t carry = 0;
@@ -249,7 +274,6 @@ void lorgint_reduce_inplace_internal(lorgint* li)
     /*@ int minimized_len = 0; @*/
     /*@ list<int> minimized_limbs = nil; @*/
     /*@ list<int> zero_limbs = nil; @*/
-    bool negative = false;
 
     /*@ int len = li->size; @*/
     /*@ int extra_cap = li->capacity - len; @*/
@@ -1007,5 +1031,178 @@ void lorgint_reduce_inplace_internal(lorgint* li)
         li->is_negative = false;
     }
 
+}
+
+/*
+
+C_{n+1} <= 2^31 + C_n/b
+
+C <= 2^31 + C/b
+(1-1/b)C <= 2^31
+(b-1)C <= 2^31*b
+C <= 2^31*b/(b-1)
+
+   */
+
+void lorgint_reduce_inplace_internal_v2(lorgint* li)
+    /*@ requires lorgint_view(li, ?base, ?neg, ?min, ?max, ?start, ?cap,
+                              ?limbs, ?v)
+            &*&  abs_of(v) < pow_nat(base,noi(cap))
+            ; @*/
+    /*@ ensures  lorgint_view(li,  base, (v < 0), 0, base-1, start,  cap,
+                              ?new_limbs, v)
+            &*&  !!minimal(new_limbs)
+            ; @*/
+    /*@ terminates; @*/
+{
+    /*@ SKIP_PROOF() @*/
+    int32_t *p;
+    int64_t carry = 0;
+    int32_t *non_zero_end = li->start;
+
+    /*@ int len = li->size; @*/
+    /*@ int extra_cap = li->capacity - len; @*/
+    /*@ int n = 0; @*/
+    /*@ int minimized_len = 0; @*/
+    /*@ list<int> minimized_limbs = nil; @*/
+    /*@ list<int> zero_limbs = nil; @*/
+
+    li->minval = 0;
+    li->maxval = li->base - 1;
+
+    for(p = li->start; p < li->end || carry > 0; ++p)
+        /*@ requires p[..len-n] |-> ?l_limbs
+                &*&  li->end |-> ?end
+                &*&  end[..extra_cap] |-> _
+                &*&  li->size == len
+
+                &*&  len + extra_cap == cap
+                &*&  li->base |-> base
+                &*&  p + len-n == end
+                &*&  0 <= n &*& n <= len
+
+                &*&  !!forall(l_limbs,(bounded)(mmin,mmax))
+                &*&  !!forall(minimized_limbs,(bounded)(0,base-1))
+
+                &*&  minimized_len == length(minimized_limbs)
+                &*&  minimized_len + length(zero_limbs) == n
+                &*&  !!poly_is_zero(zero_limbs)
+                &*&  !!minimal(minimized_limbs)
+
+                &*&  poly_eval(l_limbs,base) + carry
+                <    pow_nat(base,noi(len-n+extra_cap))
+                &*&  poly_eval(l_limbs,base) + carry
+                >=   -pow_nat(base,noi(len-n+extra_cap))
+
+                &*&  non_zero_end == p + minimized_len-n
+
+                &*&  carry < (1<<31)
+                &*&  carry > (1<<31)
+                ; @*/
+        /*@ ensures  old_p[..(len-old_n)] |-> ?new_limbs
+                &*&  li->end |-> ?new_end
+                &*&  li->base |-> base
+                &*&  old_p + len - old_n == new_end
+                &*&  len + extra_cap == cap
+                &*&  li->size |-> len
+                &*&  new_end[..extra_cap] |-> _
+
+                &*&  minimized_limbs
+                == append(old_minimized_limbs,
+                minimize(append(old_zero_limbs,new_limbs)))
+
+                &*&  minimized_limbs
+                == append(old_minimized_limbs,
+                minimize(append(old_zero_limbs,new_limbs)))
+
+                &*&  minimized_len == length(minimized_limbs)
+
+                &*&  non_zero_end == old_p + minimized_len-old_n
+
+                &*&  carry >= -(1<<31)
+                &*&  carry <   (1<<31)
+
+                &*&  !!forall(new_limbs,(bounded)(0,base-1))
+                &*&  !!forall(minimized_limbs,(bounded)(0,base-1))
+                &*&  poly_eval(l_limbs,base) + old_carry
+                ==   poly_eval(new_limbs,base)
+                    + pow_nat(base,noi(length(new_limbs)))*carry
+
+                &*&  (!(l_limbs == nil && old_carry == 0) || carry == 0)
+                &*&  length(l_limbs) <= length(new_limbs)
+                ; @*/
+        // C > (2^31 + C)/b
+        // b*C > 2^31 + C
+        // (b-1)*C > 2^31
+        // (b-1)*C > b*2^31
+        // bC - C > b*2^31
+        // b(C-2^31) > C
+        // b(2^32-2^31) >= 2(2^32 - 2^31)
+    {
+        int64_t q;
+        int32_t r;
+
+        if(p == li->end) {
+            ++li->end;
+            *p = 0;
+        }
+
+        int64_t res = *p + carry;
+        carry = 0;
+
+        euclid_divide_64_32(res,li->base,&q,&r);
+        int64_t div = q;
+        int32_t rem = r;
+
+        *p = rem;
+        carry = div;
+        if(rem != 0) {
+            non_zero_end = p+1;
+        }
+
+    }
+
+    if(carry < 0) {
+        int64_t final_carry = -carry;
+        carry = 0;
+        li->is_negative = !li->is_negative;
+        non_zero_end = li->start;
+
+        for(p = li->start; p < li->end || carry > 0; ++p)
+        {
+            int64_t q;
+            int32_t r;
+
+            if(p == li->end) {
+                ++li->end;
+                *p = 0;
+            }
+
+            int64_t res = -(*p) + carry;
+            carry = 0;
+
+            euclid_divide_64_32(res,li->base,&q,&r);
+            int64_t div = q;
+            int32_t rem = r;
+
+            *p = rem;
+            carry = div;
+
+            if(p+1 == li->end && final_carry > 0) {
+                carry += final_carry;
+                final_carry = 0;
+            }
+
+            if(rem != 0) {
+                non_zero_end = p+1;
+            }
+        }
+
+    }
+
+    li->end = non_zero_end;
+    if(non_zero_end == li->start) {
+        li->is_negative = false;
+    }
 }
 
