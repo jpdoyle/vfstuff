@@ -43,7 +43,6 @@ void icantbelieve(int* arr, int n)
                                        cons(x, suff)),
                                 l)
                         &*& !!all_le(x,pref1)
-                        // TODO finish this
 
                         :   arr[..i] |-> ?pref
                         &*& arr[i] |-> ?x
@@ -252,9 +251,6 @@ void icantbelieve(int* arr, int n)
 
             } @*/
         }
-
-        /*@ assert arr[..i] |-> ?new_pref &*& arr[i] |-> ?v; @*/
-        /* @ sorted_append(new_pref,{v}); @*/
     }
 
     /*@ {
