@@ -78,232 +78,232 @@ void is_sorted_append(list<int> a, list<int> b)
 
   @*/
 
-//int binsearch(int x, int* A, int n)
-//    /*@ requires [?f]A[..n] |-> ?elems
-//            &*&  !!is_sorted(elems);
-//      @*/
-//    /*@ ensures  [ f]A[..n] |-> elems
-//            &*&  result == -1
-//                 ? !mem(x,elems)
-//                 : result >= 0 &*& result < n
-//                 &*& nth_of(result,elems) == some(x)
-//            ;
-//      @*/
-//    //@ terminates;
-//
-//{
-//    int lower = 0;
-//    int upper = n;
-//    while(lower < upper)
-//        /*@ invariant 0 <= lower &*& lower <= upper &*& upper <= n
-//                  &*& [f]A[0..lower]     |-> ?gt_seg
-//                  &*& [f]A[lower..upper] |-> ?mid_seg
-//                  &*& [f]A[upper..n]     |-> ?le_seg
-//                  &*& !!is_sorted(append(gt_seg,mid_seg))
-//                  &*& !!is_sorted(append(mid_seg,le_seg))
-//                  &*& !!is_sorted(append(gt_seg,{x}))
-//                  &*& !!is_sorted(append({x},le_seg))
-//                  &*& append(append(gt_seg,mid_seg),le_seg) == elems
-//                  &*& !!is_sorted(elems)
-//                  &*& !mem(x,gt_seg)
-//                  &*& mem(x,elems)
-//                    == (mem(x,mid_seg)
-//                        || safe_head(le_seg) == some(x))
-//                  ;
-//          @*/
-//        //@ decreases upper-lower;
-//    {
-//        //@ open ints(A+lower,_,_);
-//
-//        if(A[lower] == x) {
-//            /*@ {
-//                close [f]ints(A+lower, upper-lower, mid_seg);
-//                ints_join(A);
-//                ints_join(A);
-//                nth_append_r(gt_seg,mid_seg,0);
-//                nth_append(append(gt_seg,mid_seg),le_seg,lower);
-//
-//                assert nth_of(0,mid_seg) == some(x);
-//                nth_of_is_nth(lower,append(gt_seg,mid_seg));
-//                nth_of_is_nth(lower,
-//                    append(append(gt_seg,mid_seg),le_seg));
-//                assert nth_of(lower,append(gt_seg,mid_seg)) == some(x);
-//                assert nth_of(lower,
-//                    append(append(gt_seg,mid_seg),le_seg)) == some(x);
-//                assert nth_of(lower,elems) == some(x);
-//            } @*/
-//
-//            return lower;
-//        }
-//        //@ close [f]ints(A+lower, upper-lower, mid_seg);
-//
-//        //@ div_rem(upper-lower,2);
-//        int mid = lower + (upper-lower)/2;
-//
-//        //@ int midind = mid-lower;
-//        /*@ {
-//            //div_sign(upper-lower,2);
-//            note_eq((A + lower) + midind, A + mid);
-//            note_eq(A + mid + (upper-lower-midind), A + upper);
-//            assert lower <= mid;
-//            assert mid <= upper;
-//
-//            ints_split(A+lower,midind);
-//            assert mid_seg
-//                == append(take(midind,mid_seg),
-//                          drop(midind,mid_seg));
-//
-//            append_assoc(gt_seg,
-//                take(midind,mid_seg), drop(midind,mid_seg));
-//
-//            append_assoc(
-//                take(midind,mid_seg), drop(midind,mid_seg),
-//                le_seg);
-//
-//            assert !!is_sorted(
-//                append(gt_seg, take(midind,mid_seg)));
-//
-//            cons_head_tail(drop(midind,mid_seg));
-//            append_assoc(append(gt_seg,
-//                take(midind,mid_seg)),
-//                {head(drop(midind,mid_seg))},
-//                tail(drop(midind,mid_seg)));
-//
-//            append_assoc(gt_seg,mid_seg,le_seg);
-//            append_assoc(gt_seg,
-//                take(midind,mid_seg),
-//                drop(midind,mid_seg));
-//            append_assoc(
-//                take(midind,mid_seg),
-//                drop(midind,mid_seg), le_seg);
-//            append_assoc(gt_seg,
-//                take(midind,mid_seg),
-//                append(drop(midind,mid_seg), le_seg));
-//
-//            assert !!is_sorted(
-//                append(append(gt_seg, take(midind,mid_seg)),
-//                       {head(drop(midind,mid_seg))}));
-//
-//            open ints(A+mid,_,_);
-//
-//            assert [f]A[mid] |-> head(drop(midind,mid_seg));
-//        } @*/
-//
-//        if(A[mid] < x) {
-//            lower = mid+1;
-//
-//            /*@ {
-//                ints_join(A);
-//                close [f]ints(A+mid,1,_);
-//                ints_join(A);
-//                assert [f]A[..lower] |-> ?new_gt;
-//                assert [f]A[lower..upper] |-> ?new_mid;
-//                assert !!is_sorted(new_gt);
-//                assert !!is_sorted(new_mid);
-//                assert !!is_sorted(append(new_gt,new_mid));
-//
-//                assert !!is_sorted({x});
-//                assert !!is_sorted(new_gt);
-//                assert head(drop(midind,mid_seg)) < x;
-//
-//                BEGIN_FORALL(int, v, new_gt,
-//                        (flip)(all_above_eq, {x}))
-//                    if(v != head(drop(midind,mid_seg))) {
-//                        forall_elim(
-//                            append(gt_seg, take(midind,mid_seg)),
-//                            (flip)(all_above_eq,
-//                                   {head(drop(midind,mid_seg))}),
-//                            v);
-//                    }
-//                END_FORALL()
-//
-//                assert !!is_sorted(append(new_gt,{x}));
-//
-//                if(mem(x,new_gt)) {
-//                    forall_elim(
-//                        append(gt_seg, take(midind,mid_seg)),
-//                        (flip)(all_above_eq,
-//                                {head(drop(midind,mid_seg))}),
-//                        x);
-//                    assert false;
-//                }
-//            } @*/
-//
-//        } else {
-//            upper = mid;
-//
-//            /*@ {
-//                close [f]ints(A+upper,1,_);
-//                if(le_seg != {}) {
-//                    ints_join(A+upper);
-//                    ints_join(A+upper);
-//                }
-//
-//                assert [f]A[..lower]      |-> ?new_gt;
-//                assert [f]A[lower..upper] |-> ?new_mid;
-//                assert [f]A[upper..n]     |-> ?new_le;
-//                assert !!is_sorted(new_gt);
-//                assert !!is_sorted(new_mid);
-//                assert !!is_sorted(new_le);
-//                assert !!is_sorted(append(new_mid,new_le));
-//
-//                //append_assoc(
-//
-//                assert !!is_sorted({x});
-//                assert !!is_sorted(new_le);
-//                assert head(drop(midind,mid_seg)) >= x;
-//
-//                BEGIN_FORALL(int, v, new_le,
-//                        (is_above_eq)(x))
-//                    if(v != head(drop(midind,mid_seg))) {
-//                        forall_elim(
-//                            append(drop(midind,mid_seg), le_seg),
-//                            (is_above_eq)
-//                                (head(drop(midind,mid_seg))),
-//                            v);
-//                    }
-//                END_FORALL()
-//
-//                assert !!is_sorted(append({x},new_le));
-//
-//                if(mem(x,elems) && !mem(x,new_mid)) {
-//                    assert !!mem(x,new_le);
-//                    forall_elim(
-//                        append(drop(midind,mid_seg), le_seg),
-//                        (is_above_eq)
-//                            (head(drop(midind,mid_seg))),
-//                        x);
-//                    if(head(drop(midind,mid_seg)) != x)
-//                        assert false;
-//                }
-//            } @*/
-//        }
-//    }
-//
-//    //@ assert lower == upper;
-//    //@ open ints(A+upper,_,_);
-//    if(lower != n && A[lower] == x) {
-//        return lower;
-//        /*@ {
-//            nth_append_r(gt_seg,le_seg,0);
-//            assert mid_seg == {};
-//
-//            assert nth_of(0,le_seg) == some(x);
-//            nth_of_is_nth(lower,
-//                append(append(gt_seg,mid_seg),le_seg));
-//
-//            close [f]ints(A+upper,n-upper,_);
-//            ints_join(A);
-//            ints_join(A);
-//        } @*/
-//    }
-//    return -1;
-//    /*@ {
-//        close [f]ints(A+upper,n-upper,_);
-//        ints_join(A);
-//        ints_join(A);
-//    } @*/
-//}
+int binsearch(int x, int* A, int n)
+    /*@ requires [?f]A[..n] |-> ?elems
+            &*&  !!is_sorted(elems);
+      @*/
+    /*@ ensures  [ f]A[..n] |-> elems
+            &*&  result == -1
+                 ? !mem(x,elems)
+                 : result >= 0 &*& result < n
+                 &*& nth_of(result,elems) == some(x)
+            ;
+      @*/
+    //@ terminates;
+
+{
+    int lower = 0;
+    int upper = n;
+    while(lower < upper)
+        /*@ invariant 0 <= lower &*& lower <= upper &*& upper <= n
+                  &*& [f]A[0..lower]     |-> ?gt_seg
+                  &*& [f]A[lower..upper] |-> ?mid_seg
+                  &*& [f]A[upper..n]     |-> ?le_seg
+                  &*& !!is_sorted(append(gt_seg,mid_seg))
+                  &*& !!is_sorted(append(mid_seg,le_seg))
+                  &*& !!is_sorted(append(gt_seg,{x}))
+                  &*& !!is_sorted(append({x},le_seg))
+                  &*& append(append(gt_seg,mid_seg),le_seg) == elems
+                  &*& !!is_sorted(elems)
+                  &*& !mem(x,gt_seg)
+                  &*& mem(x,elems)
+                    == (mem(x,mid_seg)
+                        || safe_head(le_seg) == some(x))
+                  ;
+          @*/
+        //@ decreases upper-lower;
+    {
+        //@ open ints(A+lower,_,_);
+
+        if(A[lower] == x) {
+            /*@ {
+                close [f]ints(A+lower, upper-lower, mid_seg);
+                ints_join(A);
+                ints_join(A);
+                nth_append_r(gt_seg,mid_seg,0);
+                nth_append(append(gt_seg,mid_seg),le_seg,lower);
+
+                assert nth_of(0,mid_seg) == some(x);
+                nth_of_is_nth(lower,append(gt_seg,mid_seg));
+                nth_of_is_nth(lower,
+                    append(append(gt_seg,mid_seg),le_seg));
+                assert nth_of(lower,append(gt_seg,mid_seg)) == some(x);
+                assert nth_of(lower,
+                    append(append(gt_seg,mid_seg),le_seg)) == some(x);
+                assert nth_of(lower,elems) == some(x);
+            } @*/
+
+            return lower;
+        }
+        //@ close [f]ints(A+lower, upper-lower, mid_seg);
+
+        //@ div_rem(upper-lower,2);
+        int mid = lower + (upper-lower)/2;
+
+        //@ int midind = mid-lower;
+        /*@ {
+            //div_sign(upper-lower,2);
+            note_eq((A + lower) + midind, A + mid);
+            note_eq(A + mid + (upper-lower-midind), A + upper);
+            assert lower <= mid;
+            assert mid <= upper;
+
+            ints_split(A+lower,midind);
+            assert mid_seg
+                == append(take(midind,mid_seg),
+                          drop(midind,mid_seg));
+
+            append_assoc(gt_seg,
+                take(midind,mid_seg), drop(midind,mid_seg));
+
+            append_assoc(
+                take(midind,mid_seg), drop(midind,mid_seg),
+                le_seg);
+
+            assert !!is_sorted(
+                append(gt_seg, take(midind,mid_seg)));
+
+            cons_head_tail(drop(midind,mid_seg));
+            append_assoc(append(gt_seg,
+                take(midind,mid_seg)),
+                {head(drop(midind,mid_seg))},
+                tail(drop(midind,mid_seg)));
+
+            append_assoc(gt_seg,mid_seg,le_seg);
+            append_assoc(gt_seg,
+                take(midind,mid_seg),
+                drop(midind,mid_seg));
+            append_assoc(
+                take(midind,mid_seg),
+                drop(midind,mid_seg), le_seg);
+            append_assoc(gt_seg,
+                take(midind,mid_seg),
+                append(drop(midind,mid_seg), le_seg));
+
+            assert !!is_sorted(
+                append(append(gt_seg, take(midind,mid_seg)),
+                       {head(drop(midind,mid_seg))}));
+
+            open ints(A+mid,_,_);
+
+            assert [f]A[mid] |-> head(drop(midind,mid_seg));
+        } @*/
+
+        if(A[mid] < x) {
+            lower = mid+1;
+
+            /*@ {
+                ints_join(A);
+                close [f]ints(A+mid,1,_);
+                ints_join(A);
+                assert [f]A[..lower] |-> ?new_gt;
+                assert [f]A[lower..upper] |-> ?new_mid;
+                assert !!is_sorted(new_gt);
+                assert !!is_sorted(new_mid);
+                assert !!is_sorted(append(new_gt,new_mid));
+
+                assert !!is_sorted({x});
+                assert !!is_sorted(new_gt);
+                assert head(drop(midind,mid_seg)) < x;
+
+                BEGIN_FORALL(int, v, new_gt,
+                        (flip)(all_above_eq, {x}))
+                    if(v != head(drop(midind,mid_seg))) {
+                        forall_elim(
+                            append(gt_seg, take(midind,mid_seg)),
+                            (flip)(all_above_eq,
+                                   {head(drop(midind,mid_seg))}),
+                            v);
+                    }
+                END_FORALL()
+
+                assert !!is_sorted(append(new_gt,{x}));
+
+                if(mem(x,new_gt)) {
+                    forall_elim(
+                        append(gt_seg, take(midind,mid_seg)),
+                        (flip)(all_above_eq,
+                                {head(drop(midind,mid_seg))}),
+                        x);
+                    assert false;
+                }
+            } @*/
+
+        } else {
+            upper = mid;
+
+            /*@ {
+                close [f]ints(A+upper,1,_);
+                if(le_seg != {}) {
+                    ints_join(A+upper);
+                    ints_join(A+upper);
+                }
+
+                assert [f]A[..lower]      |-> ?new_gt;
+                assert [f]A[lower..upper] |-> ?new_mid;
+                assert [f]A[upper..n]     |-> ?new_le;
+                assert !!is_sorted(new_gt);
+                assert !!is_sorted(new_mid);
+                assert !!is_sorted(new_le);
+                assert !!is_sorted(append(new_mid,new_le));
+
+                //append_assoc(
+
+                assert !!is_sorted({x});
+                assert !!is_sorted(new_le);
+                assert head(drop(midind,mid_seg)) >= x;
+
+                BEGIN_FORALL(int, v, new_le,
+                        (is_above_eq)(x))
+                    if(v != head(drop(midind,mid_seg))) {
+                        forall_elim(
+                            append(drop(midind,mid_seg), le_seg),
+                            (is_above_eq)
+                                (head(drop(midind,mid_seg))),
+                            v);
+                    }
+                END_FORALL()
+
+                assert !!is_sorted(append({x},new_le));
+
+                if(mem(x,elems) && !mem(x,new_mid)) {
+                    assert !!mem(x,new_le);
+                    forall_elim(
+                        append(drop(midind,mid_seg), le_seg),
+                        (is_above_eq)
+                            (head(drop(midind,mid_seg))),
+                        x);
+                    if(head(drop(midind,mid_seg)) != x)
+                        assert false;
+                }
+            } @*/
+        }
+    }
+
+    //@ assert lower == upper;
+    //@ open ints(A+upper,_,_);
+    if(lower != n && A[lower] == x) {
+        return lower;
+        /*@ {
+            nth_append_r(gt_seg,le_seg,0);
+            assert mid_seg == {};
+
+            assert nth_of(0,le_seg) == some(x);
+            nth_of_is_nth(lower,
+                append(append(gt_seg,mid_seg),le_seg));
+
+            close [f]ints(A+upper,n-upper,_);
+            ints_join(A);
+            ints_join(A);
+        } @*/
+    }
+    return -1;
+    /*@ {
+        close [f]ints(A+upper,n-upper,_);
+        ints_join(A);
+        ints_join(A);
+    } @*/
+}
 
 /*@
 
