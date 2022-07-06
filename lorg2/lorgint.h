@@ -96,8 +96,6 @@ void lorgint_add_internal(lorgint* dst, lorgint* src);
 void lorgint_reduce_inplace(lorgint* li);
     /*@ requires lorgint_view(li, ?base, ?neg, ?min, ?max, ?start, ?cap, _,
                               ?v)
-            &*&  2*max <  (1<<31)
-            &*&  2*min > -(1<<31)
             &*&  abs_of(v) < pow_nat(base,nat_of_int(cap))
             ; @*/
     /*@ ensures  lorgint_view(li,  base, (v < 0), 0, base-1, start,  cap,
