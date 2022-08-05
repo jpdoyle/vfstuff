@@ -219,9 +219,6 @@ int* unique(const int* arr, size_t len, size_t* newlen)
                 &*&  loopnums == drop(i,nums)
                 &*&  i >= 0 &*& i <= len
                 &*&  uniq_count <= len
-                //&*&  (uniq_count < len ? emp
-                //     : !!subset(nums,uniqNums)
-                //     )
                 ;
           @*/
 
@@ -241,8 +238,6 @@ int* unique(const int* arr, size_t len, size_t* newlen)
         bool found = false;
 
         for(j = 0; j < uniq_count; ++j)
-        /* j = 0; */
-        /* while(j < uniq_count) */
             /*@ requires j >= 0 &*& j <= uniq_count
                     &*&  [?lf]uniq_nums[j..uniq_count] |-> ?loopuniq
                     ;

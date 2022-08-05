@@ -132,6 +132,10 @@ lemma void pow_monotonic(int x,nat y,nat z);
     requires x > 1 &*& ion(y) < ion(z);
     ensures  pow_nat(x,y) < pow_nat(x,z);
 
+lemma void pow_base_soft_monotonic(int x,int y,nat n);
+    requires x >= 0 &*& y >= x;
+    ensures  pow_nat(x,n) <= pow_nat(y,n);
+
 fixpoint int pow2(nat n) { return pow_nat(2,n); }
 
 fixpoint int factorial(nat n) {

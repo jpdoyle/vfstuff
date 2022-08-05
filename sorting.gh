@@ -135,7 +135,7 @@ fixpoint bool count_matches<t>(list<t> l, list<t> r, t x) {
 
 fixpoint bool is_permutation2<t>(list<t> l, list<t> r) {
     return forall(l,(count_matches)(l,r))
-        && forall(r,(count_matches)(l,r));
+        && forall(r,(count_matches)(r,l));
 }
 
 lemma_auto void permutation2_self<t>(list<t> l)
@@ -195,19 +195,19 @@ lemma void permutation2_append(list<int> a1, list<int> a2,
       forall_elim(a1,(count_matches)(a1,a2),cx);
     }
     if(mem(cx,a2)) {
-      forall_elim(a2,(count_matches)(a1,a2),cx);
+      forall_elim(a2,(count_matches)(a2,a1),cx);
     }
     if(mem(cx,b1)) {
       forall_elim(b1,(count_matches)(b1,b2),cx);
     }
     if(mem(cx,b2)) {
-      forall_elim(b2,(count_matches)(b1,b2),cx);
+      forall_elim(b2,(count_matches)(b2,b1),cx);
     }
     assert false;
   }
-  if(!forall(append(a2,b2),(count_matches)(append(a1,b1),append(a2,b2)))) {
+  if(!forall(append(a2,b2),(count_matches)(append(a2,b2),append(a1,b1)))) {
     int cx = not_forall(append(a2,b2),
-        (count_matches)(append(a1,b1),append(a2,b2)));
+        (count_matches)(append(a2,b2),append(a1,b1)));
     count_of_mem(cx,a1);
     count_of_mem(cx,a2);
     count_of_mem(cx,b1);
@@ -216,51 +216,46 @@ lemma void permutation2_append(list<int> a1, list<int> a2,
       forall_elim(a1,(count_matches)(a1,a2),cx);
     }
     if(mem(cx,a2)) {
-      forall_elim(a2,(count_matches)(a1,a2),cx);
+      forall_elim(a2,(count_matches)(a2,a1),cx);
     }
     if(mem(cx,b1)) {
       forall_elim(b1,(count_matches)(b1,b2),cx);
     }
     if(mem(cx,b2)) {
-      forall_elim(b2,(count_matches)(b1,b2),cx);
+      forall_elim(b2,(count_matches)(b2,b1),cx);
     }
     assert false;
   }
 }
 
 lemma
+void forall_permutation<t>(fixpoint(t,bool) p, list<t> a, list<t> b)
+    requires !!is_permutation2(a,b);
+    ensures  forall(a,p) == forall(b,p);
+{
+    if(forall(a,p) && !forall(b,p)) {
+        t cx = not_forall(b,p);
+        forall_elim(b,(count_matches)(b,a),cx);
+        count_of_mem(cx,b);
+        count_of_mem(cx,a);
+        forall_elim(a,p,cx);
+        assert false;
+    }
+    if(forall(b,p) && !forall(a,p)) {
+        t cx = not_forall(a,p);
+        forall_elim(a,(count_matches)(a,b),cx);
+        count_of_mem(cx,b);
+        count_of_mem(cx,a);
+        forall_elim(b,p,cx);
+        assert false;
+    }
+}
+
+lemma
 void all_ge_permutation(int x, list<int> a, list<int> b)
     requires is_permutation2(a,b) == true;
     ensures  all_ge(x,a) == all_ge(x,b);
-{
-    if(all_ge(x,a)) {
-        if(!all_ge(x,b)) {
-            int cx = not_forall(b,(le)(x));
-            forall_elim(b,(count_matches)(a,b),cx);
-
-            if(mem(cx,a)) {
-                forall_elim(a,(le)(x),cx);
-                assert false;
-            }
-
-            count_of_mem(cx,a);
-            count_of_mem(cx,b);
-            assert false;
-        }
-    } else {
-        if(all_ge(x,b)) {
-            int cx = not_forall(a,(le)(x));
-            forall_elim(a,(count_matches)(a,b),cx);
-            if(mem(cx,b)) {
-                forall_elim(b,(le)(x),cx);
-                assert false;
-            }
-            count_of_mem(cx,b);
-            count_of_mem(cx,a);
-            assert false;
-        }
-    }
-}
+{ forall_permutation((le)(x),a,b); }
 
 lemma_auto(is_permutation2(cons(x,a),cons(x,b)))
 void permutation2_cons<t>(t x, list<t> a, list<t> b)
@@ -281,7 +276,7 @@ void permutation2_cons<t>(t x, list<t> a, list<t> b)
             if(mem(x,a)) {
                 forall_elim(a,(count_matches)(a,b),cx);
             } else if(mem(x,b)) {
-                forall_elim(b,(count_matches)(a,b),cx);
+                forall_elim(b,(count_matches)(b,a),cx);
             } else {
                 count_of_mem(x,a);
                 count_of_mem(x,b);
@@ -289,12 +284,12 @@ void permutation2_cons<t>(t x, list<t> a, list<t> b)
             assert false;
         }
     } else if(!forall(cons(x,b),
-            (count_matches)(cons(x,a),cons(x,b)))) {
+            (count_matches)(cons(x,b),cons(x,a)))) {
         t cx = not_forall(cons(x,b),
-            (count_matches)(cons(x,a),cons(x,b)));
+            (count_matches)(cons(x,b),cons(x,a)));
         if(cx != x) {
             assert !!mem(cx,b);
-            forall_elim(b,(count_matches)(a,b),cx);
+            forall_elim(b,(count_matches)(b,a),cx);
             assert false;
         }
     }
@@ -345,13 +340,13 @@ void permutation2_remove<t>(t x, list<t> a, list<t> b)
                 assert false;
             }
             if(!forall(remove(x, b),
-                        (count_matches)(remove(x, a),
-                                        remove(x, b)))) {
+                        (count_matches)(remove(x, b),
+                                        remove(x, a)))) {
                 t cx = not_forall(remove(x, b),
-                        (count_matches)(remove(x, a),
-                                        remove(x, b)));
+                        (count_matches)(remove(x, b),
+                                        remove(x, a)));
                 mem_remove_mem(cx,x,b);
-                forall_elim(b,(count_matches)(a,b),cx);
+                forall_elim(b,(count_matches)(b,a),cx);
                 count_of_remove(x,cx,a);
                 count_of_remove(x,cx,b);
                 assert false;
@@ -392,7 +387,7 @@ void permutation2_remove<t>(t x, list<t> a, list<t> b)
                     if(mem(cx,remove(x,b))) {
                         forall_elim(remove(x,b),
                             (count_matches)(
-                                remove(x,a), remove(x,b)),
+                                remove(x,b), remove(x,a)),
                             cx);
                         assert false;
                     }
@@ -403,8 +398,8 @@ void permutation2_remove<t>(t x, list<t> a, list<t> b)
 
                 assert false;
             }
-            if(!forall(b, (count_matches)(a, b))) {
-                t cx = not_forall(b, (count_matches)(a, b));
+            if(!forall(b, (count_matches)(b, a))) {
+                t cx = not_forall(b, (count_matches)(b, a));
                 count_of_remove(x,cx,a);
                 count_of_remove(x,cx,b);
 
@@ -421,7 +416,7 @@ void permutation2_remove<t>(t x, list<t> a, list<t> b)
                 if(mem(cx,remove(x,b))) {
                     forall_elim(remove(x,b),
                         (count_matches)(
-                            remove(x,a), remove(x,b)),
+                            remove(x,b), remove(x,a)),
                         cx);
 
                     assert false;
@@ -457,8 +452,6 @@ void permutation2_symmetric<t>(list<t> a, list<t> b)
             forall_elim(a,(count_matches)(a,b),cx);
             assert false;
         } else if(!forall(b,(count_matches)(b,a))) {
-            t cx = not_forall(b,(count_matches)(b,a));
-            forall_elim(b,(count_matches)(a,b),cx);
             assert false;
         }
     } else {
@@ -471,7 +464,6 @@ void permutation2_symmetric<t>(list<t> a, list<t> b)
         } else if(!forall(b,(count_matches)(a,b))) {
             t cx = not_forall(b,(count_matches)(a,b));
             if(forall(b,(count_matches)(b,a))) {
-                forall_elim(b,(count_matches)(b,a),cx);
                 assert false;
             }
         }
@@ -503,12 +495,12 @@ void permutation2_transitive<t>(list<t> a, list<t> b, list<t> c)
         forall_elim(a,(count_matches)(a,b),cx);
         forall_elim(b,(count_matches)(b,c),cx);
         assert false;
-    } else if(!forall(c,(count_matches)(a,c))) {
-        t cx = not_forall(c,(count_matches)(a,c));
+    } else if(!forall(c,(count_matches)(c,a))) {
+        t cx = not_forall(c,(count_matches)(c,a));
         count_of_mem(cx,c);
         count_of_mem(cx,b);
-        forall_elim(c,(count_matches)(b,c),cx);
-        forall_elim(b,(count_matches)(a,b),cx);
+        forall_elim(c,(count_matches)(c,b),cx);
+        forall_elim(b,(count_matches)(b,a),cx);
         assert false;
     }
 }
@@ -524,6 +516,10 @@ void permutation2_swap<t>(t x, t y, list<t> a)
     if(x != y) {
         if(!forall(l, (count_matches)(l,r))) {
             t cx = not_forall(l, (count_matches)(l,r));
+            assert false;
+        }
+        if(!forall(r, (count_matches)(r,l))) {
+            t cx = not_forall(r, (count_matches)(r,l));
             assert false;
         }
     }
@@ -570,7 +566,7 @@ lemma void sorted_unique(list<int> a, list<int> b)
             }
 
             if(!mem(bx,a)) {
-                forall_elim(b,(count_matches)(a,b),bx);
+                forall_elim(b,(count_matches)(b,a),bx);
                 count_of_mem(bx,a);
                 assert false;
             }
@@ -584,9 +580,9 @@ lemma void sorted_unique(list<int> a, list<int> b)
                 assert false;
             }
 
-            if(!forall(bxs,(count_matches)(axs,bxs))) {
-                int cx = not_forall(bxs,(count_matches)(axs,bxs));
-                forall_elim(b,(count_matches)(a,b),cx);
+            if(!forall(bxs,(count_matches)(bxs,axs))) {
+                int cx = not_forall(bxs,(count_matches)(bxs,axs));
+                forall_elim(b,(count_matches)(b,a),cx);
                 assert false;
             }
 
@@ -730,9 +726,9 @@ void permutation_equiv<t>(list<t> a, list<t> b)
     permutation_equiv(axs,new_b);
 
     if(is_permutation2(a,b)) {
-      if(!forall(new_b,(count_matches)(axs,new_b))) {
-        t cx = not_forall(new_b,(count_matches)(axs,new_b));
-        forall_elim(b,(count_matches)(a,b),cx);
+      if(!forall(new_b,(count_matches)(new_b,axs))) {
+        t cx = not_forall(new_b,(count_matches)(new_b,axs));
+        forall_elim(b,(count_matches)(b,a),cx);
         count_of_remove(ax,cx,b);
         assert false;
       }
@@ -751,10 +747,10 @@ void permutation_equiv<t>(list<t> a, list<t> b)
 
 
     if(is_permutation(a,b)) {
-      if(!forall(b,(count_matches)(a,b))) {
-        t cx = not_forall(b,(count_matches)(a,b));
+      if(!forall(b,(count_matches)(b,a))) {
+        t cx = not_forall(b,(count_matches)(b,a));
         if(mem(cx,new_b)) {
-          forall_elim(new_b,(count_matches)(axs,new_b),cx);
+          forall_elim(new_b,(count_matches)(new_b,axs),cx);
         } else if(mem(cx,axs)) {
           forall_elim(axs,(count_matches)(axs,new_b),cx);
         } else {
@@ -769,7 +765,7 @@ void permutation_equiv<t>(list<t> a, list<t> b)
       if(!forall(a,(count_matches)(a,b))) {
         t cx = not_forall(a,(count_matches)(a,b));
         if(mem(cx,new_b)) {
-          forall_elim(new_b,(count_matches)(axs,new_b),cx);
+          forall_elim(new_b,(count_matches)(new_b,axs),cx);
         } else if(mem(cx,axs)) {
           forall_elim(axs,(count_matches)(axs,new_b),cx);
         } else {

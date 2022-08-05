@@ -11,6 +11,7 @@ bins: ${BINS}
 clean:
 	rm *.vfmanifest || true
 	rm lorg/*.vfmanifest || true
+	rm lorg2/*.vfmanifest || true
 	rm p25519/*.vfmanifest || true
 	rm bin/* || true
 
@@ -46,7 +47,7 @@ LORG_LIB = b64.vfmanifest lorg/bi_big_int.vfmanifest lorg/bi_big_int_plus.vfmani
 lorg_lib: ${LORG_LIB} ${CORE_LIB}
 	${VF} ${CORE_LIB} ${LORG_LIB}
 
-LORG2_LIB = lorg2/lorgint.vfmanifest
+LORG2_LIB = lorg2/lorgint.vfmanifest lorg2/lorgint-reduce.vfmanifest lorg2/lorgint-add-int.vfmanifest
 
 lorg2_lib: ${LORG2_LIB} ${CORE_LIB}
 	${VF} ${CORE_LIB} ${LORG2_LIB}

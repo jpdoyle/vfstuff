@@ -168,15 +168,19 @@ lemma void shiftright_def(int x, Z z, nat n);
 
 lemma void truncate_unsigned_def(int x, nat n);
     requires true;
+    ensures [_]divrem(x, pow_nat(2, n), _, truncate_unsigned(x, int_of_nat(n)));
+
+lemma void truncate_unsigned_def2(int x, nat n);
+    requires true;
     ensures  euclid_mod(x,pow_nat(2,n))
         ==   truncate_unsigned(x, ion(n));
 
-lemma_auto(truncate_unsigned(x,nb)) void truncate_unsigned_def_auto(int x, int nb)
+lemma_auto(truncate_unsigned(x,nb)) void truncate_unsigned_def2_auto(int x, int nb)
     requires nb >= 0;
     ensures truncate_unsigned(x, nb)
         == (x % pow_nat(2, noi(nb)) + pow_nat(2,noi(nb))) % pow_nat(2, noi(nb));
 {
-    truncate_unsigned_def(x,noi(nb));
+    truncate_unsigned_def2(x,noi(nb));
     euclid_mod_auto(x, pow_nat(2, noi(nb)));
     int_of_nat_of_int(nb);
 }

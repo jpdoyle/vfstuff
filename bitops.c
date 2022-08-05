@@ -9,6 +9,17 @@
 
 /*@
 
+lemma void truncate_unsigned_def2(int x, nat n)
+    requires true;
+    ensures  euclid_mod(x,pow_nat(2,n))
+        ==   truncate_unsigned(x, ion(n));
+{
+    truncate_unsigned_def(x,n);
+    assert [_]divrem(x,pow_nat(2,n),?q,?r);
+    divrem_elim();
+    euclid_div_exact(x,pow_nat(2,n),q,r);
+}
+
 lemma_auto(Z_size(z))
 void Z_size_nonneg(Z z)
     requires true;

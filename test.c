@@ -16,7 +16,7 @@ void foo()
     /*@ terminates; @*/
 {
     unsigned x = /*@ truncating @*/ -(unsigned)1;
-    /*@ truncate_unsigned_def(-1,N32); @*/
+    /*@ truncate_unsigned_def2(-1,N32); @*/
     /*@ open euclid_div_sol(-1,pow_nat(2,N32),?q,x); @*/
     /*@ euclid_div_unique(-1,pow_nat(2,N32),q,x,-1,pow_nat(2,N32)-1); @*/
     /*@ assert x == pow_nat(2,N32) - 1; @*/

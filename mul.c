@@ -358,6 +358,19 @@ lemma void pow_soft_monotonic(int x,nat y,nat z)
     }
 }
 
+lemma void pow_base_soft_monotonic(int x,int y,nat n)
+    requires x >= 0 &*& y >= x;
+    ensures  pow_nat(x,n) <= pow_nat(y,n);
+{
+    switch(n) {
+    case zero:
+    case succ(n0):
+        pow_base_soft_monotonic(x,y,n0);
+        my_mul_mono_l(x,y,pow_nat(x,n0));
+        my_mul_mono_r(y,pow_nat(x,n0),pow_nat(y,n0));
+    }
+}
+
 lemma_auto(factorial(n))
 void factorial_positive(nat n)
     requires true;

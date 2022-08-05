@@ -5,6 +5,26 @@
 
 /*@
 
+// shorthand
+fixpoint nat noi(int x) { return nat_of_int(x); }
+fixpoint int ion(nat x) { return int_of_nat(x); }
+
+lemma_auto void noi_is_nat_of_int(int x)
+    requires true;
+    ensures  noi(x) == nat_of_int(x);
+{}
+
+lemma_auto void ion_is_int_of_nat(nat n)
+    requires true;
+    ensures  ion(n) == int_of_nat(n);
+{}
+
+lemma_auto(noi(length(cons(x,xs))))
+void nat_of_int_of_length<t>(t x, list<t> xs)
+    requires true;
+    ensures noi(length(cons(x,xs))) == succ(noi(length(xs)));
+{}
+
 lemma_auto(length(l))
 void length_zero_iff_nil<t>(list<t> l)
     requires true;
@@ -136,28 +156,24 @@ char* leftpad(char pad, size_t len, const char* s)
     }
 
     pad_len = len-orig_len;
-    /*@ assert pad_len >= 0; @*/
     ret = malloc(len+1);
 
-    if(ret) {
-        i = 0;
-        while(i < pad_len)
-            /*@ requires ret[i..pad_len]     |-> _; @*/
-            /*@ ensures  ret[old_i..pad_len] |->
-                            repchar(noi(pad_len-old_i),pad)
-                    &*&  i == pad_len; @*/
-            /*@ decreases pad_len-i; @*/
-        {
-            /*@ assert succ(noi(pad_len-i-1))
-                    == noi(pad_len-i); @*/
-            ret[i] = pad;
-            ++i;
-        }
+    // I really don't think accounting for allocation failure is worthwhile
+    if(!ret) abort();
 
-        strcpy(ret+i,s);
-        /*@ chars_to_string(ret+i); @*/
-        /*@ chars_string_join(ret); @*/
+    for(i = 0; i < pad_len; ++i)
+        /*@ requires ret[i..pad_len]     |-> _; @*/
+        /*@ ensures  ret[old_i..pad_len] |->
+                        repchar(noi(pad_len-old_i),pad)
+                &*&  i == pad_len; @*/
+        /*@ decreases pad_len-i; @*/
+    {
+        ret[i] = pad;
     }
+
+    strcpy(ret+i,s);
+    /*@ chars_to_string(ret+i); @*/
+    /*@ chars_string_join(ret); @*/
 
     return ret;
 }

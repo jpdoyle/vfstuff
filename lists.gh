@@ -236,6 +236,11 @@ lemma void nonneg_sum(list<int> l)
     ensures  sum(l) >= 0;
 { LIST_INDUCTION(l,xs,nonneg_sum(xs)) }
 
+lemma_auto(sum(append(a,b))) void sum_append(list<int> a, list<int> b)
+    requires true;
+    ensures  sum(append(a,b)) == sum(a) + sum(b);
+{ LIST_INDUCTION(a,xs,sum_append(xs,b)) }
+
 lemma void map_length<s,t>(fixpoint(s,t) f, list<s> l)
     requires true;
     ensures  length(map(f,l)) == length(l);
