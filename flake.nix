@@ -4,10 +4,10 @@
   inputs = {
     nixpkgs.url      = github:nixos/nixpkgs/nixos-21.11;
     flake-utils.url  = github:numtide/flake-utils;
-    verifast.url     = github:jpdoyle/verifast;
+    jpdoyle-vf.url     = github:jpdoyle/verifast/master;
   };
 
-  outputs = { self, nixpkgs, flake-utils, ... }:
+  outputs = { self, nixpkgs, flake-utils, jpdoyle-vf, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         overlays = [];
@@ -19,7 +19,7 @@
       {
         devShell = mkShell {
           buildInputs = [
-              verifast
+              jpdoyle-vf.packages.${system}.verifast
           ];
         };
       }

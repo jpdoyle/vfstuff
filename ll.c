@@ -1,7 +1,12 @@
+#include <stdlib.h>
+
 typedef struct List {
    int x;
    struct List* next;
 } List;
+
+// slight cludge to work around List** deficiency in VF's parser
+typedef List* List_ptr;
 
 /*@
 // "vals" is an inductive list of ints extracted from the heap
@@ -11,6 +16,7 @@ predicate linked_list(List* head; list<int> vals) =
                 &*& head->next |-> ?nextHead
                 &*& linked_list(nextHead,?rest)
                 &*& vals == cons(val,rest)
+                &*& malloc_block_List(head)
               ;
 
 lemma_auto void linked_list_auto()
@@ -29,6 +35,47 @@ void append_reverse_cons<t>(list<t> a, t x, list<t> b)
 
   @*/
 
+void list_push(List** head,int v)
+    /*@ requires *head |-> ?head_ptr &*& linked_list(head_ptr,?vals);
+      @*/
+    /*@ ensures  *head |-> ?new_head_ptr
+            &*&  linked_list(new_head_ptr, cons(v,vals));
+      @*/
+    /*@ terminates; @*/
+{
+    List* node = malloc(sizeof(List));
+
+    if(!node) abort();
+
+    node->x = v;
+
+    node->next = *head;
+    *head = node;
+}
+
+bool list_pop(List** head,int* dst)
+    /*@ requires *head |-> ?head_ptr &*& linked_list(head_ptr,?vals)
+            &*&  *dst  |-> ?orig_dst;
+      @*/
+    /*@ ensures  *head |-> ?new_head_ptr
+            &*&  linked_list(new_head_ptr, ?new_vals)
+            &*&  *dst |-> ?new_dst
+            &*&  head_ptr == 0
+            ?    new_head_ptr == 0 &*& new_dst == orig_dst &*& !result
+            :    vals == cons(new_dst,new_vals) &*& !!result
+            ;
+      @*/
+    /*@ terminates; @*/
+{
+    List* h = *head;
+    if(h) {
+        *dst = h->x;
+        *head = h->next;
+        free(h);
+        return true;
+    }
+    return false;
+}
 
 int list_length(List* head)
     /*@ requires [?f]linked_list(head,?vals)
@@ -52,38 +99,73 @@ int list_length(List* head)
     {
         head = head->next;
         ++ret;
-        
     }
 
     return ret;
 }
 
-List* list_reverse(List* head)
-    /*@ requires linked_list(head,?vals);
+void list_append(List** a, List* b)
+    /*@ requires *a |-> ?a_ptr
+            &*&  linked_list(a_ptr,?a_vals)
+            &*&  linked_list(b,?b_vals);
       @*/
-    /*@ ensures  linked_list(result, reverse(vals));
+    /*@ ensures  *a |-> ?new_a
+            &*&  linked_list(new_a,append(a_vals,b_vals));
+      @*/
+    /*@ terminates; @*/
+{
+    List_ptr* p;
+    p = a;
+    while(true)
+        /*@ requires *p |-> ?loop_p
+                &*&  linked_list(loop_p,?p_vals)
+                &*&  linked_list(b, b_vals);
+          @*/
+        /*@ ensures  *old_p |-> ?new_p
+                &*&  loop_p == 0
+                ?    linked_list(new_p, b_vals)
+                :    new_p == loop_p
+                &*&  linked_list(loop_p,
+                                 append(p_vals,b_vals)); @*/
+        /*@ decreases length(p_vals); @*/
+    {
+        if(*p) {
+            p = &(*p)->next;
+        } else {
+            *p = b;
+            break;
+        }
+    }
+}
+
+void list_reverse(List** head)
+    /*@ requires *head |-> ?head_ptr &*& linked_list(head_ptr,?vals);
+      @*/
+    /*@ ensures  *head |-> ?new_ptr
+            &*&  linked_list(new_ptr, reverse(vals));
       @*/
     /*@ terminates; @*/
 {
     List* ret = 0;
+    List* h = *head;
 
-    while(head)
+    while(h)
         /*@ requires linked_list(ret,?ret_vals)
-                &*&  linked_list(head,?head_vals)
+                &*&  linked_list(h,?head_vals)
                 &*&  vals == append(reverse(ret_vals),head_vals);
           @*/
         /*@ ensures  linked_list(ret,reverse(vals))
-                &*&  linked_list(head,{})
+                &*&  linked_list(h,{})
                 ;
           @*/
         /*@ decreases length(head_vals); @*/
     {
-        List* node = head;
-        head = head->next;
+        List* node = h;
+        h = h->next;
         node->next = ret;
         ret = node;
     }
 
-    return ret;
+    *head = ret;
 }
 

@@ -2,11 +2,11 @@
   "nodes": {
     "flake-utils": {
       "locked": {
-        "lastModified": 1653893745,
-        "narHash": "sha256-0jntwV3Z8//YwuOjzhV2sgJJPt+HY6KhU7VZUL0fKZQ=",
+        "lastModified": 1659877975,
+        "narHash": "sha256-zllb8aq3YO3h8B/U0/J1WBgAL8EX5yWf5pMj3G0NAmc=",
         "owner": "numtide",
         "repo": "flake-utils",
-        "rev": "1ed9fb1935d260de5fe1c2f7ee0ebaae17ed2fa1",
+        "rev": "c0e246b9b83f637f4681389ecabcb2681b4f3af0",
         "type": "github"
       },
       "original": {
@@ -30,13 +30,33 @@
         "type": "github"
       }
     },
+    "jpdoyle-vf": {
+      "inputs": {
+        "flake-utils": "flake-utils_2",
+        "nixpkgs": "nixpkgs"
+      },
+      "locked": {
+        "lastModified": 1659742952,
+        "narHash": "sha256-8LgIwzyZGXKYWfTjfBGU2rz7N8s7DtPiZZcfXlH5vuk=",
+        "owner": "jpdoyle",
+        "repo": "verifast",
+        "rev": "19fdc838e21cb1e59ee877b2e3e738917baa78ec",
+        "type": "github"
+      },
+      "original": {
+        "owner": "jpdoyle",
+        "ref": "master",
+        "repo": "verifast",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1653996475,
-        "narHash": "sha256-r/UA7h3Dfgf4dlOCkakpqejf1Tagfb+6T+9OdT0qBgU=",
+        "lastModified": 1659446231,
+        "narHash": "sha256-hekabNdTdgR/iLsgce5TGWmfIDZ86qjPhxDg/8TlzhE=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "ec6eaba9dfcfdd11547d75a193e91e26701bf7e3",
+        "rev": "eabc38219184cc3e04a974fe31857d8e0eac098d",
         "type": "github"
       },
       "original": {
@@ -65,27 +85,8 @@
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
-        "nixpkgs": "nixpkgs",
-        "verifast": "verifast"
-      }
-    },
-    "verifast": {
-      "inputs": {
-        "flake-utils": "flake-utils_2",
+        "jpdoyle-vf": "jpdoyle-vf",
         "nixpkgs": "nixpkgs_2"
-      },
-      "locked": {
-        "lastModified": 1659742952,
-        "narHash": "sha256-8LgIwzyZGXKYWfTjfBGU2rz7N8s7DtPiZZcfXlH5vuk=",
-        "owner": "jpdoyle",
-        "repo": "verifast",
-        "rev": "19fdc838e21cb1e59ee877b2e3e738917baa78ec",
-        "type": "github"
-      },
-      "original": {
-        "owner": "jpdoyle",
-        "repo": "verifast",
-        "type": "github"
       }
     }
   },
