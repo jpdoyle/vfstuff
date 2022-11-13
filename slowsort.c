@@ -174,7 +174,7 @@ int main(void)
     for(n = orig_n, p = nums; n > 0; --n,++p)
         /*@ requires n |-> ?n_val &*& n_val >= 0 &*& n_val <= orig_n
                 &*&  p[..n_val] |-> _ &*& p == nums+(orig_n-n_val); @*/
-        /*@ ensures  n |-> _ &*& old_p[..n_val] |-> _; @*/
+        /*@ ensures  n |-> _ &*& old_p[..n_val] |-> ?_; @*/
         /*@ decreases n_val; @*/
     {
         scanf(" %d",p);
@@ -184,8 +184,8 @@ int main(void)
 
     for(n = orig_n, p = nums; n > 0; --n,++p)
         /*@ requires n |-> ?n_val &*& n_val >= 0 &*& n_val <= orig_n
-                &*&  p[..n_val] |-> _ &*& p == nums+(orig_n-n_val); @*/
-        /*@ ensures  n |-> _ &*& old_p[..n_val] |-> _; @*/
+                &*&  p[..n_val] |-> ?_ &*& p == nums+(orig_n-n_val); @*/
+        /*@ ensures  n |-> _ &*& old_p[..n_val] |-> ?_; @*/
         /*@ decreases n_val; @*/
     {
         printf(" %d",*p);
@@ -202,8 +202,8 @@ int main(void)
 
     for(n = orig_n, p = nums; n > 0; --n,++p)
         /*@ requires n |-> ?n_val &*& n_val >= 0 &*& n_val <= orig_n
-                &*&  p[..n_val] |-> _ &*& p == nums+(orig_n-n_val); @*/
-        /*@ ensures  n |-> _ &*& old_p[..n_val] |-> _; @*/
+                &*&  p[..n_val] |-> ?_ &*& p == nums+(orig_n-n_val); @*/
+        /*@ ensures  n |-> _ &*& old_p[..n_val] |-> ?_; @*/
         /*@ decreases n_val; @*/
     {
         printf(" %d",*p);

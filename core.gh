@@ -507,6 +507,9 @@ lemma void abs_triangle(int x, int y)
     if(y >= 0) {}
 }
 
+lemma_auto void uintptrs_inv();
+    requires [?f]uintptrs(?p, ?count, ?vs);
+    ensures [f]uintptrs(p, count, vs) &*& count == length(vs);
 
 #endif
 

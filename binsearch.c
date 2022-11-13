@@ -138,6 +138,7 @@ int binsearch(int x, int* A, int n)
         //@ close [f]ints(A+lower, upper-lower, mid_seg);
 
         //@ div_rem(upper-lower,2);
+        //int mid = (lower + upper)/2;
         int mid = lower + (upper-lower)/2;
 
         //@ int midind = mid-lower;

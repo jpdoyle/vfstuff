@@ -2,6 +2,7 @@
 
 /*@
 
+
 lemma void chars_split_as(char *array,
         list<char> pref,list<char> suff)
     requires [?f]chars(array, ?N, append(pref,suff));
@@ -112,6 +113,31 @@ lemma_auto void malloced_strings_public()
     }
 }
 
+lemma void u_llong_integer__unique(unsigned long long *p)
+    requires [?f]u_llong_integer(p, ?v);
+    ensures [f]u_llong_integer(p, v) &*& f <= 1;
+{
+    if(f > 1) {
+        open u_llong_integer(_,_);
+        integer__to_chars(p,sizeof(unsigned long long),false);
+        chars_split((void*)p,sizeof(int));
+        chars_to_ints((char*)(void*)p,1);
+        integer_unique((int*)(void*)p);
+        assert false;
+    }
+}
+
+lemma void ullong__unique(unsigned long long *p)
+    requires [?f]ullong_(p, ?v);
+    ensures [f]ullong_(p, v) &*& f <= 1;
+{
+    if(f > 1) {
+        open ullong_(_,_);
+        integer___unique(p);
+        assert false;
+    }
+}
+
 lemma void u_llong_integer_unique(unsigned long long *p)
     requires [?f]u_llong_integer(p, ?v);
     ensures [f]u_llong_integer(p, v) &*& f <= 1;
@@ -150,18 +176,44 @@ lemma void ullongs_join(unsigned long long *a)
     }
 }
 
-lemma_auto void u_llong_buffer_auto()
-    requires [?f]u_llong_buffer(?start,?len,?cap,?vals);
-    ensures  [ f]u_llong_buffer( start, len, cap, vals)
+lemma void uintptrs_split(uintptr_t *array, int offset)
+    requires [?f]uintptrs(array, ?N, ?as) &*& 0 <= offset &*& offset <= N;
+    ensures [f]uintptrs(array, offset, take(offset, as))
+        &*& [f]uintptrs(array + offset, N - offset, drop(offset, as))
+        &*& as == append(take(offset, as), drop(offset, as));
+{
+    if(offset > 0) {
+        open uintptrs(array,_,_);
+        uintptrs_split(array+1,offset-1);
+        close [f]uintptrs(array,offset,_);
+    }
+}
+
+lemma void uintptrs_join(uintptr_t *a)
+    requires [?f]uintptrs(a, ?M, ?as) &*& [f]uintptrs(a + M, ?N, ?bs);
+    ensures [f]uintptrs(a, M + N, append(as, bs));
+{
+    open uintptrs(a,_,_);
+    if(M > 0) {
+        uintptrs_join(a+1);
+        close [f]uintptrs(a,M+N,_);
+    }
+}
+
+lemma_auto void uintptr_buffer_auto()
+    requires [?f]uintptr_buffer(?start,?len,?cap,?vals);
+    ensures  [ f]uintptr_buffer( start, len, cap, vals)
         &*&  f <= 1 &*& start != 0
         &*&  len >= 0 &*& cap > 0 &*& length(vals) == len
         ;
 {
-    open u_llong_buffer(_,_,_,_);
+    open uintptr_buffer(_,_,_,_);
     if(f > 1) {
-        open ullongs(start,_,_);
-        if(len == 0) { open ullongs(start,_,_); }
-        u_llong_integer_unique(start);
+        open uintptrs(start,_,_);
+        if(len == 0) { open uintptrs_(start,_,_); }
+        open uintptr_(start,_);
+        integer___unique(start);
+        assert false;
     }
 }
 

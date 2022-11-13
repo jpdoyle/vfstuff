@@ -1,6 +1,12 @@
 #include "numtheo.h"
 /*@ #include <arrays.gh> @*/
 
+#if 0
+#define ALREADY_PROVEN() {}
+#else
+#define ALREADY_PROVEN() assume(false);
+#endif
+
 size_t abs_diff(size_t x, size_t y)
     /*@ requires true; @*/
     /*@ ensures  result == abs(x-y); @*/
@@ -15,6 +21,7 @@ size_t euclid_gcd(size_t a,size_t b)
     /*@ ensures  result == gcd(a,b); @*/
     /*@ terminates; @*/
 {
+    /*@ ALREADY_PROVEN() @*/
     /*@ int orig_a = a; @*/
     /*@ int orig_b = b; @*/
 
@@ -58,6 +65,7 @@ size_t int_sqrt(size_t n)
             &*&  (result+1)*(result+1) > n; @*/
     /*@ terminates; @*/
 {
+    /*@ ALREADY_PROVEN() @*/
     size_t a = 1, b = n;
 
     if(n == 0) { return 0; }
@@ -164,15 +172,16 @@ size_t int_sqrt(size_t n)
 
 size_t prime_sieve(size_t* buff, size_t n)
     /*@ requires buff[..n] |-> _ &*& n > 0 &*& n+n <= ULLONG_MAX; @*/
-    /*@ ensures  u_llong_buffer(buff, result, n,
+    /*@ ensures  uintptr_buffer(buff, result, n,
                     reverse(primes_below(noi(n-1))));
       @*/
     /*@ terminates; @*/
 {
     /*@ {
         if(buff == 0) {
-            open ullongs(buff,_,_);
-            u_llong_integer_limits(buff);
+            open uintptrs_(buff,_,_);
+            open uintptr_(buff,_);
+            integer___limits(buff);
             assert false;
         }
     } @*/
@@ -195,8 +204,8 @@ size_t prime_sieve(size_t* buff, size_t n)
     }
 
     if(n <= 4) {
-        /*@ open ullongs(buff,_,_); @*/
-        /*@ open ullongs(buff+1,_,_); @*/
+        /*@ open uintptrs_(buff,_,_); @*/
+        /*@ open uintptrs_(buff+1,_,_); @*/
         buff[0] = 2;
         buff[1] = 3;
         if(n <= 3) {
@@ -235,12 +244,13 @@ size_t prime_sieve(size_t* buff, size_t n)
         /*@ decreases n-i; @*/
     {
         buff[i] = 1;
+        /*@ append_repeat(1,N1,noi(n-i-1)); @*/
     }
     /*@ assert buff[..n] |-> repeat(1,noi(n)); @*/
 
     /*@ {
-        open ullongs(buff,_,_);
-        open ullongs(buff+1,_,_);
+        open uintptrs(buff,_,_);
+        open uintptrs(buff+1,_,_);
     } @*/
 
     buff[0] = 0;
@@ -248,6 +258,7 @@ size_t prime_sieve(size_t* buff, size_t n)
 
     /*@ {
         assert buff[2..n] |-> ?init_nums;
+        append_repeat(1,N2,noi(n-2));
         assert init_nums == repeat(1,noi(n-2));
         if(!forall(indices_of_inner(1,init_nums,2),
                 (prime_up_to)(noi(1)))) {
@@ -304,7 +315,7 @@ size_t prime_sieve(size_t* buff, size_t n)
             }
         } @*/
 
-        /*@ open ullongs(buff+i,_,_); @*/
+        /*@ open uintptrs(buff+i,_,_); @*/
         /*@ prime_test(i); @*/
         if(!buff[i]) {
             /*@ {
@@ -324,7 +335,7 @@ size_t prime_sieve(size_t* buff, size_t n)
                 }
             } @*/
         } else {
-            /* @ open ullongs(buff+i,_,_); @*/
+            /* @ open uintptrs(buff+i,_,_); @*/
             /*@ {
                 assert buff[i] |-> 1;
                 indices_of_inner_correct(1, nums, i, 0);
@@ -379,7 +390,7 @@ size_t prime_sieve(size_t* buff, size_t n)
             {
 
                 /*@ {
-                    ullongs_split(buff+j-i+1, i-1);
+                    uintptrs_split(buff+j-i+1, i-1);
                     assert buff[(j-i+1)..j] |-> ?pref;
                     assert buff[j..n] |-> ?rest;
                     assert later == append(pref,rest);
@@ -500,8 +511,8 @@ size_t prime_sieve(size_t* buff, size_t n)
                     forall_append(take(i-1,later), cons(0,next_later),
                         isbit);
 
-                    close ullongs(buff+old_j, n-old_j, _);
-                    ullongs_join(buff+old_j-i+1);
+                    close uintptrs(buff+old_j, n-old_j, _);
+                    uintptrs_join(buff+old_j-i+1);
                     assert buff[(old_j-i+1)..n] |-> ?new_later;
                     assert new_later ==
                         append(take(i-1,later),append({0},next_later));
@@ -542,6 +553,7 @@ size_t prime_sieve(size_t* buff, size_t n)
                         is_prime);
                     forall_elim(indices_of_inner(1,next,i+1),
                         (prime_up_to)(noi(i)),cx);
+                    indices_of_inner_bounds(1,next,i+1,cx);
                     prime_test_sqrt(cx,noi(i));
                     assert false;
                 }
@@ -592,7 +604,7 @@ size_t prime_sieve(size_t* buff, size_t n)
         }
     } @*/
 
-    /*@  close ullongs(buff,n,_); @*/
+    /*@  close uintptrs(buff,n,_); @*/
 
     /*@ assert  buff[..n] |-> ?primes
             &*&  !!forall(primes,isbit)
@@ -602,12 +614,12 @@ size_t prime_sieve(size_t* buff, size_t n)
         @*/
 
 
-    /*@ ullongs_split(buff,2); @*/
+    /*@ uintptrs_split(buff,2); @*/
     i = 0;
     for(j = 2; j < n; ++j)
         /*@ invariant i+1 < j &*& i >= 0 &*& j <= n
                 &*&   buff[..i] |-> ?final_primes
-                &*&   buff[i..j] |-> _
+                &*&   uintptrs_(buff+i,j-i,_)
                 &*&   buff[j..n] |-> ?sieve_primes
                 &*&   !!forall(sieve_primes,isbit)
                 &*&   reverse(append(final_primes,
@@ -619,15 +631,15 @@ size_t prime_sieve(size_t* buff, size_t n)
     {
         /*@ int old_i = i; @*/
         /*@ {
-            open ullongs(buff+j,_,_);
+            open uintptrs(buff+j,_,_);
             cons_head_tail(sieve_primes);
         } @*/
         if(buff[j]) {
             buff[i] = j;
             ++i;
             /*@ {
-                close ullongs(buff+old_i,1,{j});
-                ullongs_join(buff);
+                close uintptrs(buff+old_i,1,{j});
+                uintptrs_join(buff);
                 assert indices_of_inner(1,sieve_primes,j)
                     == cons(j,indices_of_inner(1,
                         tail(sieve_primes),j+1));
@@ -643,10 +655,12 @@ size_t prime_sieve(size_t* buff, size_t n)
             } @*/
         }
         /*@ {
-            close ullongs(buff+j,1,_);
-            ullongs_join(buff+i);
+            close uintptrs_(buff+j,1,_);
+            uintptrs__join(buff+i);
         } @*/
     }
+
+
     return i;
 }
 

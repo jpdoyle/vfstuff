@@ -10,7 +10,7 @@
 #endif
 
 void merge(int* out, size_t ln, size_t rn, int* l, int* r)
-    /*@ requires out[..(ln+rn)] |-> _
+    /*@ requires out[..(ln+rn)] |-> ?_
             &*&  [?fl]l[..ln] |-> ?ls &*&  [?fr]r[..rn] |-> ?rs
             &*&  !!sorted(ls) &*&  !!sorted(rs)
             ;
@@ -106,10 +106,10 @@ void merge(int* out, size_t ln, size_t rn, int* l, int* r)
 }
 
 void mergesort_inner(int* arr, size_t n, int* scratch)
-    /*@ requires arr[..n] |-> ?l &*& scratch[..n] |-> _
+    /*@ requires arr[..n] |-> ?l &*& scratch[..n] |-> ?_
             &*&  [2]call_perm_level(currentThread,pair(lt, n), {mergesort_inner})
       ; @*/
-    /*@ ensures  arr[..n] |-> ?new_l &*& scratch[..n] |-> _
+    /*@ ensures  arr[..n] |-> ?new_l &*& scratch[..n] |-> ?_
             &*&  !!sorted(new_l) &*& !!is_permutation2(l,new_l); @*/
     /*@ terminates; @*/
 {
@@ -170,8 +170,8 @@ void mergesort_inner(int* arr, size_t n, int* scratch)
 
     /*@ ints_join(arr); @*/
     for(size_t i = 0; i < n; ++i)
-        /*@ requires arr[i..n] |-> _ &*& scratch[i..n] |-> ?vals; @*/
-        /*@ ensures  arr[old_i..n] |-> vals &*& scratch[old_i..n] |-> _; @*/
+        /*@ requires arr[i..n] |-> ?_ &*& scratch[i..n] |-> ?vals; @*/
+        /*@ ensures  arr[old_i..n] |-> vals &*& scratch[old_i..n] |-> ?_; @*/
         /*@ decreases n-i; @*/
     {
         /*@ open ints(arr+i,_,_); @*/
@@ -181,8 +181,8 @@ void mergesort_inner(int* arr, size_t n, int* scratch)
 }
 
 void mergesort(int* arr, size_t n, int* scratch)
-    /*@ requires arr[..n] |-> ?l &*& scratch[..n] |-> _; @*/
-    /*@ ensures  arr[..n] |-> ?new_l &*& scratch[..n] |-> _
+    /*@ requires arr[..n] |-> ?l &*& scratch[..n] |-> ?_; @*/
+    /*@ ensures  arr[..n] |-> ?new_l &*& scratch[..n] |-> ?_
             &*&  !!sorted(new_l)
             &*&  !!is_permutation2(l,new_l); @*/
     /*@ terminates; @*/

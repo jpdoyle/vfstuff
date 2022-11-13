@@ -563,6 +563,18 @@ void poly_eval_repeat_mul(int x, int y, nat n, int pt)
     }
 }
 
+lemma_auto(poly_eval(repeat(1,n),1))
+void poly_eval_repeat_1_1(nat n)
+    requires true;
+    ensures  poly_eval(repeat(1,n),1) == ion(n);
+{
+    switch(n) {
+    case zero:
+    case succ(n0):
+        poly_eval_repeat_1_1(n0);
+    }
+}
+
 lemma_auto(poly_eval(repeat(1,n),pt))
 void poly_eval_repeat_1(nat n, int pt)
     requires true;

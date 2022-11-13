@@ -458,7 +458,7 @@ uint8_t* bytes_of_hex(size_t len, char* s, size_t* outlen)
     /*@ ensures  [ f]s[..len] |->  hex_str &*& *outlen |-> ?len_out
             &*&  base_n(hex_chars(),reverse(hex_str), hexits, val)
             &*&  result[..len_out] |-> ?out_bytes
-            &*&  malloc_block_uchars(result,len_out)
+            &*&  malloc_block_uchars((unsigned char*)result,len_out)
             &*&  poly_eval(reverse(out_bytes),256) == val
             ; @*/
     /*@ terminates; @*/
@@ -472,14 +472,15 @@ uint8_t* bytes_of_hex(size_t len, char* s, size_t* outlen)
     /*@ assert *outlen |-> ?len_out; @*/
     /*@ div_rem(len,2); @*/
 
-    ret = calloc(*outlen,sizeof(uint8_t));
+    /*@ assert sizeof(unsigned char) == sizeof(uint8_t); @*/
+    ret = calloc(*outlen,sizeof(unsigned char));
     if(!ret) { abort(); }
 
     /*@ base_n_dup(); @*/
 
     for(i = 0,p = ret; i < len; i+=2,++p)
         /*@ requires [f]s[i..len] |-> ?loop_hex
-                &*&  ret[i/2..len_out] |-> _
+                &*&  ((unsigned char*)ret)[i/2..len_out] |-> _
                 &*&  p == ret+(i/2)
                 &*&  i%2 == 0
                 &*&  i >= 0 &*& i <= len
@@ -525,7 +526,7 @@ uint8_t* bytes_of_hex(size_t len, char* s, size_t* outlen)
 
             shiftleft_def(h,N4);
             bitor_no_overlap(h,l,N4);
-            open uchars(ret+(i/2),_,_);
+            open uchars_((unsigned char*)(ret+(i/2)),_,_);
             div_monotonic_numerator(i,len-1,2);
             assert i/2 <= (len-1)/2;
 
@@ -604,12 +605,12 @@ char* hex_of_bytes(size_t len, uint8_t* b)
             &*&  string(result,?hex_str)
             &*&  length(hex_str) == 2*len
             &*&  base_n(hex_chars(),reverse(hex_str),_,?val)
-            &*&  malloc_block_chars(result,_)
+            &*&  malloc_block_chars((char*)result,_)
             &*&  poly_eval(reverse(bytes),256) == val
             ; @*/
     /*@ terminates; @*/
 {
-    /*@ ALREADY_PROVEN() @*/
+    /* @ ALREADY_PROVEN() @*/
     char* ret;
     char* p;
     size_t i;
@@ -631,13 +632,15 @@ char* hex_of_bytes(size_t len, uint8_t* b)
                 ; @*/
         /*@ decreases len-i; @*/
     {
-        /*@ open uchars(b+i,_,_); @*/
-        /*@ open  chars(p,_,_); @*/
-        /*@ open  chars(p+1,_,_); @*/
+        /*@ open integers_(b+i,_,_,_,_); @*/
+        /*@ open  chars_(p,_,_); @*/
+        /*@ open  chars_(p+1,_,_); @*/
         /*@ assert [f]b[i]        |-> ?x; @*/
         /*@ assert [f]b[i+1..len] |-> ?xs; @*/
         /*@ {
-            u_character_limits(b+i);
+            integer__limits(b+i);
+            shiftleft_def(1,N8);
+            assert x < 256;
             shiftright_div(x,N4);
             bitand_pow_2(x,N4);
             div_rem(x,16);

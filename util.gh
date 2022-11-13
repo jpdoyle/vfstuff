@@ -262,14 +262,23 @@ lemma void ullongs_join(unsigned long long *a);
     requires [?f]ullongs(a, ?M, ?as) &*& [f]ullongs(a + M, ?N, ?bs);
     ensures [f]ullongs(a, M + N, append(as, bs));
 
+lemma void uintptrs_split(uintptr_t *array, int offset);
+    requires [?f]uintptrs(array, ?N, ?as) &*& 0 <= offset &*& offset <= N;
+    ensures [f]uintptrs(array, offset, take(offset, as))
+        &*& [f]uintptrs(array + offset, N - offset, drop(offset, as))
+        &*& as == append(take(offset, as), drop(offset, as));
 
-predicate u_llong_buffer(unsigned long long* start, int len, int cap; list<int> vals)
+lemma void uintptrs_join(uintptr_t *a);
+    requires [?f]uintptrs(a, ?M, ?as) &*& [f]uintptrs(a + M, ?N, ?bs);
+    ensures [f]uintptrs(a, M + N, append(as, bs));
+
+predicate uintptr_buffer(uintptr_t* start, int len, int cap; list<int> vals)
     =   start != 0 &*& cap > 0 &*& len >= 0 &*& start[..len] |-> vals
-    &*& start[len..cap] |-> _;
+    &*& uintptrs_(start+len,cap-len,_);
 
-lemma_auto void u_llong_buffer_auto();
-    requires [?f]u_llong_buffer(?start,?len,?cap,?vals);
-    ensures  [ f]u_llong_buffer( start, len, cap, vals)
+lemma_auto void uintptr_buffer_auto();
+    requires [?f]uintptr_buffer(?start,?len,?cap,?vals);
+    ensures  [ f]uintptr_buffer( start, len, cap, vals)
         &*&  f <= 1 &*& start != 0
         &*&  len >= 0 &*& cap > 0 &*& length(vals) == len
         ;

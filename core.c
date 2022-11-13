@@ -198,6 +198,16 @@ lemma void min_of_correct(int a, int b, int c)
     if(c <= b) {} else {}
 }
 
+lemma_auto void uintptrs_inv()
+    requires [?f]uintptrs(?p, ?count, ?vs);
+    ensures [f]uintptrs(p, count, vs) &*& count == length(vs);
+{
+    open uintptrs(_,_,_);
+    if(count != 0) {
+        uintptrs_inv();
+        switch(vs) { case nil: case cons(vv,vvs): }
+    }
+}
 
   @*/
 
