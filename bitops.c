@@ -20,6 +20,16 @@ lemma void truncate_unsigned_def2(int x, nat n)
     euclid_div_exact(x,pow_nat(2,n),q,r);
 }
 
+lemma_auto(truncate_unsigned(x,nb)) void truncate_unsigned_def2_auto(int x, int nb)
+    requires nb >= 0;
+    ensures truncate_unsigned(x, nb)
+        == (x % pow_nat(2, noi(nb)) + pow_nat(2,noi(nb))) % pow_nat(2, noi(nb));
+{
+    truncate_unsigned_def2(x,noi(nb));
+    euclid_mod_auto(x, pow_nat(2, noi(nb)));
+    int_of_nat_of_int(nb);
+}
+
 lemma_auto(Z_size(z))
 void Z_size_nonneg(Z z)
     requires true;

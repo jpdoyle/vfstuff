@@ -136,9 +136,9 @@ bi_block_reduce(big_int_block* first, big_int_block* last,
             /*@ decreases length(blk_chunks); @*/
         {
             /* @ ALREADY_PROVEN() @*/
-            /*@ open ints(&i->chunks[0]+chunk_i,_,_); @*/
-            /*@ integer_limits(&i->chunks[0]+chunk_i); @*/
-            int32_t new_chunk = *(&i->chunks[0]+chunk_i);
+            /*@ open integers_(&i->chunks[0]+chunk_i,_,_,_,_); @*/
+            /*@ integer__limits(&i->chunks[0]+chunk_i); @*/
+            int32_t new_chunk = i->chunks[chunk_i];
             if(flip_sign) new_chunk = -new_chunk;
             /*@ int orig_chunk = new_chunk; @*/
             /*@ {
@@ -168,10 +168,10 @@ bi_block_reduce(big_int_block* first, big_int_block* last,
                 assert abs(new_chunk-chunk_mod) < pow_nat(2,N31);
             } @*/
             new_chunk -= (carry*(1<<CHUNK_BITS));
-            *(&i->chunks[0]+chunk_i) = new_chunk;
+            i->chunks[chunk_i] = new_chunk;
 
             /*@ int next_carry = carry; @*/
-            /*@ assert *(&i->chunks[0]+chunk_i)|-> ?final_chunk; @*/
+            /*@ assert i->chunks[chunk_i] |-> ?final_chunk; @*/
             /*@ assert i->chunks[chunk_i+1..N_INTS] |-> ?rest_chunks; @*/
 
             /*@ if(flip_sign) {

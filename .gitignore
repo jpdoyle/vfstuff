@@ -3,3 +3,4 @@ Session.vim
 *.vfmanifest
 *.vfmanifest.done
 bin/
+.direnv

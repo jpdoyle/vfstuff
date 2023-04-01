@@ -27,7 +27,8 @@ lemma_auto void bi_block_inv()
     assert [f]b->next |-> ?next;
     assert [f]b->chunks[..N_INTS] |-> ?my_chunks;
     if(f > 1) {
-        integer_unique(b->chunks);
+        open integers_(b->chunks,_,_,_,_);
+        integer__unique(b->chunks);
         assert false;
     }
 
@@ -40,12 +41,13 @@ lemma_auto void bi_block_inv()
                 ;
             decreases length(loop_chunks);
         {
-            open ints(_,_,_);
-            assert [f]integer(_,?v);
+            open integers_(_,_,_,_,_);
+            assert [f]integer_(_,_,_,?v);
 
-            integer_limits(&b->chunks[i]);
+            integer__limits(&b->chunks[i]);
+            shiftleft_def(1,N31);
 
-            leak [f]integer(_,v);
+            leak [f]integer_(_,_,_,v);
 
         }
         assert false;
@@ -179,7 +181,7 @@ lemma void bi_block_disjoint(big_int_block* a,big_int_block* b)
             big_int_block* b_left = b;
             while(bptrs_left != nil)
                 invariant !!mem(a,bptrs_left)
-                    &*&   [f1]a->next |-> _
+                    &*&   [f1]a->next |-> ?_
                     &*&   [f2]bi_block(b_left,?bl_last,_,_,bptrs_left,_);
                 decreases length(bptrs_left);
             {
@@ -292,11 +294,12 @@ big_int_block* new_block()
     ret->next = NULL;
     ret->prev = NULL;
     for(i=0;i < N_INTS; ++i)
-        /*@ requires i >= 0 &*& ret->chunks[i..N_INTS] |-> _; @*/
+        /*@ requires i >= 0 &*& i <= N_INTS &*& ret->chunks[i..N_INTS] |-> _; @*/
         /*@ ensures  ret->chunks[old_i..N_INTS] |->
                         repeat(0,noi(N_INTS-old_i)); @*/
         /*@ decreases N_INTS-i; @*/
     {
+        /*@ assert noi(N_INTS-i) == succ(noi(N_INTS-(i+1))); @*/
         ret->chunks[i] = 0;
     }
     return ret;
@@ -363,7 +366,7 @@ void big_int_set(big_int* x,int32_t v)
         i->chunks[1] = v2;
 
         for(block_i=2; block_i<N_INTS; ++block_i)
-            /*@ requires i->chunks[block_i..N_INTS] |-> _
+            /*@ requires i->chunks[block_i..N_INTS] |-> ?_
                     &*&  block_i >= 2 &*& block_i <= N_INTS; @*/
             /*@ ensures  i->chunks[old_block_i..N_INTS]
                             |-> repeat(0,noi(N_INTS-old_block_i)); @*/
@@ -462,7 +465,7 @@ big_int* big_int_clone_into(big_int* ret,const big_int* x)
         if(x_i) {
             for(block_i = 0; block_i < N_INTS; ++block_i)
                 /*@ requires block_i >= 0 &*& block_i <= N_INTS
-                        &*&  i->chunks[block_i..N_INTS] |-> _
+                        &*&  i->chunks[block_i..N_INTS] |-> ?_
                         &*&  [f]x_i->chunks[block_i..N_INTS] |-> ?block
                         ; @*/
                 /*@ ensures  i->chunks[old_block_i..N_INTS] |-> block
@@ -470,13 +473,15 @@ big_int* big_int_clone_into(big_int* ret,const big_int* x)
                         ; @*/
                 /*@ decreases N_INTS-block_i; @*/
             {
-                /*@ ints_limits2(&x_i->chunks[block_i]); @*/
-                i->chunks[block_i] = *(&x_i->chunks[0]+block_i);
+                /*@ {
+                  integers__limits2(&x_i->chunks[block_i]);
+                } @*/
+                i->chunks[block_i] = *(&x_i->chunks[block_i]);
             }
         } else {
             for(block_i = 0; block_i < N_INTS; ++block_i)
                 /*@ requires block_i >= 0 &*& block_i <= N_INTS
-                        &*&  i->chunks[block_i..N_INTS] |-> _
+                        &*&  i->chunks[block_i..N_INTS] |-> ?_
                         ; @*/
                 /*@ ensures  i->chunks[old_block_i..N_INTS] |-> ?block
                         &*&  !!all_eq(block,0)
@@ -576,7 +581,7 @@ big_int* big_int_clone(const big_int* x)
         size_t block_i;
         for(block_i = 0; block_i < N_INTS; ++block_i)
             /*@ requires block_i >= 0 &*& block_i <= N_INTS
-                    &*&  i->chunks[block_i..N_INTS] |-> _
+                    &*&  i->chunks[block_i..N_INTS] |-> ?_
                     &*&  [f]x_i->chunks[block_i..N_INTS] |-> ?block
                     ; @*/
             /*@ ensures  i->chunks[old_block_i..N_INTS] |-> block
@@ -584,8 +589,8 @@ big_int* big_int_clone(const big_int* x)
                     ; @*/
             /*@ decreases N_INTS-block_i; @*/
         {
-            /*@ ints_limits2(&x_i->chunks[block_i]); @*/
-            i->chunks[block_i] = *(&x_i->chunks[0]+block_i);
+            /*@ integers__limits2(&x_i->chunks[block_i]); @*/
+            i->chunks[block_i] = *(&x_i->chunks[block_i]);
         }
         if(x_i != x->last) {
             big_int_block* last = new_block();
@@ -595,6 +600,10 @@ big_int* big_int_clone(const big_int* x)
             /*@ note(last != 0); @*/
             /*@ note(last != i); @*/
             /*@ assert last->next |-> 0; @*/
+        } else {
+            /*@ {
+              assert [f]x_i->next |-> 0;
+            } @*/
         }
         x_i = x_i->next;
         i = i->next;

@@ -172,12 +172,16 @@ predicate malloced_string(char* s; list<char> cs) =
 lemma_auto void malloced_string_inv()
     requires [?f]malloced_string(?s,?cs);
     ensures  [ f]malloced_string( s, cs)
+        &*&  !!pointer_within_limits(s)
+        &*&  !!pointer_within_limits(s+length(cs))
         &*&  s > 0 &*& s+length(cs)+1 <= (char*)UINTPTR_MAX
         &*&  !mem('\0',cs)
         ;
 {
     if(!(s > 0 && s+length(cs)+1 <= (char*)UINTPTR_MAX
         &&  !mem('\0',cs)
+        &&  pointer_within_limits(s)
+        &&  pointer_within_limits(s+length(cs))
         )) {
         string_limits(s);
         string_to_body_chars(s);
@@ -247,6 +251,13 @@ lemma void ints_limits2(int *array);
     ensures [f]ints(array, n, cs) &*& (int *)0 <= array &*&
         array + n <= (int *)UINTPTR_MAX;
 
+lemma void integers__limits2(void *array);
+    requires [?f]integers_(array, ?sz, ?sgn, ?n, ?cs) &*& n > 0;
+    ensures [f]integers_(array, sz, sgn, n, cs) &*& (void *)0 <= array
+        &*& array + n <= (void *)UINTPTR_MAX
+        &*& array + n*sz <= (void *)UINTPTR_MAX
+        &*& !!pointer_within_limits(array);
+
 lemma void uints_limits(unsigned *array);
     requires [?f]uints(array, ?n, ?cs) &*& n > 0;
     ensures [f]uints(array, n, cs) &*& (unsigned *)0 <= array &*&
@@ -271,6 +282,10 @@ lemma void uintptrs_split(uintptr_t *array, int offset);
 lemma void uintptrs_join(uintptr_t *a);
     requires [?f]uintptrs(a, ?M, ?as) &*& [f]uintptrs(a + M, ?N, ?bs);
     ensures [f]uintptrs(a, M + N, append(as, bs));
+
+lemma void uintptrs__join(uintptr_t *a);
+    requires [?f]uintptrs_(a, ?M, ?as) &*& [f]uintptrs_(a + M, ?N, ?bs);
+    ensures [f]uintptrs_(a, M + N, append(as, bs));
 
 predicate uintptr_buffer(uintptr_t* start, int len, int cap; list<int> vals)
     =   start != 0 &*& cap > 0 &*& len >= 0 &*& start[..len] |-> vals

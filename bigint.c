@@ -117,6 +117,10 @@ char* read_hex_string()
         return ret;
     }
     if(*ret == '-' && is_hex_string(ret+1)) return ret;
+    /*@ {
+      string_to_chars_(ret);
+      chars__join(ret);
+    } @*/
     free(ret);
     return NULL;
 }
@@ -134,6 +138,9 @@ int test1(void)
     printf("%s\n",s);
     printf("%s\n",s2);
     free_big_int_inner(p);
+    /*@ {
+      string_to_chars_(s2);
+    } @*/
     free(s2);
     /*@ leak base_n(_,_,_,_); @*/
 
@@ -153,6 +160,7 @@ int test2(void)
     printf("%s\n",s);
     printf("%s\n",s2);
     free_big_int_inner(p);
+    /*@ string_to_chars_(s2); @*/
     free(s2);
     /*@ leak base_n(_,_,_,_); @*/
 
@@ -186,6 +194,7 @@ int main(void)
         char* s = read_hex_string();
         if(s) {
             x = big_int_from_hex(s);
+            /*@ string_to_chars_(s); @*/
             free(s);
             /*@ assert bi_big_int(x,_,_,?x_v); @*/
             /*@ xv = x_v; @*/
@@ -215,6 +224,7 @@ int main(void)
         char* s = read_hex_string();
         if(s) {
             y = big_int_from_hex(s);
+            /*@ string_to_chars_(s); @*/
             free(s);
             /*@ assert bi_big_int(y,_,_,?y_v); @*/
             /*@ yv = y_v; @*/
@@ -252,6 +262,7 @@ int main(void)
                 :   cs == cons('-',tail(cs))
                 &*& base_n(hex_chars(),reverse(tail(cs)),_,-res); @*/
         printf("x+n*y=\n%s\n",x_hex);
+        /*@ string_to_chars_(x_hex); @*/
         free(x_hex);
     }
 

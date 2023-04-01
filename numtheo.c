@@ -1,7 +1,7 @@
 #include "numtheo.h"
 /*@ #include <arrays.gh> @*/
 
-#if 0
+#if 1
 #define ALREADY_PROVEN() {}
 #else
 #define ALREADY_PROVEN() assume(false);
@@ -615,6 +615,7 @@ size_t prime_sieve(size_t* buff, size_t n)
 
 
     /*@ uintptrs_split(buff,2); @*/
+    /*@ close uintptrs_(buff,2,_); @*/
     i = 0;
     for(j = 2; j < n; ++j)
         /*@ invariant i+1 < j &*& i >= 0 &*& j <= n

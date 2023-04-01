@@ -511,5 +511,9 @@ lemma_auto void uintptrs_inv();
     requires [?f]uintptrs(?p, ?count, ?vs);
     ensures [f]uintptrs(p, count, vs) &*& count == length(vs);
 
+lemma_auto void uintptrs__inv();
+    requires [?f]uintptrs_(?p, ?count, ?vs);
+    ensures [f]uintptrs_(p, count, vs) &*& count == length(vs);
+
 #endif
 

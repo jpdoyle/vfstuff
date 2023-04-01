@@ -1,4 +1,5 @@
 //@ #include "util.gh"
+//@ #include "mul.gh"
 
 /*@
 
@@ -95,6 +96,24 @@ lemma void ints_limits2(int *array)
         open ints(array,_,_);
         if(n > 1) ints_limits2(array+1);
         integer_limits(array);
+        assert false;
+    }
+}
+
+lemma void integers__limits2(void *array)
+    requires [?f]integers_(array, ?sz, ?sgn, ?n, ?cs) &*& n > 0;
+    ensures [f]integers_(array, sz, sgn, n, cs) &*& (void *)0 <= array
+        &*& array + n <= (void *)UINTPTR_MAX
+        &*& array + n*sz <= (void *)UINTPTR_MAX
+        &*& !!pointer_within_limits(array);
+{
+    if(array < (void *)0 || array + n > (void *)UINTPTR_MAX
+                         || array + n*sz > (void *)UINTPTR_MAX
+                         || !pointer_within_limits(array)) {
+        open integers_(array,_,_,_,_);
+        integer__limits(array);
+        if(n > 1) integers__limits2(array+sz);
+
         assert false;
     }
 }
@@ -197,6 +216,17 @@ lemma void uintptrs_join(uintptr_t *a)
     if(M > 0) {
         uintptrs_join(a+1);
         close [f]uintptrs(a,M+N,_);
+    }
+}
+
+lemma void uintptrs__join(uintptr_t *a)
+    requires [?f]uintptrs_(a, ?M, ?as) &*& [f]uintptrs_(a + M, ?N, ?bs);
+    ensures [f]uintptrs_(a, M + N, append(as, bs));
+{
+    open uintptrs_(a,_,_);
+    if(M > 0) {
+        uintptrs__join(a+1);
+        close [f]uintptrs_(a,M+N,_);
     }
 }
 

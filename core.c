@@ -209,5 +209,16 @@ lemma_auto void uintptrs_inv()
     }
 }
 
+lemma_auto void uintptrs__inv()
+    requires [?f]uintptrs_(?p, ?count, ?vs);
+    ensures [f]uintptrs_(p, count, vs) &*& count == length(vs);
+{
+    open uintptrs_(_,_,_);
+    if(count != 0) {
+        uintptrs__inv();
+        switch(vs) { case nil: case cons(vv,vvs): }
+    }
+}
+
   @*/
 
