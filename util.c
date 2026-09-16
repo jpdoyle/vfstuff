@@ -160,7 +160,6 @@ lemma_auto void u_llong_buffer_auto()
     open u_llong_buffer(_,_,_,_);
     if(f > 1) {
         open ullongs(start,_,_);
-        if(len == 0) { open ullongs(start,_,_); }
         u_llong_integer_unique(start);
     }
 }
