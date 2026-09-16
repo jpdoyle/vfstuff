@@ -62,7 +62,7 @@ bool is_hex(char c)
     return (c >= 'a' && c <= 'f') || (c >= '0' && c <= '9');
 }
 
-char hex_of_nib(uint8_t c)
+char hex_of_nib(unsigned char c)
     /*@ requires c >= 0 &*& c < 16; @*/
     /*@ ensures  some(result) == nth_of(c,hex_chars())
             &*&  !!mem(result,hex_chars())
@@ -77,7 +77,7 @@ char hex_of_nib(uint8_t c)
     else { /*@ assert false; @*/ abort(); } //~allow_dead_code
 }
 
-uint8_t nib_of_hex(char c)
+unsigned char nib_of_hex(char c)
     /*@ requires !!mem(c,hex_chars()); @*/
     /*@ ensures  some(c) == nth_of(result,hex_chars())
             &*&  index_of(c,hex_chars()) == result
@@ -87,9 +87,9 @@ uint8_t nib_of_hex(char c)
 {
     /*@ ALREADY_PROVEN() @*/
     if(c >= 'a' && c <= 'f') {
-        return (uint8_t)(10 + (c-'a'));
+        return (unsigned char)(10 + (c-'a'));
     } else if(c >= '0' && c <= '9') {
-        return (uint8_t)(c-'0');
+        return (unsigned char)(c-'0');
     } else { /*@ assert false; @*/ abort(); } //~allow_dead_code
 }
 
@@ -271,12 +271,8 @@ lemma void base_n_split(list<char> symbs_l,list<char> symbs_r)
                 + length(place_vals)*(v_xs
                     + pow_nat(length(place_vals),
                                  noi(length(xs)))*v_r);
-        note_eq( length(place_vals)*(v_xs
-                    + pow_nat(length(place_vals),
-                                 noi(length(xs)))*v_r)
-            ,  length(place_vals)*v_xs
-                    + length(place_vals)*(pow_nat(length(place_vals),
-                                 noi(length(xs)))*v_r));
+        mul_distr(length(place_vals), v_xs,
+                  pow_nat(length(place_vals), noi(length(xs)))*v_r);
 
         assert val == (v + length(place_vals)*v_xs)
                     + length(place_vals)*(pow_nat(length(place_vals),
@@ -450,7 +446,7 @@ lemma void base_n_trim(char p0, list<char> ps, list<char> symbs,
 
 @*/
 
-uint8_t* bytes_of_hex(size_t len, char* s, size_t* outlen)
+unsigned char* bytes_of_hex(size_t len, char* s, size_t* outlen)
     /*@ requires [?f]s[..len] |-> ?hex_str &*& *outlen |-> _
             &*&  base_n(hex_chars(),reverse(hex_str),?hexits,?val)
             &*&  len%2 == 0
@@ -458,21 +454,21 @@ uint8_t* bytes_of_hex(size_t len, char* s, size_t* outlen)
     /*@ ensures  [ f]s[..len] |->  hex_str &*& *outlen |-> ?len_out
             &*&  base_n(hex_chars(),reverse(hex_str), hexits, val)
             &*&  result[..len_out] |-> ?out_bytes
-            &*&  malloc_block_uchars(result,len_out)
+            &*&  malloc_block(result, ?blk_len)
             &*&  poly_eval(reverse(out_bytes),256) == val
             ; @*/
     /*@ terminates; @*/
 {
     /*@ ALREADY_PROVEN() @*/
-    uint8_t* ret;
-    uint8_t* p;
+    unsigned char* ret;
+    unsigned char* p;
     size_t i;
     *outlen = len/2;
 
     /*@ assert *outlen |-> ?len_out; @*/
     /*@ div_rem(len,2); @*/
 
-    ret = calloc(*outlen,sizeof(uint8_t));
+    ret = calloc(*outlen,sizeof(unsigned char));
     if(!ret) { abort(); }
 
     /*@ base_n_dup(); @*/
@@ -513,8 +509,8 @@ uint8_t* bytes_of_hex(size_t len, char* s, size_t* outlen)
         /*@ open base_n(_,{x1},_,_); @*/
         /*@ open base_n(_,{x2},_,_); @*/
 
-        uint8_t h = nib_of_hex(s[i  ]);
-        uint8_t l = nib_of_hex(s[i+1]);
+        unsigned char h = nib_of_hex(s[i  ]);
+        unsigned char l = nib_of_hex(s[i+1]);
 
         /*@ assert base_n(hex_chars(),
                 reverse(xs2), ?rest_hexits,
@@ -525,7 +521,6 @@ uint8_t* bytes_of_hex(size_t len, char* s, size_t* outlen)
 
             shiftleft_def(h,N4);
             bitor_no_overlap(h,l,N4);
-            open uchars(ret+(i/2),_,_);
             div_monotonic_numerator(i,len-1,2);
             assert i/2 <= (len-1)/2;
 
@@ -539,7 +534,7 @@ uint8_t* bytes_of_hex(size_t len, char* s, size_t* outlen)
             assert i/2 <  len/2;
         } @*/
 
-        *p = (uint8_t)((h<<4) | l);
+        *p = (unsigned char)((h<<4) | l);
 
         /*@ assert *p |-> ?v; @*/
         /*@ {
@@ -574,7 +569,7 @@ uint8_t* bytes_of_hex(size_t len, char* s, size_t* outlen)
     return ret;
 }
 
-char b64_of_byte(uint8_t n)
+char b64_of_byte(unsigned char n)
     /*@ requires 0 <= n &*& n < 64; @*/
     /*@ ensures  some(result) == nth_of(n,b64_chars()); @*/
     /*@ terminates; @*/
@@ -582,9 +577,9 @@ char b64_of_byte(uint8_t n)
 {
     /*@  ALREADY_PROVEN() @*/
     /*@ b64_cases(n); @*/
-    uint8_t thresh0 = (uint8_t)('Z'-'A');
-    uint8_t thresh1 = (uint8_t)('z'-'a' + thresh0 + 1);
-    uint8_t thresh2 = (uint8_t)('9'-'0' + thresh1 + 1);
+    unsigned char thresh0 = (unsigned char)('Z'-'A');
+    unsigned char thresh1 = (unsigned char)('z'-'a' + thresh0 + 1);
+    unsigned char thresh2 = (unsigned char)('9'-'0' + thresh1 + 1);
 
     if(n >= 64)             { /*@ assert false; @*/ abort(); }//~allow_dead_code
     else if(n <= thresh0)   { return (char)('A' + n);             }
@@ -596,7 +591,7 @@ char b64_of_byte(uint8_t n)
 }
 
 
-char* hex_of_bytes(size_t len, uint8_t* b)
+char* hex_of_bytes(size_t len, unsigned char* b)
     /*@ requires [?f]b[..len] |-> ?bytes
             &*&  2*len+1 <= ULONG_MAX
             ; @*/
@@ -632,8 +627,8 @@ char* hex_of_bytes(size_t len, uint8_t* b)
         /*@ decreases len-i; @*/
     {
         /*@ open uchars(b+i,_,_); @*/
-        /*@ open  chars(p,_,_); @*/
-        /*@ open  chars(p+1,_,_); @*/
+        /*@ open  chars_(p,_,_); @*/
+        /*@ open  chars_(p+1,_,_); @*/
         /*@ assert [f]b[i]        |-> ?x; @*/
         /*@ assert [f]b[i+1..len] |-> ?xs; @*/
         /*@ {
@@ -642,8 +637,8 @@ char* hex_of_bytes(size_t len, uint8_t* b)
             bitand_pow_2(x,N4);
             div_rem(x,16);
         } @*/
-        p[0] = hex_of_nib((uint8_t)(b[i]>>4));
-        p[1] = hex_of_nib((uint8_t)(b[i]&0xf));
+        p[0] = hex_of_nib((unsigned char)(b[i]>>4));
+        p[1] = hex_of_nib((unsigned char)(b[i]&0xf));
 
         /*@ assert p[0] |-> ?c1; @*/
         /*@ assert p[1] |-> ?c2; @*/

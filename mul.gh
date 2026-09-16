@@ -71,6 +71,18 @@ lemma void mul_3var(int x,int y,int z);
         &*&  x*(y*z) == y*(x*z)
         &*&  x*(y*z) == y*(z*x);
 
+lemma void mul_distr(int x, int y, int z);
+    requires true;
+    ensures  x*(y + z) == x*y + x*z;
+
+lemma void mul_subst(int c, int E, int f);
+    requires E == f;
+    ensures  c*E == c*f;
+
+lemma void mul_subst_2(int c, int E, int f, int g);
+    requires E == f + g;
+    ensures  c*E == c*(f + g);
+
 lemma void mul_abs_commute(int x, int y);
     requires true;
     ensures  abs(x)*abs(y) == abs(x*y);

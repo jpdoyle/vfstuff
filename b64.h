@@ -56,7 +56,7 @@ bool is_hex(char c);
     /*@ ensures  result == mem(c,hex_chars()); @*/
     /*@ terminates; @*/
 
-char hex_of_nib(uint8_t c);
+char hex_of_nib(unsigned char c);
     /*@ requires c >= 0 &*& c < 16; @*/
     /*@ ensures  some(result) == nth_of(c,hex_chars())
             &*&  !!mem(result,hex_chars())
@@ -64,7 +64,7 @@ char hex_of_nib(uint8_t c);
             ; @*/
     /*@ terminates; @*/
 
-uint8_t nib_of_hex(char c);
+unsigned char nib_of_hex(char c);
     /*@ requires !!mem(c,hex_chars()); @*/
     /*@ ensures  some(c) == nth_of(result,hex_chars())
             &*&  index_of(c,hex_chars()) == result
@@ -106,7 +106,7 @@ lemma void b64_cases(int n)
   @*/
 
 
-char b64_of_byte(uint8_t n);
+char b64_of_byte(unsigned char n);
     /*@ requires 0 <= n &*& n < 64; @*/
     /*@ ensures  some(result) == nth_of(n,b64_chars()); @*/
     /*@ terminates; @*/
@@ -192,7 +192,7 @@ lemma void base_n_trim(char p0, list<char> ps, list<char> symbs,
 
   @*/
 
-uint8_t* bytes_of_hex(size_t len, char* s, size_t* outlen);
+unsigned char* bytes_of_hex(size_t len, char* s, size_t* outlen);
     /*@ requires [?f]s[..len] |-> ?hex_str &*& *outlen |-> _
             &*&  base_n(hex_chars(),reverse(hex_str),?hexits,?val)
             &*&  len%2 == 0
@@ -200,12 +200,12 @@ uint8_t* bytes_of_hex(size_t len, char* s, size_t* outlen);
     /*@ ensures  [ f]s[..len] |->  hex_str &*& *outlen |-> ?len_out
             &*&  base_n(hex_chars(),reverse(hex_str), hexits, val)
             &*&  result[..len_out] |-> ?out_bytes
-            &*&  malloc_block_uchars(result,len_out)
+            &*&  malloc_block(result, ?blk_len)
             &*&  poly_eval(reverse(out_bytes),256) == val
             ; @*/
     /*@ terminates; @*/
 
-char* hex_of_bytes(size_t len, uint8_t* b);
+char* hex_of_bytes(size_t len, unsigned char* b);
     /*@ requires [?f]b[..len] |-> ?bytes
             &*&  2*len+1 <= ULONG_MAX
             ; @*/
@@ -314,7 +314,7 @@ lemma_auto b64_string_inv()
 
   @*/
 
-//char* b64_of_bytes(size_t len, uint8_t *b)
+//char* b64_of_bytes(size_t len, unsigned char *b)
 //    /*@ requires [?f]b[..len] |-> ?bytes
 //            &*&  2*len+1 <= ULONG_MAX
 //            ; @*/

@@ -1,28 +1,34 @@
 {
-  description = "A devShell example";
+  description = "VeriFast proofs, verified with the VeriFast checkout in ../verifast";
 
   inputs = {
-    nixpkgs.url      = github:nixos/nixpkgs/nixos-21.11;
-    flake-utils.url  = github:numtide/flake-utils;
-    jpdoyle-vf.url     = github:jpdoyle/verifast/master;
+    # VeriFast itself: the git checkout next to this repo. Its flake provides
+    # a `packages.verifast` verifier (vfconsole.exe + stdlib manifests) and a
+    # devShell for building VeriFast itself from source.
+    # Absolute path instead of `../verifast` because relative `path:` inputs
+    # do not resolve outside a git-worktree flake in pure evaluation mode.
+    verifast.url = "path:/home/joe/verifast";
+    # Build everything with one nixpkgs revision.
+    nixpkgs.follows = "verifast/nixpkgs";
+    flake-utils.follows = "verifast/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils, jpdoyle-vf, ... }:
+  outputs = { self, nixpkgs, flake-utils, verifast, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        overlays = [];
-        pkgs = import nixpkgs {
-          inherit system overlays;
-        };
+        pkgs = import nixpkgs { inherit system; };
       in
-      with pkgs;
       {
-        devShell = mkShell {
-          buildInputs = [
-              jpdoyle-vf.packages.${system}.verifast
+        devShells.default = pkgs.mkShell {
+          packages = [
+            # The VeriFast from ../verifast: `verifast` CLI verifier. Its stdlib
+            # manifests and headers live next to the binary (its bindir/vroot
+            # "CRT"), where the verifier looks for #include'd .h/.gh files and
+            # auto-links crt.dll.vfmanifest.
+            verifast.packages.${system}.verifast
+            pkgs.gnumake # rules in the Makefile
+            pkgs.gcc # ${CC}: bin/fibber etc. get compiled by some make targets
           ];
         };
-      }
-    );
+      });
 }
-

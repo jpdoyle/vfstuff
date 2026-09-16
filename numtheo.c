@@ -162,7 +162,7 @@ size_t int_sqrt(size_t n)
     return a;
 }
 
-size_t prime_sieve(size_t* buff, size_t n)
+size_t prime_sieve(unsigned long long* buff, size_t n)
     /*@ requires buff[..n] |-> _ &*& n > 0 &*& n+n <= ULLONG_MAX; @*/
     /*@ ensures  u_llong_buffer(buff, result, n,
                     reverse(primes_below(noi(n-1))));

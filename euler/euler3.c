@@ -51,7 +51,7 @@ lemma list<int> factorize(int x)
 
 size_t largest_prime_factor(size_t n)
     /*@ requires n > 1
-            &*&  (n+1)*sizeof(size_t) <= ULLONG_MAX
+            &*&  (n+1)*sizeof(unsigned long long) <= ULLONG_MAX
             ; @*/
     /*@ ensures  prime_factorization(n,?l) &*& result == maximum(l);
       @*/
@@ -59,7 +59,7 @@ size_t largest_prime_factor(size_t n)
 {
     size_t i;
     size_t sqrt_n;
-    size_t* primes;
+    unsigned long long* primes;
     size_t n_primes;
     size_t max_factor = 1;
     size_t max_prime = 1;
@@ -71,9 +71,14 @@ size_t largest_prime_factor(size_t n)
             my_mul_mono_l(1,sqrt_n,sqrt_n);
             assert false;
         }
-        my_mul_mono_l(sqrt_n+1,n+1,sizeof(size_t));
+        my_mul_mono_l(sqrt_n+1,n+1,sizeof(unsigned long long));
     } @*/
-    primes = malloc((sqrt_n+1)*sizeof(size_t));
+    /*@ {
+        assert sqrt_n <= n;
+        assert (sqrt_n+1) <= (n+1);
+        assert (sqrt_n+1)*sizeof(unsigned long long) <= UINTPTR_MAX;
+    } @*/
+    primes = malloc((sqrt_n+1)*sizeof(unsigned long long));
     if(!primes) { abort(); }
 
     n_primes = prime_sieve(primes,sqrt_n+1);
@@ -230,7 +235,6 @@ size_t largest_prime_factor(size_t n)
         }
     }
 
-    /*@ ullongs_join(primes); @*/
     /*@ ullongs_join(primes); @*/
     free(primes);
 

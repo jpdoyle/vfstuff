@@ -106,6 +106,7 @@ lemma void mul_commutes(int a, int b)
     requires true;
     ensures  a*b == b*a;
 {
+
     if(a >= 0) {
         for(int i = 0; i < a; ++i)
             invariant i*b == b*i
@@ -120,6 +121,21 @@ lemma void mul_commutes(int a, int b)
         { }
     }
 }
+
+lemma void mul_distr(int x, int y, int z)
+    requires true;
+    ensures  x*(y + z) == x*y + x*z;
+{ }
+
+lemma void mul_subst(int c, int E, int f)
+    requires E == f;
+    ensures  c*E == c*f;
+{ }
+
+lemma void mul_subst_2(int c, int E, int f, int g)
+    requires E == f + g;
+    ensures  c*E == c*(f + g);
+{ }
 
 lemma void mul_3var(int x,int y,int z)
     requires true;

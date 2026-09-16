@@ -514,10 +514,8 @@ void poly_eval_append(list<int> a, list<int> b, int x)
         assert poly_eval(append(a,b),x)
             == v + x*(poly_eval(vs,x) +
                     pow_nat(x,noi(length(vs)))*poly_eval(b,x));
-        note_eq(x*(poly_eval(vs,x) +
-                    pow_nat(x,noi(length(vs)))*poly_eval(b,x)),
-                x*poly_eval(vs,x) +
-                x*(pow_nat(x,noi(length(vs)))*poly_eval(b,x)));
+        mul_distr(x, poly_eval(vs,x),
+                  pow_nat(x,noi(length(vs)))*poly_eval(b,x));
         assert poly_eval(append(a,b),x)
             == (v + x*poly_eval(vs,x)) +
                     x*(pow_nat(x,noi(length(vs)))*poly_eval(b,x));
@@ -538,12 +536,20 @@ void poly_eval_repeat_plus(int x, int y, nat n, int pt)
 {
     switch(n) {
     case zero:
+        break;
     case succ(n0):
         poly_eval_repeat_plus(x,y,n0,pt);
-        note_eq( poly_eval(repeat(x+y,n),pt)
-            ,  x + y +
-                pt*(poly_eval(repeat(x,n0),pt) +
-                        poly_eval(repeat(y,n0),pt)));
+        mul_subst_2(pt, poly_eval(repeat(x+y,n0),pt),
+                        poly_eval(repeat(x,n0),pt),
+                        poly_eval(repeat(y,n0),pt));
+        mul_distr(pt, poly_eval(repeat(x,n0),pt), poly_eval(repeat(y,n0),pt));
+        assert poly_eval(repeat(x+y,n),pt)
+            == x + y + pt*poly_eval(repeat(x+y,n0),pt);
+        assert poly_eval(repeat(x,n),pt)
+            == x + pt*poly_eval(repeat(x,n0),pt);
+        assert poly_eval(repeat(y,n),pt)
+            == y + pt*poly_eval(repeat(y,n0),pt);
+        break;
     }
 }
 
@@ -571,13 +577,28 @@ void poly_eval_repeat_1(nat n, int pt)
 {
     switch(n) {
     case zero:
+        break;
     case succ(n0):
         poly_eval_repeat_1(n0,pt);
-        note_eq( (1-pt)*poly_eval(repeat(1,n),pt)
-            ,  (1-pt) * (1 + pt*poly_eval(repeat(1,n0),pt)));
-        mul_3var(1-pt,pt,poly_eval(repeat(1,n0),pt));
-        note_eq((1-pt)*poly_eval(repeat(1,n),pt)
-            ,  (1-pt) + pt*(1 - pow_nat(pt,n0)));
+        assert pow_nat(pt, n) == pt*pow_nat(pt, n0);
+        mul_subst_2(1-pt, poly_eval(repeat(1,n),pt),
+                        1, pt*poly_eval(repeat(1,n0),pt));
+        mul_distr(1-pt, 1, pt*poly_eval(repeat(1,n0),pt));
+        mul_3var(1-pt, pt, poly_eval(repeat(1,n0),pt));
+        assert poly_eval(repeat(1,n),pt) == 1 + pt*poly_eval(repeat(1,n0),pt);
+        assert (1-pt)*poly_eval(repeat(1,n),pt)
+            == (1-pt)*(1 + pt*poly_eval(repeat(1,n0),pt));
+        assert (1-pt)*poly_eval(repeat(1,n),pt)
+            == (1-pt) + (1-pt)*(pt*poly_eval(repeat(1,n0),pt));
+        assert (1-pt)*poly_eval(repeat(1,n),pt)
+            == (1-pt) + pt*((1-pt)*poly_eval(repeat(1,n0),pt));
+        assert (1-pt)*poly_eval(repeat(1,n),pt)
+            == (1-pt) + pt*(1 - pow_nat(pt,n0));
+        mul_distr(pt, 1, -pow_nat(pt, n0));
+        mul_subst(pt, (1-pt)*poly_eval(repeat(1,n0),pt), 1 - pow_nat(pt, n0));
+        assert (1-pt)*poly_eval(repeat(1,n),pt)
+            == 1 - pow_nat(pt,n);
+        break;
     }
 }
 

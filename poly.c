@@ -467,8 +467,7 @@ void poly_plus_eval(list<int> p, list<int> q, int pt)
             //mul_abstract_def(pt,poly_eval(poly_plus(xs,ys),pt));
             assert poly_eval(poly_plus(p,q),pt)
                 == x+y+pt*(poly_eval(xs,pt) + poly_eval(ys,pt));
-            note_eq( pt*(poly_eval(xs,pt) + poly_eval(ys,pt)),
-                     pt*poly_eval(xs,pt) + pt*poly_eval(ys,pt));
+            mul_distr(pt, poly_eval(xs,pt), poly_eval(ys,pt));
             assert poly_eval(poly_plus(p,q),pt)
                 == x+y+pt*poly_eval(xs,pt) + pt*poly_eval(ys,pt);
         }

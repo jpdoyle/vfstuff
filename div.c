@@ -86,50 +86,10 @@ lemma void mod_plus(int x, int y, int d)
     ensures  (x%d + y)%d == (x+y)%d;
 {
 ALREADY_PROVEN()
-    div_rem(x,d);
-    div_rem(x+y,d);
-
-    div_rem(x%d+y,d);
-
-    assert x%d + y == (x%d+y)/d*d + (x%d+y)%d;
-    assert x + y == (x+y)/d*d + (x+y)%d;
-
-    assert x - x%d == (x+y)/d*d - (x%d+y)/d*d + (x+y)%d - (x%d+y)%d;
-
-    assert x/d*d == (x+y)/d*d - (x%d+y)/d*d + (x+y)%d - (x%d+y)%d;
-    assert x/d*d - (x+y)/d*d + (x%d + y)/d*d == (x+y)%d - (x%d+y)%d;
-    assert (x/d - (x+y)/d + (x%d + y)/d)*d == (x+y)%d - (x%d+y)%d;
-    mod_sign(x+y,d);
-    mod_sign(x,d);
-    mod_sign(x%d+y,d);
-
-    assert (x+y)%d >= 0 && (x+y)%d < d;
-    assert (x+y)%d >= 0 && (x+y)%d <= d-1;
-    assert (x%d+y)%d >= 0 && (x%d+y)%d < d;
-    assert -((x%d+y)%d) <= 0 && -((x%d+y)%d) > -d;
-    assert -((x%d+y)%d) <= 0 && -((x%d+y)%d) >= -d+1;
-
-    assert (x+y)%d - (x%d+y)%d >= -d+1;
-    assert (x+y)%d - (x%d+y)%d <= d-1;
-
-    assert abs((x+y)%d - (x%d+y)%d) < abs(d);
-
-    if(x/d - (x+y)/d + (x%d + y)/d != 0) {
-        assert abs(x/d - (x+y)/d + (x%d + y)/d) > 0;
-        my_mul_mono_l(1, abs(x/d - (x+y)/d + (x%d + y)/d),d);
-        assert abs(x/d - (x+y)/d + (x%d + y)/d)*d >= d;
-        mul_abs_commute(x/d - (x+y)/d + (x%d + y)/d,d);
-
-        assert false;
-    }
-
-    if((x/d - (x+y)/d + (x%d + y)/d)*d != 0) {
-        my_mul_mono_l(0,x/d - (x+y)/d + (x%d + y)/d,d);
-        my_mul_mono_l(x/d - (x+y)/d + (x%d + y)/d,0,d);
-
-        assert false;
-    }
-
+    div_rem_nonneg(x, d);
+    div_rem_nonneg(x + y, d);
+    // x%d + y == (x+y) - d*(x/d): see div_rem_nonneg below
+    div_rem_nonneg_unique(x%d + y, d, (x + y)/d - x/d, (x + y)%d);
 }
 
 lemma void mod_shrinks(int x, int d)
@@ -641,7 +601,8 @@ lemma void div_twice(int x, int y, int z)
 
     assert x == y*(x/y) + x%y;
     assert x/y == z*((x/y)/z) + (x/y)%z;
-    note_eq( x ,  y*(z*((x/y)/z) + (x/y)%z) + x%y);
+    mul_subst_2(y, x/y, z*((x/y)/z), (x/y)%z);
+    mul_distr(y, z*((x/y)/z), (x/y)%z);
     assert x == y*(z*((x/y)/z)) + y*((x/y)%z) + x%y;
     assert x == (y*z)*((x/y)/z) + y*((x/y)%z) + x%y;
     assert x == (y*z)*((x/y)/z) + y*((x/y)%z) + z*((x%y)/z) + (x%y)%z;

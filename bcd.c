@@ -376,10 +376,20 @@ uint32_t bcd_add_u32(uint32_t x,uint32_t y)
                 + (ret_digit + 10*carry + 10*(loop_xv/10)
                     + 10*(loop_yv/10))*pow_nat(10,n));
 
-            note_eq(xv + yv ,  retv
-                + ret_digit*pow_nat(10,n)
-                + (carry + loop_xv/10
-                    + loop_yv/10)*(10*pow_nat(10,n)));
+            mul_distr(pow_nat(10,succ(n)), 10, 0);
+            assert pow_nat(10,succ(n)) == 10*pow_nat(10,n);
+            mul_distr(10*pow_nat(10,n), loop_xv/10, loop_yv/10 + carry);
+            mul_distr(10*pow_nat(10,n), loop_yv/10, carry);
+            note_eq(xv + yv,  retv
+                + pow_nat(10,n)*ret_digit
+                + (xv_rest + yv_rest + carry)
+                    *pow_nat(10,succ(n)));
+            mul_distr(10*pow_nat(10,n), carry, loop_xv/10 + loop_yv/10);
+            mul_distr(10*pow_nat(10,n), loop_xv/10, loop_yv/10);
+            note_eq(xv + yv,  retv
+                + (ret_digit + 10*carry + 10*(loop_xv/10)
+                    + 10*(loop_yv/10))*pow_nat(10,n));
+
 
             n = succ(n);
             m = nat_predecessor(m);

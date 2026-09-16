@@ -644,6 +644,9 @@ lemma pair<int,int> gcd_is_min_lincomb_sol(int a, int b, int x, int y, int n)
     div_rem(a,n);
     assert a%n == a - n*(a/n);
     assert a%n == a - (a*x + b*y)*(a/n);
+    mul_distr(a/n, a*x, b*y);
+    mul_commutes(a/n, a*x);
+    mul_commutes(a/n, b*y);
     note_eq((a*x + b*y)*(a/n),((a*x)*(a/n) + (b*y)*(a/n)));
     assert a%n == a - ((a*x)*(a/n) + (b*y)*(a/n));
     assert a%n == a - (a*x)*(a/n) - (b*y)*(a/n);
@@ -745,6 +748,7 @@ lemma void prime_divides_product(int p, int a, int b)
             mul_abstract_def(a,p*x + b*y);
             note_eq(a*1,a);
             note_eq(a*(p*x + b*y), a);
+            mul_distr(a, p*x, b*y);
             assert a*(p*x) + a*(b*y) == a;
 
             mul_assoc(a,p,x);
