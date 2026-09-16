@@ -464,6 +464,8 @@ lemma void bitand_flag_inner(int x, Z x_Z, Z y_Z, nat n)
                 Z_and_zero(y_Z,x_Z);
                 bitand_def(x,x_Z,pow_nat(2,n),y_Z);
                 assert (x&pow_nat(2,n)) == 0;
+                div_rem(x, pow_nat(2,n));
+                division_zero_unique(pow_nat(2,n), x/pow_nat(2,n), x%pow_nat(2,n));
                 assert x%pow_nat(2,n) == 0;
                 assert x%pow_nat(2,succ(n)) == 0;
             case Zdigit(x_z0,xb):
