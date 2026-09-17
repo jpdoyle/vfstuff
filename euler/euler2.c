@@ -2,6 +2,7 @@
 /*@ #include "../util.gh" @*/
 /*@ #include "../lists.gh" @*/
 /*@ #include "../math.gh" @*/
+/*@ #include "../div.gh" @*/
 #include <stdio.h>
 
 /*@
