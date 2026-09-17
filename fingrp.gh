@@ -84,7 +84,7 @@ prodmap_backward<r,s,t>(t y, fixpoint(r,s,t) f, list<r> l, list<s> r)
 
 // compose with the diagonal function -- ie, convert f(x,y) into
 // f(g(u),h(u))
-fixpoint t diag<q,r,s,t>(fixpoint(r,s,t) f, fixpoint(q,r) g,
+fixpoint t diag2<q,r,s,t>(fixpoint(r,s,t) f, fixpoint(q,r) g,
                          fixpoint(q,s) h, q x) {
     return f(g(x),h(x));
 }
@@ -119,14 +119,14 @@ predicate fingrp<t>(list<t> elems, t u, fixpoint(t,t,t) op,
     // closure of op -- x,y in G => x op y in G
     &*& !!forall(prodmap(op,elems,elems), (flip)(mem,elems))
     // unit is unit -- x in G => (x op u = x and u op x = x)
-    &*& !!forall(elems, (diag)(equals,id,(op)(u)))
-    &*& !!forall(elems, (diag)(equals,id,(flip)(op,u)))
+    &*& !!forall(elems, (diag2)(equals,id,(op)(u)))
+    &*& !!forall(elems, (diag2)(equals,id,(flip)(op,u)))
     // inverse is inverse:
     // x in G => (x op inv(x) = u and inv(x) op x = u
-    &*& let((diag)(op,inv,id), ?opinv_l)
-    &*& let((diag)(op,id,inv), ?opinv_r)
-    &*& !!forall(elems, (diag)(equals, (constf)(u), opinv_l))
-    &*& !!forall(elems, (diag)(equals, (constf)(u), opinv_r))
+    &*& let((diag2)(op,inv,id), ?opinv_l)
+    &*& let((diag2)(op,id,inv), ?opinv_r)
+    &*& !!forall(elems, (diag2)(equals, (constf)(u), opinv_l))
+    &*& !!forall(elems, (diag2)(equals, (constf)(u), opinv_r))
     // op is associative
     &*& !!forall(prodmap(pair,prodmap(pair,elems,elems),elems),
             (onlpair3)((checkassoc)(op)))
@@ -135,25 +135,25 @@ predicate fingrp<t>(list<t> elems, t u, fixpoint(t,t,t) op,
 lemma void fingrp_unit_unique<t>(t x)
     requires [?f]fingrp(?elems, ?u, ?op, ?inv)
         &*&  !!mem(x,elems)
-        &*&  (forall(elems, (diag)(equals,id,(op)(x)))
-             || forall(elems, (diag)(equals,id,(flip)(op,x))))
+        &*&  (forall(elems, (diag2)(equals,id,(op)(x)))
+             || forall(elems, (diag2)(equals,id,(flip)(op,x))))
         ;
     ensures  [ f]fingrp( elems,  u,  op,  inv)
         &*&  x == u;
 {
     if(x != u) {
         open [f]fingrp(_,_,_,_);
-        if(forall(elems, (diag)(equals,id,(op)(x)))) {
-            forall_elim(elems, (diag)(equals,id,(op)(x)), u);
+        if(forall(elems, (diag2)(equals,id,(op)(x)))) {
+            forall_elim(elems, (diag2)(equals,id,(op)(x)), u);
             assert op(x,u) == u;
-            forall_elim(elems, (diag)(equals,id,(flip)(op,u)), x);
+            forall_elim(elems, (diag2)(equals,id,(flip)(op,u)), x);
             assert false;
         }
 
-        if(forall(elems, (diag)(equals,id,(flip)(op,u)))) {
-            forall_elim(elems, (diag)(equals,id,(flip)(op,x)), u);
+        if(forall(elems, (diag2)(equals,id,(flip)(op,u)))) {
+            forall_elim(elems, (diag2)(equals,id,(flip)(op,x)), u);
             assert op(u,x) == u;
-            forall_elim(elems, (diag)(equals,id,(op)(u)), x);
+            forall_elim(elems, (diag2)(equals,id,(op)(u)), x);
             assert false;
         }
     }
@@ -183,14 +183,14 @@ lemma void fingrp_inv_unique<t>(t x, t y)
                 pair(pair(inv(x),x),y));
         assert op(inv(x),op(x,y)) == op(op(inv(x),x),y);
 
-        forall_elim(elems, (diag)(equals, (constf)(u),
-            (diag)(op,inv,id)),x);
+        forall_elim(elems, (diag2)(equals, (constf)(u),
+            (diag2)(op,inv,id)),x);
         assert op(inv(x),op(x,y)) == op(u,y);
 
-        forall_elim(elems, (diag)(equals,id,(op)(u)),y);
+        forall_elim(elems, (diag2)(equals,id,(op)(u)),y);
         assert op(u,y) == y;
 
-        forall_elim(elems, (diag)(equals,id,(flip)(op,u)),inv(x));
+        forall_elim(elems, (diag2)(equals,id,(flip)(op,u)),inv(x));
         assert op(inv(x),u) == inv(x);
 
         assert false;
