@@ -146,7 +146,7 @@ lemma void split_at_step<t>(nat n0, list<t> l, list<t> pref, t x, list<t> suff)
     }
 }
 
-lemma void ints_sum_limits(int32_t* arr, int n)
+lemma void ints_sum_limits(int* arr, int n)
     requires [?f]arr[..n] |-> ?l;
     ensures  [ f]arr[..n] |->  l
         &*&  sum(l) >= -length(l)*(pow_nat(2,N31))
@@ -171,7 +171,7 @@ int64_t abs64(int64_t x)
     return x >= 0 ? x : -x;
 }
 
-int fulcrum(int32_t* arr, int n)
+int fulcrum(int* arr, int n)
     /*@ requires [?f]arr[..n] |-> ?l; @*/
     /*@ ensures  [ f]arr[..n] |->  l
             &*&  result >= 0 &*& result <= length(l)
