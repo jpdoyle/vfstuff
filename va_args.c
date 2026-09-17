@@ -3,14 +3,18 @@
 #include <string.h>
 #include <malloc.h>
 /*@ #include "util.gh" @*/
+/*@ #include <target.gh> @*/
 
 /*@
 
+fixpoint vararg int_vararg(int v) { return vararg_int(sizeof(int), v); }
+
 predicate int_of_vararg(vararg va; int x) =
     switch(va) {
-    case vararg_int(y):  return x == y;
-    case vararg_uint(y): return x == 0 &*& false;
+    case vararg_int(size, y):  return x == y;
+    case vararg_uint(size, y): return x == 0 &*& false;
     case vararg_pointer(p):  return x == 0 &*& false;
+    case vararg_double(d):  return x == 0 &*& false;
     };
 
 predicate varargs_ints(list<vararg> va; list<int> out) =
@@ -23,14 +27,14 @@ predicate varargs_ints(list<vararg> va; list<int> out) =
 
 lemma void make_varargs_ints(list<int> l)
     requires true;
-    ensures  varargs_ints(map(vararg_int,l),l);
+    ensures  varargs_ints(map(int_vararg,l),l);
 {
     switch(l) {
     case nil:
     case cons(x,xs):
         make_varargs_ints(xs);
-        close int_of_vararg(vararg_int(x),_);
-        close varargs_ints(map(vararg_int,l),l);
+        close int_of_vararg(vararg_int(sizeof(int),x),_);
+        close varargs_ints(map(int_vararg,l),l);
     }
 }
 
@@ -131,6 +135,7 @@ add_em_up (int count,...)
   va_list ap;
   int i, acc;
 
+  //@ case_split_sizeof_int();
   va_start (ap, count);         /* Initialize the argument list. */
   /*@ assert count |-> length(is); @*/
 

@@ -25,7 +25,7 @@ lemma_auto void bi_block_inv()
     ALREADY_PROVEN()
     open bi_block(_,_,_,_,_,_);
     assert [f]b->next |-> ?next;
-    assert [f]b->chunks[..N_INTS] |-> ?my_chunks;
+    assert b->chunks[..N_INTS] |-> ?my_chunks;
     if(f > 1) {
         integer_unique(b->chunks);
         assert false;
