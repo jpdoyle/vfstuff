@@ -33,8 +33,7 @@ lemma_auto void string_limits_auto()
 
 lemma_auto void chars_limits_auto()
     requires [?f]chars(?array, ?n, ?cs)
-        &*&  (char *)0 <= array
-        &*&  array <= (char *)UINTPTR_MAX;
+        &*&  pointer_within_limits(array) == true;
     ensures  [ f]chars( array,  n,  cs)
         &*&  (char *)0 <= array
         &*&  array + n <= (char *)UINTPTR_MAX;
