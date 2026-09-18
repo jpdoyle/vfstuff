@@ -186,9 +186,8 @@ lemma void bi_block_disjoint(big_int_block* a,big_int_block* b)
                 open [f2]bi_block(b_left,bl_last,_,_,bptrs_left,_);
                 assert [f2]b_left->next |-> ?bl_next;
                 if(b_left == a) {
-                    open big_int_block_next(a,_);
-                    open big_int_block_next(b_left,_);
-                    //merge_fractions pointer(&a->next,_);
+                    merge_fractions big_int_block_next(a, _);
+                    open big_int_block_next(a, _);
                     pointer_unique(&a->next);
                     assert false;
                 }
