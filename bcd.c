@@ -380,9 +380,11 @@ uint32_t bcd_add_u32(uint32_t x,uint32_t y)
             assert pow_nat(10,succ(n)) == 10*pow_nat(10,n);
             mul_distr(10*pow_nat(10,n), loop_xv/10, loop_yv/10 + carry);
             mul_distr(10*pow_nat(10,n), loop_yv/10, carry);
+            assert [f1]bcd_int(x/16,?nx0,?xle0,?xv_rest2);
+            assert [f2]bcd_int(y/16,?ny0,?yle0,?yv_rest2);
             note_eq(xv + yv,  retv
                 + pow_nat(10,n)*ret_digit
-                + (xv_rest + yv_rest + carry)
+                + (xv_rest2 + yv_rest2 + carry)
                     *pow_nat(10,succ(n)));
             mul_distr(10*pow_nat(10,n), carry, loop_xv/10 + loop_yv/10);
             mul_distr(10*pow_nat(10,n), loop_xv/10, loop_yv/10);
