@@ -153,12 +153,12 @@ lemma void ullongs_join(unsigned long long *a)
 lemma_auto void u_llong_buffer_auto()
     requires [?f]u_llong_buffer(?start,?len,?cap,?vals);
     ensures  [ f]u_llong_buffer( start, len, cap, vals)
-        &*&  f <= 1 &*& start != 0
+        &*&  start != 0
         &*&  len >= 0 &*& cap > 0 &*& length(vals) == len
         ;
 {
     open u_llong_buffer(_,_,_,_);
-    if(f > 1) {
+    if(f > 1 && len > 0) {
         open ullongs(start,_,_);
         u_llong_integer_unique(start);
     }
