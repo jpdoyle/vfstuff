@@ -129,9 +129,11 @@ void list_append(List** a, List* b)
                                  append(p_vals,b_vals)); @*/
         /*@ decreases length(p_vals); @*/
     {
+        //@ open linked_list(loop_p, p_vals);
         if(*p) {
             p = &(*p)->next;
         } else {
+            //@ close linked_list(loop_p, p_vals);
             *p = b;
             break;
         }
