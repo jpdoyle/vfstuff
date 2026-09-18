@@ -219,6 +219,21 @@ void lorgint_reduce_inplace(lorgint* li)
                 ,  pow_nat(base,noi(orig_n))
                     *(rem + base*(div + poly_eval(next_limbs, base))));
 
+            // euclid: val + orig_carry == base*div + rem  (from euclid_div_sol)
+            append_assoc(orig_minimized_limbs,orig_zero_limbs,{rem});
+
+            mul_distr(pow_nat(base,noi(orig_n)), rem, base*(div + poly_eval(next_limbs, base)));
+            mul_distr(base, div, poly_eval(next_limbs, base));
+            mul_distr(pow_nat(base,noi(orig_n))*base, div, poly_eval(next_limbs, base));
+            note_eq( poly_eval(append(orig_minimized_limbs,orig_zero_limbs),base)
+                   + pow_nat(base,noi(orig_n))*(rem + base*(div + poly_eval(next_limbs, base)))
+                   ,  poly_eval(append(append(orig_minimized_limbs,orig_zero_limbs),cons(rem,nil)),base)
+                   +  pow_nat(base,noi(orig_n))*base*poly_eval(next_limbs,base)
+                   +  pow_nat(base,noi(orig_n))*base*div );
+
+            pow_times2(base,noi(orig_n+1),orig_n);
+            mul_3var(pow_nat(base,noi(orig_n)), base, div);
+
         } @*/
 
     }
