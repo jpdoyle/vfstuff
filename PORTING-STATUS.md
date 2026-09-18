@@ -31,11 +31,13 @@ via its flake `packages.verifast`). Verify a single file with:
    `integers_(void*, size, signed, count, vs)` family for typedef'd
    element types like int32_t.
 
-## Passing (verified with vfcheck.sh)
+## Passing (24 files, verified with vfcheck.sh)
 
 core.c div.c mul.c poly.c bitops.c b64.c nats.c lists.c binsearch.c
-isort.c termination.c test.c fingrp.c fulcrum.c euler1.c euler2.c
-sorting.gh div.gh mul.gh numtheo.gh poly.gh and everything they guard.
+isort.c termination.c test.c fingrp.c fulcrum.c euler1.c euler2.c ll.c
+crypto/chacha20.c exercises/isort-exercises.c exercises/sort_exercises.c
+lorg2/lorgint.c p25519/p25519.c p25519/p512m32p1.c p25519/p569_generated.c
+(sorting.gh div.gh mul.gh numtheo.gh poly.gh and everything they guard).
 
 ## Still failing, with what each needs
 
@@ -55,7 +57,7 @@ sorting.gh div.gh mul.gh numtheo.gh poly.gh and everything they guard.
 | lambda.c | union_variant/field_ptr chunk family | port to the new union-predicate shape |
 | bigint.c | `pointer_within_limits(ptr_add(ret,1))` in hex_of_bytes caller | derive via malloc-block limits lemma |
 | bigint/fibber.c | `chars_(x_hex, numbytes0, _)` chunk after the b64.h contract edits | update the caller to the new bytes_of_hex contract (`malloc_block(result, ?blk_len)`) |
-| ll.c (list_append loop) | `pointer_within_limits(field_ptr(loop_p, List_next_offset))` for `p = &(*p)->next` | needs linked_list pred to carry node pointer-limit facts (malloc_block_limits lemma call in a helper lemma) |
+| ll.c | FIXED: open the linked_list chunk in the loop body (produces the field_pointer_within_limits facts) + close in the else branch | done |
 | hillelogram/leftpad.c, unique.c | `chars_limits` needs `pointer_within_limits(ret+i)` | same pointer-limits class |
 | va_args.c | `va_arg(ap,int)` needs the va_list args head `vararg_int(sizeof(int),k)`; the case fork on the head vararg happens but the chunk shape doesn't match | needs the loop's `varargs_ints`/`int_of_vararg` opens arranged so the head vararg is case-split before `va_arg` |
 | exercises/ll-exercises.c | `Loop invariant required` | homework file (unsolved exercises); needs the student-style invariant, cf. ll.c list_length |
