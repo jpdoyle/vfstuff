@@ -108,6 +108,7 @@ char* read_hex_string()
 {
     char* ret = read_line();
     /*@ assert string(ret,?cs); @*/
+    /*@ string_limits(ret); @*/
     /*@ TRIVIAL_LIST(cs) @*/
     if(is_hex_string(ret)) {
         /*@ if(safe_head(cs) == some('-')) {

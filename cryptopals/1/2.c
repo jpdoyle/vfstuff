@@ -13,7 +13,7 @@ int main(void) {
     char* inbufs[2] = {
         calloc(n_chars[0]+1,sizeof(char)),
         calloc(n_chars[1]+1,sizeof(char))
-    }
+    };
 
     if(!inbufs[0]) { abort(); }
     if(!inbufs[1]) { abort(); }
