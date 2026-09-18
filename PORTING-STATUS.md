@@ -58,7 +58,7 @@ sorting.gh div.gh mul.gh numtheo.gh poly.gh and everything they guard.
 | hillelogram/leftpad.c, unique.c | `chars_limits` needs `pointer_within_limits(ret+i)` | same pointer-limits class |
 | va_args.c | `va_arg(ap,int)` needs the va_list args head `vararg_int(sizeof(int),k)`; the case fork on the head vararg happens but the chunk shape doesn't match | needs the loop's `varargs_ints`/`int_of_vararg` opens arranged so the head vararg is case-split before `va_arg` |
 | exercises/ll-exercises.c | `Loop invariant required` | homework file (unsolved exercises); needs the student-style invariant, cf. ll.c list_length |
-| mergesort.c | verifast-master arrays.gh(9) no-match via the packaged bin | investigate: the packaged arrays.gh is verifast master's; repo has its own? |
+| mergesort.c | verifast-master arrays.gh ints_limits now requires `(uintptr_t)pxs <= ptr_provenance_max_addr(...)` (provenance-aware) and can't apply to the uninit `ints_` chunk of the malloc'd out buffer; plus a new `(li+ri) <= UINTPTR_MAX` overflow check on the merge loop index | port merge/merge_sort to the provenance-aware arrays.gh: derive the malloc-range facts (object_pointer_within_limits from malloc) and add `ln+rn <= UINTPTR_MAX` to merge's requires (caller proves it from the ints_limits pointer-range fact) |
 | test.c (partially) | final `0xffffffff` value needs a nonlinear modulo step z3 4.15 won't do (see comment in file) | would need a truncate_unsigned uniqueness lemma routed through lemma calls |
 
 ## Packaging notes
