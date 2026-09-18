@@ -175,7 +175,7 @@ void big_int_tiny_mul(int s, big_int* x)
                 }
 
             } @*/
-            *(&i->chunks[0] + block_i) *= s;
+            i->chunks[block_i] *= s;
             /*@ assert i->chunks[block_i+1..N_INTS] |->
                     ?rest_chunks; @*/
 
@@ -222,7 +222,9 @@ void big_int_tiny_mul(int s, big_int* x)
         } @*/
 
     } while(i);
-    /*@ note_eq(-(s*v),s*(-v)); @*/
+    //@ mul_distr_sub_l(s, 0, v);
+    //@ assert s*(0 - v) == 0 - s*v;
+    //@ note_eq(-(s*v),s*(-v));
 }
 
 big_int* big_int_small_mul(big_int* dst,big_int* scratch,int s,const big_int* x)
@@ -404,7 +406,9 @@ big_int* big_int_small_mul(big_int* dst,big_int* scratch,int s,const big_int* x)
     /*@ division_unique(abs_s,pow_nat(2,N0),abs_s,0); @*/
 
     if(s < 0) {
-        /*@ note_eq(s*v,-((-s)*v)); @*/
+        //@ mul_distr_sub_r(0, s, v);
+        //@ assert (0 - s)*v == 0*v - s*v;
+        //@ note_eq(s*v,-((-s)*v));
         big_int_negate(ret);
     }
     if(free_scratch) free_big_int_inner(scratch);
