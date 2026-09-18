@@ -223,8 +223,8 @@ char* big_int_to_hex(const big_int* s)
             /*@ int chunk_chars_left = CHUNK_BITS/4; @*/
             /*@ int prev_len = len; @*/
             /*@ division_unique(CHUNK_BITS,4,CHUNK_BITS/4,0); @*/
-            int32_t chunk_bits_left = (int32_t)(int)CHUNK_BITS;
-            int32_t chunk = *((&b->chunks[0])+block_i);
+            int chunk_bits_left = (int)(int)CHUNK_BITS;
+            int chunk = *((&b->chunks[0])+block_i);
             /*@ int orig_chunk = chunk; @*/
             for(; chunk_bits_left; chunk_bits_left -= 4, chunk >>= 4)
                 /*@ requires chunk >= 0

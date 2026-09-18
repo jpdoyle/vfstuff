@@ -25,7 +25,7 @@ lemma_auto void bi_block_inv()
     ALREADY_PROVEN()
     open bi_block(_,_,_,_,_,_);
     assert [f]b->next |-> ?next;
-    assert b->chunks[..N_INTS] |-> ?my_chunks;
+    assert [f]b->chunks[..N_INTS] |-> ?my_chunks;
     if(f > 1) {
         integer_unique(b->chunks);
         assert false;
@@ -316,7 +316,7 @@ big_int* new_big_int_zero()
     return ret;
 }
 
-void big_int_set(big_int* x,int32_t v)
+void big_int_set(big_int* x,int v)
     /*@ requires bi_big_int(x, _,_,_); @*/
     /*@ ensures  bi_big_int(x, CARRY_BITS, false, v); @*/
     /*@ terminates; @*/
@@ -330,8 +330,8 @@ void big_int_set(big_int* x,int32_t v)
         bitand_pow_2(abs_v,noi(CHUNK_BITS));
         div_rem(abs_v,pow_nat(2,noi(CHUNK_BITS)));
     } @*/
-    int32_t v1 = (int32_t)(abs_v&((((uint64_t)1)<<CHUNK_BITS)-1));
-    int32_t v2 = (int32_t)(abs_v >> CHUNK_BITS);
+    int v1 = (int)(abs_v&((((uint64_t)1)<<CHUNK_BITS)-1));
+    int v2 = (int)(abs_v >> CHUNK_BITS);
     /*@ assert abs_v == v1 + CHUNK_BASE*v2; @*/
     /*@ assert !!bounded(0,CHUNK_BASE-1,v1); @*/
     /*@ assert !!bounded(0,CHUNK_BASE-1,v2); @*/
@@ -394,7 +394,7 @@ void big_int_set(big_int* x,int32_t v)
     }
 }
 
-big_int* new_big_int_from(int32_t v)
+big_int* new_big_int_from(int v)
     /*@ requires true; @*/
     /*@ ensures  bi_big_int(result, CARRY_BITS, false, v); @*/
     /*@ terminates; @*/
@@ -408,8 +408,8 @@ big_int* new_big_int_from(int32_t v)
         bitand_pow_2(abs_v,noi(CHUNK_BITS));
         div_rem(abs_v,pow_nat(2,noi(CHUNK_BITS)));
     } @*/
-    int32_t v1 = (int32_t)(abs_v&((((uint64_t)1)<<CHUNK_BITS)-1));
-    int32_t v2 = (int32_t)(abs_v >> CHUNK_BITS);
+    int v1 = (int)(abs_v&((((uint64_t)1)<<CHUNK_BITS)-1));
+    int v2 = (int)(abs_v >> CHUNK_BITS);
     /*@ assert abs_v == v1 + CHUNK_BASE*v2; @*/
 
     big_int* ret = malloc(sizeof(big_int));

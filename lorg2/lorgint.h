@@ -10,22 +10,22 @@
 
 typedef struct lorgint_t {
     bool    is_negative;
-    int32_t base;
-    int32_t minval;
-    int32_t maxval;
+    int base;
+    int minval;
+    int maxval;
     /* needed because verifast doesn't support subtracting pointers */
     /*@ int  size; @*/
     /*@ int  capacity; @*/
-    int32_t *start;
-    int32_t *end;
-    int32_t *cap;
+    int *start;
+    int *end;
+    int *cap;
 } lorgint;
 
 /*@
 
 predicate lorgint_view(lorgint* li;
         int base, bool is_negative, int minval, int maxval,
-        int32_t* start, int capacity,
+        int* start, int capacity,
         list<int> limbs, int val)
     =   li->base |-> base &*& li->minval |-> minval
     &*& li->maxval |-> maxval
@@ -47,7 +47,7 @@ predicate lorgint_view(lorgint* li;
 
 predicate lorgint_malloced(lorgint* li;
         int base, bool is_negative, int minval, int maxval,
-        int32_t* start, int cap,
+        int* start, int cap,
         list<int> limbs, int val)
     =   lorgint_view(li,base,is_negative,minval,maxval,start,cap,limbs,val)
     &*& malloc_block_ints(start,cap)
@@ -233,7 +233,7 @@ lemma void base_conversion(nat m1, nat m2, int b_orig, int b, list<int> limbs, i
 
   @*/
 
-lorgint* lorgint_new(int32_t base, int32_t orig_base, int32_t* arr,
+lorgint* lorgint_new(int base, int orig_base, int* arr,
         size_t n);
     /*@ requires base > 1 &*&  [?f]arr[..n] |-> ?orig_limbs
             &*&  orig_base > 1; @*/

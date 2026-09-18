@@ -13,9 +13,9 @@ void lorgint_reduce_inplace(lorgint* li)
             ; @*/
     /*@ terminates; @*/
 {
-    int32_t *p;
+    int *p;
     int64_t carry = 0;
-    int32_t *non_zero_end = li->start;
+    int *non_zero_end = li->start;
 
     /*@ int len = li->size; @*/
     /*@ int extra_cap = li->capacity - len; @*/
@@ -35,7 +35,7 @@ void lorgint_reduce_inplace(lorgint* li)
                 &*&   li->end |-> ?end
                 &*&   end[..extra_cap] |-> _
                 &*&   li->size |-> len
-                &*&   end + extra_cap <= (int32_t*)UINTPTR_MAX
+                &*&   end + extra_cap <= (int*)UINTPTR_MAX
 
                 &*&   len + extra_cap == cap
                 &*&   li->base |-> base
@@ -73,7 +73,7 @@ void lorgint_reduce_inplace(lorgint* li)
         /*@ if(n == len) open ints(start+n,len-n,_); @*/
         /*@ open ints(p,_,_); @*/
         int64_t q;
-        int32_t r;
+        int r;
 
         if(p == li->end) {
             /*@ if(extra_cap <= 0) { assert false; } @*/
@@ -101,7 +101,7 @@ void lorgint_reduce_inplace(lorgint* li)
 
         euclid_divide_64_32(res,li->base,&q,&r);
         int64_t div = q;
-        int32_t rem = r;
+        int rem = r;
 
         *p = rem;
         carry = div;
@@ -260,7 +260,7 @@ void lorgint_reduce_inplace(lorgint* li)
                     &*&   li->end |-> ?end
                     &*&   end[..extra_cap] |-> _
                     &*&   li->size |-> len
-                    &*&   end + extra_cap <= (int32_t*)UINTPTR_MAX
+                    &*&   end + extra_cap <= (int*)UINTPTR_MAX
 
                     &*&   len + extra_cap == cap
                     &*&   li->base |-> base
@@ -310,7 +310,7 @@ void lorgint_reduce_inplace(lorgint* li)
             /*@ if(n == len) open ints(start+n,len-n,_); @*/
             /*@ open ints(p,_,_); @*/
             int64_t q;
-            int32_t r;
+            int r;
 
             if(p == li->end) {
                 /*@ if(extra_cap <= 0) { assert false; } @*/
@@ -372,7 +372,7 @@ void lorgint_reduce_inplace(lorgint* li)
 
             euclid_divide_64_32(res,li->base,&q,&r);
             int64_t div = q;
-            int32_t rem = r;
+            int rem = r;
 
             *p = rem;
             carry = div;

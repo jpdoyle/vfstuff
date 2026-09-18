@@ -5,7 +5,7 @@
 /*@ #include <arrays.gh> @*/
 /*@ #include "../div.gh" @*/
 
-static int32_t max32(int32_t x, int32_t y)
+static int max32(int x, int y)
     /*@ requires true; @*/
     /*@ ensures  result == max_of(x,y); @*/
     /*@ terminates; @*/
@@ -13,7 +13,7 @@ static int32_t max32(int32_t x, int32_t y)
     return x > y ? x : y;
 }
 
-static int32_t min32(int32_t x, int32_t y)
+static int min32(int x, int y)
     /*@ requires true; @*/
     /*@ ensures  result == min_of(x,y); @*/
     /*@ terminates; @*/
@@ -21,7 +21,7 @@ static int32_t min32(int32_t x, int32_t y)
     return x < y ? x : y;
 }
 
-static void euclid_divide(int32_t D, int32_t d, int32_t* q, int32_t* r)
+static void euclid_divide(int D, int d, int* q, int* r)
     /*@ requires d > 0 &*& *q |-> _ &*& *r |-> _; @*/
     /*@ ensures  [_]euclid_div_sol(D,d,euclid_div(D,d),euclid_mod(D,d))
             &*&  *q |-> euclid_div(D,d) &*& *r |-> euclid_mod(D,d); @*/
@@ -34,8 +34,8 @@ static void euclid_divide(int32_t D, int32_t d, int32_t* q, int32_t* r)
         div_shrinks(D,d);
     } @*/
 
-    int32_t div = D/d;
-    int32_t rem = D%d;
+    int div = D/d;
+    int rem = D%d;
     if(rem < 0) {
         rem += d;
         div -= 1;
@@ -44,7 +44,7 @@ static void euclid_divide(int32_t D, int32_t d, int32_t* q, int32_t* r)
     *r = rem;
 }
 
-static void euclid_divide_64_32(int64_t D, int32_t d, int64_t* q, int32_t* r)
+static void euclid_divide_64_32(int64_t D, int d, int64_t* q, int* r)
     /*@ requires d > 0 &*& *q |-> _ &*& *r |-> _; @*/
     /*@ ensures  [_]euclid_div_sol(D,d,euclid_div(D,d),euclid_mod(D,d))
             &*&  *q |-> euclid_div(D,d) &*& *r |-> euclid_mod(D,d); @*/
@@ -58,7 +58,7 @@ static void euclid_divide_64_32(int64_t D, int32_t d, int64_t* q, int32_t* r)
     } @*/
 
     int64_t div = D/d;
-    int32_t rem = (int32_t)(D%d);
+    int rem = (int)(D%d);
     if(rem < 0) {
         rem += d;
         div -= 1;

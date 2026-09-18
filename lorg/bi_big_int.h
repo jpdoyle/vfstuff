@@ -10,7 +10,7 @@
 
 #define CACHE_LINE 64
 // fill out a 64-byte cache line
-//#define N_INTS ((CACHE_LINE-2*sizeof(void*))/(sizeof(uint32_t)))
+//#define N_INTS ((CACHE_LINE-2*sizeof(void*))/(sizeof(uint)))
 //#define N_INTS 12
 #define N_INTS 44
 // number of bits to reserve for carries
@@ -22,7 +22,7 @@
 typedef struct big_int_block {
     struct big_int_block* prev;
     struct big_int_block* next;
-    int32_t chunks[N_INTS];
+    int chunks[N_INTS];
 } big_int_block;
 
 typedef big_int_block* big_int_block_ptr;
@@ -41,7 +41,7 @@ predicate bi_block_opt
          big_int_block* first_prev,
          big_int_block* last_next,
          list<big_int_block*> ptrs,
-         list<int32_t> chunks) =
+         list<int> chunks) =
     first == 0
     ? last == 0 &*& first_prev == 0 &*& last_next == 0
     &*& ptrs == nil &*& chunks == nil
@@ -53,7 +53,7 @@ predicate bi_block(big_int_block* first,
                    big_int_block* first_prev,
                    big_int_block* last_next,
                    list<big_int_block*> ptrs,
-                   list<int32_t> chunks) =
+                   list<int> chunks) =
         malloc_block_big_int_block(first)
         //struct_big_int_block_padding(first)
     &*& first > 0
@@ -194,12 +194,12 @@ big_int* new_big_int_zero();
     /*@ ensures  bi_big_int(result, CARRY_BITS, false, 0); @*/
     /*@ terminates; @*/
 
-big_int* new_big_int_from(int32_t v);
+big_int* new_big_int_from(int v);
     /*@ requires true; @*/
     /*@ ensures  bi_big_int(result, CARRY_BITS, false, v); @*/
     /*@ terminates; @*/
 
-void big_int_set(big_int* x,int32_t v);
+void big_int_set(big_int* x,int v);
     /*@ requires bi_big_int(x, _,_,_); @*/
     /*@ ensures  bi_big_int(x, CARRY_BITS, false, v); @*/
     /*@ terminates; @*/
@@ -278,7 +278,7 @@ void big_int_pluseq(big_int* a,const big_int* b);
             :    [ bf]bi_big_int(b, b_carry, b_under, bv); @*/
     /*@ terminates; @*/
 
-big_int* big_int_small_mul(big_int* dst,big_int* scratch,int32_t s,
+big_int* big_int_small_mul(big_int* dst,big_int* scratch,int s,
                            const big_int* x);
     /*@ requires [?f]bi_big_int(x,CARRY_BITS,false,?v)
             &*&  (dst != 0 ? bi_big_int(dst,CARRY_BITS,false,0) : emp)
@@ -290,7 +290,7 @@ big_int* big_int_small_mul(big_int* dst,big_int* scratch,int32_t s,
             ; @*/
     /*@ terminates; @*/
 
-//big_int* big_int_small_mul(/*big_int* dst,*/int32_t s,const big_int* x);
+//big_int* big_int_small_mul(/*big_int* dst,*/int s,const big_int* x);
 //    /*@ requires [?f]bi_big_int(x,CARRY_BITS,false,?v); @*/
 //    /*@ ensures  [ f]bi_big_int(x,CARRY_BITS,false, v)
 //            &*&  bi_big_int(result,CARRY_BITS,false,s*v); @*/

@@ -57,9 +57,9 @@ big_int* big_int_from_hex(const char* s)
     ret->last = new_block();
     ret->first = ret->last;
 
-    /*@ close exists<list<int32_t> >(nil); @*/
-    /*@ close exists<int32_t>(0); @*/
-    /*@ int32_t ghost_block_shift = 0; @*/
+    /*@ close exists<list<int> >(nil); @*/
+    /*@ close exists<int>(0); @*/
+    /*@ int ghost_block_shift = 0; @*/
     /*@ note_eq(noi(N_INTS),succ(noi(N_INTS-1))); @*/
 
     for(s_i = strlen(s),block_i = 0,block_shift = 0; s_i > 0; --s_i)
@@ -73,8 +73,8 @@ big_int* big_int_from_hex(const char* s)
 
                 &*&  base_n(hex_chars(),reverse(loop_cs),_,?loop_val)
 
-                &*&  exists<list<int32_t> >(?pref)
-                &*&  exists<int32_t>(?blk)
+                &*&  exists<list<int> >(?pref)
+                &*&  exists<int>(?blk)
                 &*&  let(repeat(0,noi(N_INTS-1-block_i)),?suff)
                 &*&  chunks
                     == append(pref, cons(blk,suff))
@@ -129,9 +129,9 @@ big_int* big_int_from_hex(const char* s)
             assert reverse(loop_cs) == cons(c,reverse(cs_pref));
             assert !!mem(c,hex_chars());
         } @*/
-        /* @ int32_t *block = &ret->last->chunks[0]; @*/
+        /* @ int *block = &ret->last->chunks[0]; @*/
         /* @ ints_split(block,block_i); @*/
-        int32_t nib = nib_of_hex(s[s_i-1]);
+        int nib = nib_of_hex(s[s_i-1]);
         /*@ close [f]chars(s+s_i-1,1,_); @*/
 
         /*@ {
@@ -198,7 +198,7 @@ big_int* big_int_from_hex(const char* s)
             assert (blk|(nib<<block_shift))
                 == blk+nib*pow_nat(2,noi(block_shift));
             note( (blk|(nib<<block_shift)) >= 0);
-            close exists<int32_t>(blk|(nib<<block_shift));
+            close exists<int>(blk|(nib<<block_shift));
         } @*/
 
         *(&ret->last->chunks[0]+block_i) |= (nib<<block_shift);
@@ -212,7 +212,7 @@ big_int* big_int_from_hex(const char* s)
 
             if(!forall(next_chunks,
                 (bounded)(0, upper))) {
-                int32_t cx = not_forall(next_chunks,
+                int cx = not_forall(next_chunks,
                     (bounded)(0,upper));
                 if(mem(cx,pref) || mem(cx,suff)) {
                     forall_elim(chunks,
@@ -223,7 +223,7 @@ big_int* big_int_from_hex(const char* s)
             }
             assert !!forall(next_chunks, (bounded)(0,upper));
             if(!forall(next_chunks, (bounded)(-upper, upper))) {
-                int32_t cx = not_forall(next_chunks,
+                int cx = not_forall(next_chunks,
                     (bounded)(-upper,upper));
                 forall_elim(next_chunks,
                         (bounded)(0,upper),
@@ -330,10 +330,10 @@ big_int* big_int_from_hex(const char* s)
         /*@ big_int_block* fresh_block = 0; @*/
         /*@ bool fresh_chunk = false; @*/
         if(block_shift == (size_t)CHUNK_BITS) {
-            /*@ open exists<int32_t>(?v); @*/
+            /*@ open exists<int>(?v); @*/
             /*@ {
                 fresh_chunk = true;
-                close exists<int32_t>(0);
+                close exists<int>(0);
                 open exists(pref);
             } @*/
             ++block_i;
@@ -348,7 +348,7 @@ big_int* big_int_from_hex(const char* s)
                     assert ret->last |-> ?next;
                     fresh_block = next;
                     close bi_block(next,next,last,_,_,_);
-                    close exists<list<int32_t> >(nil);
+                    close exists<list<int> >(nil);
                 } @*/
             } else { /*@ {
                 cons_head_tail(suff);

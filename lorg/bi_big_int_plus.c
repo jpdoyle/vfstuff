@@ -14,7 +14,7 @@
 
 INLINE big_int_block*
 bi_block_reduce(big_int_block* first, big_int_block* last,
-        bool flip_sign, int32_t* final_carry)
+        bool flip_sign, int* final_carry)
     /*@ requires bi_block(first, last,?bprev, 0, _,
                     ?chunks)
             &*&  !!forall(chunks,
@@ -46,7 +46,7 @@ bi_block_reduce(big_int_block* first, big_int_block* last,
     /*@ ALREADY_PROVEN() @*/
     /*@ note(CHUNK_BASE > 1); @*/
     big_int_block* i = first;
-    int32_t carry = 0;
+    int carry = 0;
 
     /*@ nat len_bits = npow2(length(chunks)); @*/
     /*@ int extra_blocks = 1; @*/
@@ -138,7 +138,7 @@ bi_block_reduce(big_int_block* first, big_int_block* last,
             /* @ ALREADY_PROVEN() @*/
             /*@ open ints(&i->chunks[0]+chunk_i,_,_); @*/
             /*@ integer_limits(&i->chunks[0]+chunk_i); @*/
-            int32_t new_chunk = *(&i->chunks[0]+chunk_i);
+            int new_chunk = *(&i->chunks[0]+chunk_i);
             if(flip_sign) new_chunk = -new_chunk;
             /*@ int orig_chunk = new_chunk; @*/
             /*@ {
@@ -221,7 +221,7 @@ bi_block_reduce(big_int_block* first, big_int_block* last,
         /*@ int offset = 0; @*/
         /*@ int final_chunk_carry = carry; @*/
         if(i == last) {
-            int32_t outer_carry = (flip_sign ? -(*final_carry)
+            int outer_carry = (flip_sign ? -(*final_carry)
                                              : *final_carry);
             /*@ offset = outer_carry; @*/
             carry += outer_carry;
@@ -524,7 +524,7 @@ void big_int_reduce(big_int* p)
     /*@ terminates; @*/
 {
     /*@ ALREADY_PROVEN() @*/
-    int32_t carry_over = 0;
+    int carry_over = 0;
 
     /*@ open bi_big_int(_,_,_,_); @*/
     /*@ assert bi_block(_,_,0,0,_,?chunks); @*/

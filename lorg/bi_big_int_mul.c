@@ -75,7 +75,7 @@ lemma void div_shift(int x,int b, nat n)
 
   @*/
 
-void big_int_tiny_mul(int32_t s, big_int* x)
+void big_int_tiny_mul(int s, big_int* x)
     /*@ requires bi_big_int(x,?carry,?und,?v)
             &*&  let(log_ceil(abs(s)),?lg2)
             &*&  carry >= ion(lg2); @*/
@@ -224,7 +224,7 @@ void big_int_tiny_mul(int32_t s, big_int* x)
     /*@ note_eq(-(s*v),s*(-v)); @*/
 }
 
-big_int* big_int_small_mul(big_int* dst,big_int* scratch,int32_t s,const big_int* x)
+big_int* big_int_small_mul(big_int* dst,big_int* scratch,int s,const big_int* x)
     /*@ requires [?f]bi_big_int(x,CARRY_BITS,false,?v)
             &*&  (dst != 0 ? bi_big_int(dst,CARRY_BITS,false,0) : emp)
             &*&  (scratch != 0 ? bi_big_int(scratch,_,_,_) : emp)
@@ -293,7 +293,7 @@ big_int* big_int_small_mul(big_int* dst,big_int* scratch,int32_t s,const big_int
             note_eq(shifted, abs_s/pow_nat(mask+1,noi(shift-1)));
         } @*/
 
-        int32_t coeff = (int32_t)(shifted&mask);
+        int coeff = (int)(shifted&mask);
         big_int* term = big_int_clone_into(scratch,x);
         /*@ bi_big_int_unique(term,ret); @*/
         big_int_tiny_mul(1<<(CARRY_BITS-2),ret);
@@ -424,7 +424,7 @@ big_int* big_int_mul(const big_int* x,const big_int* y)
     big_int* scratch1 = new_big_int_zero();
     /*@ shiftleft_def(1,noi(CHUNK_BITS)); @*/
     /*@ pow_monotonic(2,noi(CHUNK_BITS),N31); @*/
-    int32_t chunk_base = (1<<CHUNK_BITS);
+    int chunk_base = (1<<CHUNK_BITS);
 
     /*@ open bi_big_int(x,_,_,_); @*/
     /*@ assert [xf]x->first |-> ?first; @*/
@@ -490,7 +490,7 @@ big_int* big_int_mul(const big_int* x,const big_int* y)
         {
             /*@ ints_split(&i->chunks[0],block_i-1); @*/
             /*@ open ints((&i->chunks[0]) + block_i-1,_,_); @*/
-            int32_t v = i->chunks[block_i-1];
+            int v = i->chunks[block_i-1];
             big_int* new_ret = big_int_small_mul(scratch0,scratch1,
                     chunk_base, ret);
             /*@ bi_big_int_unique(ret,new_ret); @*/
