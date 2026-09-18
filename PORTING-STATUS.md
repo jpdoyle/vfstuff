@@ -49,7 +49,8 @@ sorting.gh div.gh mul.gh numtheo.gh poly.gh and everything they guard.
 | lorg/bi_big_int_plus.c, _hex.c | `pointer_within_limits(&field + i)` arithmetic | derive limits via the ints_-family facts (`ints_limits2`) or object_pointer_within_limits |
 | lorg/bi_big_int_hex2.c | `chars_(s, cap, _)` chunk missing after the hex-buffer changes | same class |
 | lorg2/lorgint-reduce.c | euclid_mod/euclid_div rearrangement in the reduce lemma | route through mul_distr/mul_subst_2 like div.c |
-| finfield.c, p25519/p25519_generated.c, p448_generated.c | euclid_mod arithmetic in finfield.gh(110)/(132) | same: lemma-call the euclid_mod/euclid_div facts |
+| finfield.c | DONE: Zp_times/Zp_is_zero fixed (mul_subst + mul_distr_sub_l/r, added to mul.gh). Remaining: primes_below_32's concrete {31,29,23,...} list | the all_no_divide/primality computations need explicit div_rem calls per check (uninterpreted % can't be computed by z3) |
+| p25519/p25519_generated.c, p448_generated.c | finfield.gh(132) euclid_mod facts in generated proofs | same: the machine-generated proofs need per-division div_rem calls |
 | cantbelieve_sort.c | `forall_elim(l, (count_matches)(l_old,l), cx)` at (121): the forall fact is for a differently-shaped list | re-establish `forall(l, (count_matches)(l_old,l))` for the appended list before the elim |
 | lambda.c | union_variant/field_ptr chunk family | port to the new union-predicate shape |
 | bigint.c | `pointer_within_limits(ptr_add(ret,1))` in hex_of_bytes caller | derive via malloc-block limits lemma |

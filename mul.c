@@ -127,6 +127,16 @@ lemma void mul_distr(int x, int y, int z)
     ensures  x*(y + z) == x*y + x*z;
 { }
 
+lemma void mul_distr_sub_r(int x, int y, int z)
+    requires true;
+    ensures  (x - y)*z == x*z - y*z;
+{ }
+
+lemma void mul_distr_sub_l(int x, int y, int z)
+    requires true;
+    ensures  x*(y - z) == x*y - x*z;
+{ }
+
 lemma void mul_subst(int c, int E, int f)
     requires E == f;
     ensures  c*E == c*f;

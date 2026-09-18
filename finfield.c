@@ -105,7 +105,13 @@ ALREADY_PROVEN()
 
     if(tot_r != ab_r) {
         assert p*tot_q + tot_r == a_r*b_r;
+        mul_subst(b_r, a_r, a - p*a_q);
+        mul_subst(a - p*a_q, b_r, b - p*b_q);
         note_eq( p*tot_q + tot_r , (a-p*a_q)*(b - p*b_q));
+        mul_distr_sub_r(a, p*a_q, b - p*b_q);
+        mul_distr_sub_l(a, b, p*b_q);
+        mul_distr_sub_l(p*a_q, b, p*b_q);
+        mul_commutes(p*a_q,b);
         assert p*tot_q + tot_r
             == a*b - (p*a_q)*b - a*(p*b_q) + (p*a_q)*(p*b_q);
         mul_3var(p,a_q,b);
@@ -145,6 +151,8 @@ ALREADY_PROVEN()
         assert a == p*a_q + a_r;
         assert b == p*b_q + b_r;
         note_eq( (p*a_q + a_r)*(p*b_q + b_r) ,  p*ab_q);
+        mul_distr((p*a_q + a_r), p*b_q, b_r);
+        mul_distr(p*a_q, p*b_q, b_r);
         assert (p*a_q)*(p*b_q) + a_r*(p*b_q) + (p*a_q)*b_r + a_r*b_r == p*ab_q;
         mul_3var(p,a_q,p*b_q);
         mul_3var(a_r,p,b_q);
@@ -1626,6 +1634,9 @@ lemma void square_roots_of_one_basic(int p, int x)
     } else {
         assert euclid_mod(x,p) == p-1;
         assert euclid_mod(x*x,p) == euclid_mod((p-1)*(p-1),p);
+        mul_distr_sub_r(p, 1, p - 1);
+        mul_distr_sub_l(p, 1, p - 1);
+        assert (p-1)*(p-1) == p*(p - 2)+1;
         assert euclid_mod(x*x,p) == euclid_mod(p*(p - 2)+1,p);
         euclid_div_unique_intro(p*(p-2)+1,p,p-2,1);
     }
