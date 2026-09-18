@@ -49,6 +49,7 @@ lemma void div_shift(int x,int b, nat n)
     assert pow_nat(b,succ(n))*((x/pow_nat(b,n))/b)
         <= x;
 
+    mul_distr(pow_nat(b,n), b*((x/pow_nat(b,n))/b), (x/pow_nat(b,n))%b);
     note_eq( pow_nat(b,succ(n))*((x/pow_nat(b,n))/b)
         +  pow_nat(b,n)*((x/pow_nat(b,n))%b)
         +  (x%pow_nat(b,n))
