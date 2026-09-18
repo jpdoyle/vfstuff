@@ -212,6 +212,7 @@ int main(void)
             &*& base_n(hex_chars(),reverse(cs),_,
                     fib(noi(orig_n))); @*/
         printf("%s\n",x_hex);
+        //@ malloced_string_to_chars_(x_hex);
         free(x_hex);
         /*@ leak base_n(_,_,_,_); @*/
         //free_big_int_inner(res);
@@ -409,6 +410,7 @@ int main(void)
 
 
         printf("%s\n",x_hex);
+        //@ malloced_string_to_chars_(x_hex);
         free(x_hex);
         /*@ leak base_n(_,_,_,_); @*/
     }

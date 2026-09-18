@@ -83,6 +83,7 @@ INLINE char* reverse_and_dup(char* s,size_t len)
         /*@ body_chars_to_string(s); @*/
         s = strdup(s);
         if(!s) abort();
+        //@ malloced_string_to_chars_(orig_s);
         free(orig_s);
     }
     return s;

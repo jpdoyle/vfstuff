@@ -169,6 +169,18 @@ predicate malloced_string(char* s; list<char> cs) =
         string(s,cs) &*& malloc_block_chars(s,?numbytes)
     &*& s[length(cs) + 1..numbytes] |-> _;
 
+lemma void malloced_string_to_chars_(char* s)
+    requires malloced_string(s, ?cs);
+    ensures  chars_(s, ?numbytes, ?ocs) &*& malloc_block_chars(s, numbytes);
+{
+    string_to_body_chars(s);
+    chars_to_chars_(s);
+    open character(s + length(cs), 0);
+    close chars_(s + length(cs), 1, cons(some(0), nil));
+    chars__join(s);
+    chars__join(s);
+}
+
 lemma_auto void malloced_string_inv()
     requires [?f]malloced_string(?s,?cs);
     ensures  [ f]malloced_string( s, cs)
