@@ -5,7 +5,10 @@
 
 #include "../../b64.h"
 
-int main(void) {
+int main(void)
+    //@ requires true;
+    //@ ensures true;
+{
     size_t i;
     size_t ixs[2] = { 0 };
     size_t n_chars[2] = { 10, 10 };
@@ -35,8 +38,8 @@ int main(void) {
     {
         size_t n_bytes1;
         size_t n_bytes2;
-        uint8_t* bytes1 = bytes_of_hex(ixs[0],inbufs[0],&n_bytes[0]);
-        uint8_t* bytes2 = bytes_of_hex(ixs[0],inbufs[1],&n_bytes[1]);
+        unsigned char* bytes1 = bytes_of_hex(ixs[0],inbufs[0],&n_bytes[0]);
+        unsigned char* bytes2 = bytes_of_hex(ixs[0],inbufs[1],&n_bytes[1]);
         free(inbuf);
         free(bytes);
         free(b64);
