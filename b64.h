@@ -207,7 +207,7 @@ unsigned char* bytes_of_hex(size_t len, char* s, size_t* outlen);
 
 char* hex_of_bytes(size_t len, unsigned char* b);
     /*@ requires [?f]b[..len] |-> ?bytes
-            &*&  2*len+1 <= ULONG_MAX
+            &*&  2*len+1 <= UINTPTR_MAX
             ; @*/
     /*@ ensures  [ f]b[..len] |->  bytes
             &*&  string(result,?hex_str)

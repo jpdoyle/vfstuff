@@ -593,7 +593,7 @@ char b64_of_byte(unsigned char n)
 
 char* hex_of_bytes(size_t len, unsigned char* b)
     /*@ requires [?f]b[..len] |-> ?bytes
-            &*&  2*len+1 <= ULONG_MAX
+            &*&  2*len+1 <= UINTPTR_MAX
             ; @*/
     /*@ ensures  [ f]b[..len] |->  bytes
             &*&  string(result,?hex_str)
@@ -608,7 +608,7 @@ char* hex_of_bytes(size_t len, unsigned char* b)
     char* ret;
     char* p;
     size_t i;
-    ret = calloc(2*len+1,sizeof(char));
+    ret = malloc(2*len+1);
     if(!ret) { abort(); }
 
     for(i = 0,p = ret; i < len; ++i,p+=2)
