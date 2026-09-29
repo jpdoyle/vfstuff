@@ -11,6 +11,7 @@
 
 void merge(int* out, size_t ln, size_t rn, int* l, int* r)
     /*@ requires out[..(ln+rn)] |-> _
+            &*&  ln + rn <= UINTPTR_MAX
             &*&  [?fl]l[..ln] |-> ?ls &*&  [?fr]r[..rn] |-> ?rs
             &*&  !!sorted(ls) &*&  !!sorted(rs)
             ;
@@ -24,10 +25,10 @@ void merge(int* out, size_t ln, size_t rn, int* l, int* r)
 {
     /*@ { ALREADY_PROVEN() } @*/
 
-    /*@ ints_limits(out); @*/
     size_t li = 0, ri = 0;
     while(li < ln || ri < rn)
         /*@ requires out[(li+ri)..(ln+rn)] |-> _
+                &*&  li <= ln &*& ri <= rn
                 &*&  [fl]l[li..ln] |-> ?loop_ls
                 &*&  [fr]r[ri..rn] |-> ?loop_rs
                 &*&  !!sorted(loop_ls) &*& !!sorted(loop_rs)
@@ -129,9 +130,9 @@ void mergesort_inner(int* arr, size_t n, int* scratch)
     /*@ {
         div_rem(n,2);
         ints_limits(arr);
-        ints_limits(scratch);
         ints_split(arr,mid);
-        ints_split(scratch,mid);
+        ints__split(scratch,mid);
+        ints__inv();
     } @*/
 
     /*@ assert arr[..mid]  |-> ?orig_pref; @*/
