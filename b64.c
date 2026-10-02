@@ -454,7 +454,7 @@ unsigned char* bytes_of_hex(size_t len, char* s, size_t* outlen)
     /*@ ensures  [ f]s[..len] |->  hex_str &*& *outlen |-> ?len_out
             &*&  base_n(hex_chars(),reverse(hex_str), hexits, val)
             &*&  result[..len_out] |-> ?out_bytes
-            &*&  malloc_block(result, ?blk_len)
+            &*&  malloc_block(result, len_out)
             &*&  poly_eval(reverse(out_bytes),256) == val
             ; @*/
     /*@ terminates; @*/
