@@ -139,8 +139,6 @@ lemma void base_conversion(nat m1, nat m2, int b_orig, int b, list<int> limbs, i
             my_mul_mono_l(0,ion(m2),length(limbs));
             pow_plus(b,m1,ion(m2)*length(limbs));
 
-            assert poly_eval(limbs,b_orig)
-                <  pow_nat(b,noi(ion(m1)+ion(m2)*length(limbs)));
 
             assert false;
 
@@ -202,11 +200,6 @@ lemma void base_conversion(nat m1, nat m2, int b_orig, int b, list<int> limbs, i
 
             my_mul_mono_l(0,ion(m2),length(limbs));
             pow_plus(b,m1,ion(m2)*length(limbs));
-
-            assert -poly_eval(limbs,b_orig)
-                <  pow_nat(b,noi(ion(m1)+ion(m2)*length(limbs)));
-
-
             assert false;
         }
 
