@@ -69,6 +69,7 @@ lemma void numsBelow_sum(int base, nat n)
         assert (ion(n)*(ion(n)-1)) == 0;
         division_unique(ion(n)*(ion(n)-1),2,0,0);
         assert (ion(n)*(ion(n)-1))/2 == 0;
+        break;
 
     case succ(n0):
         numsBelow_sum(base+1,n0);
@@ -101,8 +102,6 @@ lemma void numsBelow_sum(int base, nat n)
                 assert ion(n0)-1 >= 0;
                 my_mul_mono_r(ion(n0),0,ion(n0)-1);
             } else {
-                assert ion(n0) == 0;
-                assert (ion(n0)*(ion(n0)-1)) == 0;
             }
 
             assert false;
