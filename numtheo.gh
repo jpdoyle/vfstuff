@@ -653,12 +653,7 @@ lemma pair<int,int> gcd_is_min_lincomb_sol(int a, int b, int x, int y, int n)
     mul_assoc(a,x,a/n); mul_assoc(b,y,a/n);
     assert a%n == a - a*(x*(a/n)) - b*(y*(a/n));
     assert a%n == a*(1 - x*(a/n)) - b*(y*(a/n));
-    if(-b*(y*(a/n)) != b*(-y*(a/n))) {
-        note_eq(b*(-y*(a/n)) + b*(y*(a/n)),b*(y*(a/n)+(-y*(a/n))));
-        note_eq(0,y*(a/n)+(-y*(a/n)));
-        mul_abs_commute(b,(y*(a/n)+(-y*(a/n))));
-        assert false;
-    }
+    assert -b*(y*(a/n)) == b*(-y*(a/n));
     //note_eq(-b*(y*(a/n)),b*(-y*(a/n)));
     note_eq(a%n, a*(1 - x*(a/n)) + b*(-y*(a/n)));
     assert a == n*(a/n) + a%n;
