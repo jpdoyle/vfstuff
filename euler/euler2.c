@@ -45,17 +45,12 @@ lemma void even_fib_likelihood_core(int f0, int f1, nat n)
                 ion(n)+2-firstEvenInd);
             switch(n0) {
             case zero:
+                break;
             case succ(n1):
                 assert n == succ(succ(n1));
                 switch(n1) {
                 case zero:
                 case succ(n2):
-                    switch(n2) {
-                    case zero:
-                    case succ(n3):
-                        assert false;
-                    }
-
                 }
             }
             return;
