@@ -191,7 +191,6 @@ lemma void fingrp_inv_unique<t>(t x, t y)
         assert op(u,y) == y;
 
         forall_elim(elems, (diag2)(equals,id,(flip)(op,u)),inv(x));
-        assert op(inv(x),u) == inv(x);
 
         assert false;
     }
