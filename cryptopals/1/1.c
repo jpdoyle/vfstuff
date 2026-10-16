@@ -17,10 +17,11 @@ int main(void)
     if(!inbuf) { abort(); }
 
     while(1)
-        /*@ invariant malloc_block(inbuf,n_chars+1)
+        /*@ invariant malloc_block_chars(inbuf,n_chars+1)
                 &*&  inbuf[0..ix] |-> ?cs
                 &*&  inbuf[ix..n_chars+1] |-> _
                 &*&  0 <= ix &*& ix <= n_chars &*& n_chars >= 10
+                &*&  n_chars < UINTPTR_MAX
                 &*&  length(cs) == ix
                 &*&  !!forall(cs,(flip)(mem,hex_chars()))
                 &*&  !mem('\0', cs)
@@ -30,16 +31,21 @@ int main(void)
     {
         c = /*@ truncating @*/ (char)getchar();
         if(!is_hex(c)) break;
+        //@ assert !!mem(c, hex_chars());
 
+        inbuf[ix] = c;
+        //@ close chars(inbuf + ix, 1, cons(c, nil));
+        //@ chars_join(inbuf);
+        ++ix;
         if(ix == n_chars) {
             if(n_chars > UINT_MAX/2) abort();
+            inbuf[ix] = c;
+            //@ close chars(inbuf + ix, 1, cons(c, nil));
+            //@ chars_join(inbuf);
             n_chars *= 2;
             inbuf = realloc(inbuf,n_chars+1);
             if(!inbuf) { abort(); }
         }
-
-        inbuf[ix] = c;
-        ++ix;
     }
 
     inbuf[ix] = '\0';

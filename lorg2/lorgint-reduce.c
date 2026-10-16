@@ -71,7 +71,7 @@ void lorgint_reduce_inplace(lorgint* li)
         /*@ decreases (len+extra_cap)-n; @*/
     {
         /*@ if(n == len) open ints(start+n,len-n,_); @*/
-        /*@ open ints(p,_,_); @*/
+        /*@ open ints(start+n, len-n, _); @*/
         int64_t q;
         int r;
 

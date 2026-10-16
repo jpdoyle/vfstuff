@@ -26,9 +26,6 @@ void isort(int* arr, int n)
             &*&  !!is_permutation(l,new_l); @*/
     /*@ terminates; @*/
 {
-    /* remove this to start proving! */
-    /*@ assume(false); @*/
-
     int i,j;
     for(i = n; i > 0; --i)
     {
@@ -36,9 +33,7 @@ void isort(int* arr, int n)
         {
             if(arr[j] <= arr[j+1]) { break; }
 
-            int tmp = arr[j+1];
-            arr[j+1] = arr[j];
-            arr[j] = tmp;
+
 
         }
     }

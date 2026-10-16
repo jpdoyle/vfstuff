@@ -225,9 +225,6 @@ void insertion_sort(int* arr, int n)
             &*&  !!is_permutation(l,new_l); @*/
     /*@ terminates; @*/
 {
-    /* remove this to start proving! */
-    /*@ assume(false); @*/
-
     int i,j;
     for(i = n; i > 0; --i)
     {
